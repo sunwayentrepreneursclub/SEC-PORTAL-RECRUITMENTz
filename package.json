@@ -1,8 +1,0 @@
-{
-  "name": "sec-recruitment-portal",
-  "version": "1.0.0",
-  "private": true,
-  "description": "Sunway Entrepreneurs Club committee recruitment portal",
-  "type": "module",
-  "engines": { "node": ">=18" }
-}

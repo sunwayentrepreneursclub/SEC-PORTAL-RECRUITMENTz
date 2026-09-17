@@ -8,7 +8,7 @@
 <link rel="icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Geist:wght@400;500;600;700;800;900&family=Geist+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* =========================================================================
    "Scrapbook" theme — white ground, black poster type, a rainbow of
@@ -99,9 +99,17 @@
   --sh-1:0 1px 2px rgba(0,0,0,.45);
   --sh-2:0 6px 20px rgba(0,0,0,.5);
   --sh-3:0 16px 40px rgba(0,0,0,.6);
+  /* the reference site runs entirely on Geist (Vercel's grotesk) at a much
+     bigger, tighter-leaded display scale than the rest of this site uses */
+  --display:'Geist',Arial,Helvetica,sans-serif;
+  --body:'Geist',Arial,Helvetica,sans-serif;
+  --mono:'Geist',Arial,Helvetica,sans-serif;
   background:
     radial-gradient(900px 560px at 100% -10%, rgba(124,99,255,.16), transparent 60%),
     radial-gradient(760px 480px at -10% 8%, rgba(114,227,183,.10), transparent 55%),
+    /* faint technical grid, the same texture the reference site's hero runs on */
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 64px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.035) 0 1px, transparent 1px 64px),
     var(--navy);
   background-attachment:fixed;
   min-height:100vh;
@@ -112,7 +120,46 @@
      Restating color here re-anchors inheritance to this scope's tokens. */
   color:var(--ink);
 }
-#viewPublic h1,#viewPublic h2,#viewPublic .aband-title{letter-spacing:-.035em}
+/* much bigger, tighter-leaded display type — the reference runs headlines at
+   80-128px with ~0.9-1em line-height, a world away from a body-copy scale */
+#viewPublic h1{font-size:clamp(40px,6.5vw,88px);line-height:.96;letter-spacing:-.03em;font-weight:800}
+#viewPublic .aband-title{font-size:clamp(32px,5vw,64px);line-height:.98;letter-spacing:-.03em;font-weight:800}
+#viewPublic h2,#viewPublic h3{letter-spacing:-.02em}
+#viewPublic .lede,#viewPublic .aband-lede{font-weight:400;letter-spacing:-.005em}
+/* flat surfaces instead of a visible border — a 1px inset line (nearly
+   invisible on black, exactly like the reference's card treatment) rather
+   than a lit outline, so cards read as cut from the same dark material.
+   dept-card/cf-card keep their coloured top stripe — only the other three
+   sides go transparent there, so that accent doesn't get erased too. */
+#viewPublic .why-grid,#viewPublic .standard-wrap,#viewPublic .stats,
+#viewPublic .dept,#viewPublic .faq,#viewPublic .stage-track{
+  border-color:transparent!important;box-shadow:inset 0 0 0 1px rgba(255,255,255,.06),var(--sh-1);
+}
+#viewPublic .dept-card,#viewPublic .cf-card{
+  border-left-color:transparent!important;border-right-color:transparent!important;
+  border-bottom-color:transparent!important;box-shadow:var(--sh-1);
+}
+/* labels/eyebrows/status text go monospace-flavoured and wide-tracked —
+   the reference's "-- 001." / "[ FOCUS AREA ]" register */
+#viewPublic .aband-eyebrow,#viewPublic .why-num,#viewPublic .level,
+#viewPublic .cf-dept,#viewPublic .cf-level,#viewPublic .status,#viewPublic .dept-meta{
+  font-family:'Geist Mono',var(--mono);letter-spacing:.08em;
+}
+/* glassy translucent chips — backdrop blur + saturation, the same treatment
+   the reference uses on its circular badges, applied to filter chips and
+   small status pills instead */
+#viewPublic .cf-chip,#viewPublic .pubtab-dot,#viewPublic .badge,#viewPublic .pill{
+  backdrop-filter:blur(10px) saturate(1.6);-webkit-backdrop-filter:blur(10px) saturate(1.6);
+}
+#viewPublic .cf-chip{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.14)}
+#viewPublic .cf-chip.is-active{background:var(--open)}
+/* the reference pairs a solid pill primary with a sharp, thin-bordered
+   secondary — echoed here on ghost/outline buttons only */
+#viewPublic .btn.ghost{border-radius:6px}
+/* more breathing room between sections, matching the reference's generous
+   vertical rhythm (it runs 64-80px section padding, well past this site's
+   default spacing) */
+#viewPublic .abandsection{margin:0 0 96px}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;overflow-x:hidden}
 body{

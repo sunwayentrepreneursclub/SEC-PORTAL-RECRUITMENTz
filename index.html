@@ -291,56 +291,42 @@ h1{
 .envelope-gate.is-leaving{animation:envGateOut .5s ease forwards}
 @keyframes envGateOut{to{opacity:0}}
 .envelope-gate .eyebrow{color:var(--muted);margin:0}
+/* a plain closed envelope (paper back + folded-corner shading, no visible
+   flap seam) with a wax seal centred on it — matches the reference's own
+   "open your invitation" card exactly, rather than a paper-flap illustration */
 .envelope{
-  position:relative;width:min(78vw,340px);aspect-ratio:3/2;
-  perspective:900px;
+  position:relative;width:min(86vw,420px);aspect-ratio:16/9;
+  border:1.5px solid var(--line-strong);padding:5px;
 }
-/* back panel — the envelope's base colour, always visible */
-/* fixed paper/ink colours for the illustration itself — an envelope reads as
-   a physical object regardless of which theme (light admin, dark public) is
-   active, so it doesn't borrow --ink/--paper the way the rest of the UI does */
-.envelope-back{
-  position:absolute;inset:0;background:#EDEAE2;border-radius:6px;
-  box-shadow:var(--sh-3);
+/* fixed paper colours for the illustration itself — an envelope reads as a
+   physical object regardless of theme, so it doesn't borrow --ink/--paper */
+.envelope-paper{
+  position:relative;width:100%;height:100%;overflow:hidden;
+  background:
+    linear-gradient(135deg, #EDEAE0 0 49.6%, #E1DCCC 50.4% 100%);
 }
-/* the letter card, tucked inside, peeks out and slides up on open */
-.envelope-letter{
-  position:absolute;left:8%;right:8%;bottom:8%;top:14%;
-  background:#FFFEFB;border-radius:4px;box-shadow:0 6px 18px rgba(0,0,0,.35);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
-  padding:16px;text-align:center;
-  transform:translateY(6%);transition:transform .6s cubic-bezier(.22,1,.36,1);
-  z-index:1;
+.wax-seal{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(1) rotate(0deg);
+  width:22%;aspect-ratio:1;border-radius:50%;
+  background:
+    repeating-conic-gradient(from 0deg, rgba(0,0,0,.05) 0deg 3deg, transparent 3deg 9deg),
+    radial-gradient(circle at 35% 30%, #2c2454, #16112c 72%);
+  box-shadow:0 10px 22px rgba(0,0,0,.4), inset 0 -6px 10px rgba(0,0,0,.35), inset 0 4px 8px rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .5s cubic-bezier(.4,0,.2,1), opacity .5s ease;
 }
-.envelope-letter .lt{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#8A867C}
-.envelope-letter .lb{font-family:var(--serif);font-size:clamp(17px,3vw,22px);color:#1B1D21}
-/* front pocket — the lower triangle that holds the letter behind it until
-   the flap opens; sits above the letter, below the flap */
-.envelope-front{
-  position:absolute;left:0;right:0;bottom:0;height:62%;
-  background:#DDD8CC;
-  clip-path:polygon(0 100%, 100% 100%, 100% 22%, 50% 68%, 0 22%);
-  z-index:2;
+.wax-seal span{
+  font-family:var(--serif);font-size:clamp(22px,4.5vw,34px);color:rgba(246,245,242,.78);
+  transform:scaleY(.94);
 }
-/* the flap — closed by default (pointing down over the opening), rotates
-   up and back on open like a real envelope flap */
-.envelope-flap{
-  position:absolute;left:0;right:0;top:0;height:58%;
-  background:#E4E0D6;
-  clip-path:polygon(0 0, 100% 0, 50% 100%);
-  transform-origin:top center;transform:rotateX(0deg);
-  transition:transform .55s cubic-bezier(.4,0,.2,1);
-  z-index:3;box-shadow:inset 0 -8px 14px -10px rgba(0,0,0,.25);
-}
-.envelope.is-open .envelope-flap{transform:rotateX(-170deg)}
-.envelope.is-open .envelope-letter{transform:translateY(-38%)}
+.envelope.is-open .wax-seal{transform:translate(-50%,-50%) scale(.2) rotate(24deg);opacity:0}
 .envelope-hint{
   font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
-  color:var(--muted);animation:envHintPulse 1.8s ease-in-out infinite;
+  color:var(--muted);animation:envHintPulse 1.8s ease-in-out infinite;text-decoration:underline;text-underline-offset:4px;
 }
 @keyframes envHintPulse{0%,100%{opacity:.5}50%{opacity:1}}
 @media (prefers-reduced-motion:reduce){
-  .envelope-flap,.envelope-letter{transition:none}
+  .wax-seal{transition:none}
   .envelope-gate.is-leaving{animation:none}
 }
 
@@ -1063,15 +1049,11 @@ textarea{min-height:110px;resize:vertical}
 <div class="envelope-gate" id="introSplash" role="button" tabindex="0" aria-label="Open your invitation to enter the site">
   <p class="eyebrow">You're invited</p>
   <div class="envelope" id="envelopeShape">
-    <div class="envelope-back"></div>
-    <div class="envelope-letter">
-      <p class="lt">Sunway Entrepreneurs Club</p>
-      <p class="lb">Join the committee.</p>
+    <div class="envelope-paper">
+      <div class="wax-seal"><span>E</span></div>
     </div>
-    <div class="envelope-front"></div>
-    <div class="envelope-flap"></div>
   </div>
-  <p class="envelope-hint">Click to open</p>
+  <p class="envelope-hint">Open your invitation</p>
 </div>
 
 <nav class="topbar">
@@ -1079,7 +1061,7 @@ textarea{min-height:110px;resize:vertical}
     <span class="topbar-word">Sunway Entrepreneurs Club</span>
     <div class="pubnav" role="tablist" aria-label="Recruitment sections">
       <button class="pubtab" role="tab" id="pt-overview" aria-controls="pp-overview" data-pub="overview" aria-selected="true" type="button">Overview</button>
-      <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Apply <span class="pubtab-dot" id="pubtabDot" hidden></span></button>
+      <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Apply</button>
       <button class="pubtab" role="tab" id="pt-ecosystem" aria-controls="pp-ecosystem" data-pub="ecosystem" aria-selected="false" type="button">Ecosystem</button>
       <button class="pubtab" role="tab" id="pt-policies" aria-controls="pp-policies" data-pub="policies" aria-selected="false" type="button">Policies</button>
     </div>
@@ -1094,9 +1076,8 @@ textarea{min-height:110px;resize:vertical}
         <div class="hero-mark" aria-hidden="true">E</div>
         <div class="mast-copy">
           <p class="eyebrow">Committee recruitment</p>
-          <h1 id="headline">Loading…</h1>
-          <p class="lede">This is the full SEC committee structure. Every position is listed, whether or not it's available — so you can see what you'd be joining, not just what we're short of.</p>
-          <button class="hero-cta" id="heroApply" type="button">Apply now <span aria-hidden="true">↓</span></button>
+          <h1>For people who want to build.</h1>
+          <p class="lede">SEC is for people who want to build, take ownership and improve fast — not for titles, certificates, or a light resume line. Those can be side effects. They are not the point.</p>
         </div>
       </div>
     </header>
@@ -1105,8 +1086,7 @@ textarea{min-height:110px;resize:vertical}
       <section class="abandsection" data-reveal>
         <div class="aband-head">
           <p class="aband-eyebrow">Why join SEC</p>
-          <h2 class="aband-title"><span class="dim">For people who want to</span> build.</h2>
-          <p class="aband-lede">SEC is for people who want to build, take ownership and improve fast — not for titles, certificates, or a light resume line. Those can be side effects. They are not the point.</p>
+          <h2 class="aband-title">Leave with more than you came with.</h2>
         </div>
         <div class="why-grid">
           <div class="why-card" style="animation-delay:0ms">
@@ -1801,6 +1781,7 @@ if ('IntersectionObserver' in window) {
 // the seat count changes, so the headline visibly "retypes" as data updates.
 function animateHeadline(n) {
   const h = $('#headline');
+  if (!h) return; // the hero now shows a fixed headline instead of the live seat count
   const text = `${WORDS[n] || n} seat${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} open.`;
   const STEP_MS = 26;
   const chars = text.split('').map((c, i) => {

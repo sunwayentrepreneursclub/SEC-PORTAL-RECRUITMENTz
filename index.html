@@ -304,8 +304,9 @@ h1{
    glyph — same idea (one huge letterform anchoring the hero), built from a
    type character instead of an image so it needs no asset */
 .hero-mark{
-  font-family:var(--serif);font-weight:400;font-size:clamp(220px,32vw,460px);
-  line-height:.75;color:var(--ink);opacity:.95;user-select:none;
+  font-family:var(--serif);font-weight:700;font-size:clamp(260px,38vw,560px);
+  -webkit-text-stroke:2px var(--ink);
+  line-height:.75;color:var(--ink);opacity:.98;user-select:none;
   margin:0 0 -.08em;
 }
 .hero-grid{display:grid;grid-template-columns:.85fr 1.5fr;gap:48px;align-items:center}
@@ -647,6 +648,17 @@ h1{
   transition:transform 1.3s cubic-bezier(.16,1,.3,1);
 }
 .process-track.is-visible::before{transform:scaleY(1)}
+.process-track::after{
+  content:"";position:absolute;left:16px;top:17px;width:10px;height:10px;margin:-4px 0 0 -4px;
+  border-radius:50%;background:var(--ink);opacity:0;pointer-events:none;
+  box-shadow:0 0 16px 6px var(--ink),0 0 32px 12px rgba(246,245,242,.5);
+}
+.process-track.is-visible::after{animation:processGlow 1.3s cubic-bezier(.16,1,.3,1)}
+@keyframes processGlow{
+  0%{opacity:1;top:17px}
+  92%{opacity:1}
+  100%{opacity:0;top:calc(100% - 17px)}
+}
 .process-step{
   display:flex;align-items:center;gap:18px;position:relative;padding:11px 0;
   opacity:0;transform:translateX(-22px);
@@ -675,6 +687,8 @@ h1{
     transform-origin:left;transform:scaleX(0);
   }
   .process-track.is-visible::before{transform:scaleX(1)}
+  .process-track::after{left:17px;top:17px}
+  .process-track.is-visible::after{animation:processGlowH 1.3s cubic-bezier(.16,1,.3,1)}
   .process-step{
     flex-direction:column;align-items:flex-start;gap:14px;flex:1;padding:0 16px 0 0;
     transform:translateY(-14px);
@@ -682,6 +696,11 @@ h1{
   .process-step.is-visible{animation:stepInH .5s cubic-bezier(.16,1,.3,1) forwards}
   @keyframes stepInH{to{opacity:1;transform:none}}
   .process-label{font-size:15px}
+}
+@keyframes processGlowH{
+  0%{opacity:1;left:17px}
+  92%{opacity:1}
+  100%{opacity:0;left:calc(100% - 17px)}
 }
 @media (prefers-reduced-motion:reduce){
   .process-step{animation:none;opacity:1;transform:none}

@@ -173,25 +173,23 @@ body{
 #viewPublic .why-num::before{content:"— "}
 /* "committee in numbers" as a row list — icon square, big serif number,
    label — rather than a four-up card grid */
-#overviewStats{display:flex;flex-direction:column;border:0;background:none;box-shadow:none;gap:0}
+#overviewStats{display:grid;grid-template-columns:repeat(4,1fr);border:0;background:none;box-shadow:none;gap:0}
+@media (max-width:720px){#overviewStats{grid-template-columns:1fr 1fr}}
 #overviewStats .stat{
-  display:flex;align-items:center;gap:20px;padding:22px 4px;
-  border-right:0;border-bottom:1px solid var(--board-line);
+  display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:0 28px 0 0;
+  border-right:1px solid var(--board-line);border-bottom:0;
 }
-#overviewStats .stat:last-child{border-bottom:0}
-#overviewStats .stat-icon{
-  width:40px;height:40px;flex:none;border:1.5px solid var(--line-strong);border-radius:6px;
-  display:flex;align-items:center;justify-content:center;color:var(--stat-a,var(--ink))
-}
-#overviewStats .stat-icon svg{width:19px;height:19px}
+#overviewStats .stat:last-child{border-right:0}
+#overviewStats .stat-icon{display:none}
 #overviewStats .n{
-  font-family:var(--serif);font-size:clamp(36px,6vw,52px);font-weight:400;
-  letter-spacing:-.01em;min-width:80px;
+  font-family:var(--display-mega);font-weight:400;font-size:clamp(48px,6.5vw,88px);
+  letter-spacing:-.01em;line-height:1;
 }
 #overviewStats .l{
-  font-family:var(--body);font-size:16px;font-weight:500;color:var(--ink-weak);
-  margin-left:auto;text-align:right;
+  font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin:0;
 }
+@media (max-width:720px){#overviewStats .stat{padding:0 16px 20px 0;margin-bottom:20px;border-bottom:1px solid var(--board-line)}}
 /* mixed emphasis inside a headline — de-emphasise the connective words in
    grey, keep the payoff word full white/weight, the reference's own
    "Seven days of / innovation, learning, / and meaningful / connections."
@@ -271,7 +269,8 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
   .topbar-cta{padding:9px 16px;font-size:13px}
 }
 /* ---------- masthead ---------- */
-.masthead{padding:64px 0 34px;min-height:calc(100svh - 64px);display:flex;align-items:center}
+.masthead{padding:88px 0 56px;display:flex;align-items:center}
+@media (min-width:768px){.masthead{padding:120px 0 72px}}
 .masthead[hidden]{display:none}
 .masthead .hero-grid{width:100%}
 .hero-cta{
@@ -614,19 +613,33 @@ h1{
 .standard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--board-line)}
 @media (max-width:860px){.standard-grid{grid-template-columns:1fr 1fr}}
 @media (max-width:480px){.standard-grid{grid-template-columns:1fr}}
-.standard-card{padding:26px 22px;border-right:1px solid var(--board-line);border-bottom:1px solid var(--board-line)}
-.standard-card h3{font-family:var(--display);font-size:18px;font-weight:700;margin:0 0 8px;letter-spacing:-.01em}
-.standard-card p{margin:0;font-size:15px;color:var(--ink-weak);line-height:1.5}
-.proof-list{list-style:none;margin:0 0 24px;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px 32px;max-width:520px}
-.proof-list li{font-family:var(--serif);font-size:20px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line);
+.standard-card{padding:40px 32px;border-right:1px solid var(--board-line);border-bottom:1px solid var(--board-line)}
+.standard-num{display:block;font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em;margin:0 0 20px}
+.standard-card h3{font-family:var(--serif);font-weight:400;font-size:28px;margin:0 0 12px;letter-spacing:-.01em}
+.standard-card p{margin:0;font-size:15px;color:var(--ink-weak);line-height:1.5;max-width:28ch}
+.proof-list{list-style:none;margin:0 0 32px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0 48px;max-width:960px}
+@media (max-width:860px){.proof-list{grid-template-columns:1fr 1fr;max-width:none}}
+@media (max-width:480px){.proof-list{grid-template-columns:1fr}}
+.proof-list li{font-family:var(--serif);font-size:26px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line);
   opacity:0;transform:translateX(-18px);transition:opacity .5s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1)}
 .proof-list li.is-visible{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.proof-list li{transition:none;opacity:1;transform:none}}
-.plain-rows{list-style:none;margin:0 0 24px;padding:0;max-width:420px}
-.plain-rows li{font-family:var(--body);font-size:15px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
-  padding:14px 0;border-bottom:1px solid var(--board-line);color:var(--ink)}
+.how-we-work-split{display:grid;grid-template-columns:.9fr 1.3fr;gap:64px;align-items:start}
+@media (max-width:860px){.how-we-work-split{grid-template-columns:1fr;gap:28px}}
+.hww-left .proof-closing{margin-top:18px}
+.plain-rows{list-style:none;margin:0;padding:0;max-width:560px}
+.plain-rows li{font-family:var(--body);font-size:22px;font-weight:600;letter-spacing:-.01em;
+  display:flex;align-items:baseline;gap:20px;
+  padding:18px 0;border-bottom:1px solid var(--board-line);color:var(--ink)}
+.pr-num{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.1em;flex:none}
 .proof-closing{margin:0;font-size:16px;color:var(--muted)}
-.final-cta-section{text-align:left}
+.final-cta-section{
+  text-align:center;border-top:1px solid var(--board-line);padding:72px 0 24px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.final-cta-section .aband-eyebrow{margin:0 0 18px}
+.final-cta-section .aband-title{font-size:clamp(40px,6vw,76px);margin:0 0 32px}
+.final-cta-section .hero-cta{margin-top:0;padding:16px 40px;font-size:16px}
 .final-cta-section .hero-cta{margin-top:20px}
 .process-track{display:flex;flex-direction:column;gap:4px;max-width:460px;position:relative}
 .process-track::before{
@@ -655,6 +668,21 @@ h1{
 .process-label{
   font-family:var(--body);font-size:16px;font-weight:600;letter-spacing:0;
   text-align:left;color:var(--ink);line-height:1.4;
+}
+@media (min-width:960px){
+  .process-track{flex-direction:row;max-width:none;gap:0;align-items:flex-start}
+  .process-track::before{
+    left:17px;right:17px;top:17px;width:auto;height:2px;
+    transform-origin:left;transform:scaleX(0);
+  }
+  .process-track.is-visible::before{transform:scaleX(1)}
+  .process-step{
+    flex-direction:column;align-items:flex-start;gap:14px;flex:1;padding:0 16px 0 0;
+    transform:translateY(-14px);
+  }
+  .process-step.is-visible{animation:stepInH .5s cubic-bezier(.16,1,.3,1) forwards}
+  @keyframes stepInH{to{opacity:1;transform:none}}
+  .process-label{font-size:15px}
 }
 @media (prefers-reduced-motion:reduce){
   .process-step{animation:none;opacity:1;transform:none}
@@ -756,7 +784,7 @@ h1{
   transition:opacity .55s ease-out,transform .55s ease-out;
 }
 .footnote.is-visible{opacity:1;transform:none}
-.site-footer{padding:40px 0 64px;border-top:1px solid var(--board-line);margin-top:32px}
+.site-footer{padding:80px 0 48px;border-top:1px solid var(--board-line);margin-top:32px}
 .site-footer-name{font-family:var(--serif);font-size:18px;margin:0 0 14px;color:var(--ink)}
 .site-footer-links{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--muted);margin:0 0 14px}
 .site-footer-links a{color:var(--muted);text-decoration:none}
@@ -798,8 +826,11 @@ h1 .tcursor{
 
 /* ---------- job list (jobstreet-style single-column scroll, no swiping) ---------- */
 .cf-head{display:flex;align-items:center;justify-content:space-between;gap:16px;
-  flex-wrap:wrap;margin-bottom:22px}
-.cf-filters{position:relative;display:flex;gap:9px;flex-wrap:wrap}
+  flex-wrap:wrap;margin-bottom:22px;position:sticky;top:64px;z-index:20;
+  background:var(--navy);padding:16px 0;border-bottom:1px solid var(--board-line)}
+.cf-filters{position:relative;display:flex;gap:9px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.cf-filters::-webkit-scrollbar{display:none}
+.cf-chip{flex:none}
 .cf-chip-glide{
   position:absolute;top:0;left:0;background:var(--open);z-index:0;border-radius:var(--r-pill);
   transition:transform .34s cubic-bezier(.16,1,.3,1),width .34s cubic-bezier(.16,1,.3,1);
@@ -822,7 +853,21 @@ h1 .tcursor{
 .cf-count b{color:var(--ink);font-size:16px;font-weight:700}
 
 /* the list itself: one column, stacked, page-scrolls — no carousel/drag engine */
-.job-list{display:flex;flex-direction:column;gap:16px}
+.job-list{display:flex;flex-direction:column;gap:0}
+.roles-group{display:flex;flex-direction:column;gap:16px;margin-bottom:28px}
+@media (min-width:860px){.roles-group{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
+.roles-group.is-collapsed{display:none}
+.roles-subhead{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin:4px 0 16px}
+.filled-toggle{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  background:none;border:0;border-top:1px solid var(--board-line);padding:20px 0;margin-bottom:16px;
+  font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);cursor:pointer;
+}
+.filled-toggle:hover{color:var(--ink)}
+.filled-toggle-arrow{font-family:var(--body);font-size:16px}
+.jd-not-ready{font-family:var(--body);font-size:14px;color:var(--muted);font-style:italic}
 
 .cf-card{
   background:var(--paper);border:1px solid var(--board-line);border-top:4px solid var(--deptc,var(--open));
@@ -1196,10 +1241,10 @@ textarea{min-height:110px;resize:vertical}
           <h2 class="aband-title">If you need to be chased, don't apply.</h2>
         </div>
         <div class="standard-grid">
-          <div class="standard-card"><h3>Own it.</h3><p>If it's yours, carry it to the end.</p></div>
-          <div class="standard-card"><h3>Ship it.</h3><p>Ideas mean little until something gets delivered.</p></div>
-          <div class="standard-card"><h3>Speak early.</h3><p>Problems raised early can be solved. Silence can't.</p></div>
-          <div class="standard-card"><h3>Finish.</h3><p>Starting is easy. Closing the loop is the job.</p></div>
+          <div class="standard-card"><span class="standard-num">01</span><h3>Own it.</h3><p>If it's yours, carry it to the end.</p></div>
+          <div class="standard-card"><span class="standard-num">02</span><h3>Ship it.</h3><p>Ideas mean little until something gets delivered.</p></div>
+          <div class="standard-card"><span class="standard-num">03</span><h3>Speak early.</h3><p>Problems raised early can be solved. Silence can't.</p></div>
+          <div class="standard-card"><span class="standard-num">04</span><h3>Finish.</h3><p>Starting is easy. Closing the loop is the job.</p></div>
         </div>
       </section>
 
@@ -1224,16 +1269,20 @@ textarea{min-height:110px;resize:vertical}
         <p class="proof-closing">Work you can point to. Not a title you have to explain.</p>
       </section>
 
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
+      <section class="abandsection how-we-work-split" data-reveal>
+        <div class="hww-left">
           <p class="aband-eyebrow">How we work</p>
           <h2 class="aband-title">The standard is simple.</h2>
+          <p class="proof-closing">Your title means very little. Your work won't.</p>
         </div>
         <ul class="plain-rows">
-          <li>Ownership</li><li>Reliability</li><li>Quality</li>
-          <li>Speed</li><li>Communication</li><li>Accountability</li>
+          <li><span class="pr-num">01</span><span class="pr-label">Ownership</span></li>
+          <li><span class="pr-num">02</span><span class="pr-label">Reliability</span></li>
+          <li><span class="pr-num">03</span><span class="pr-label">Quality</span></li>
+          <li><span class="pr-num">04</span><span class="pr-label">Speed</span></li>
+          <li><span class="pr-num">05</span><span class="pr-label">Communication</span></li>
+          <li><span class="pr-num">06</span><span class="pr-label">Accountability</span></li>
         </ul>
-        <p class="proof-closing">Your title means very little. Your work won't.</p>
       </section>
 
       <section class="abandsection" data-reveal>
@@ -1878,7 +1927,7 @@ function cfCardHTML(p, i) {
     <div class="cf-card-ladder" aria-hidden="true">${seatLadderHTML(p)}</div>
     <div class="cf-card-foot">
       <span class="cf-status">${statusText}</span>
-      ${open && ready ? `<button class="apply cf-apply" data-apply="${p.id}">View role</button>` : ''}
+      ${open ? `<button class="apply cf-apply" data-apply="${p.id}">View role</button>` : ''}
     </div>
   </div>`;
 }
@@ -1886,11 +1935,37 @@ function cfCardHTML(p, i) {
 function buildJobList(positions) {
   CF_POSITIONS = positions;
   const list = $('#jobList');
-  list.innerHTML = positions.length
-    ? positions.map((p, i) => cfCardHTML(p, i)).join('')
-    : `<div class="empty">No positions match this filter.</div>`;
+  const openReady = positions.filter(p => isOpen(p) && isReady(p));
+  const openingSoon = positions.filter(p => isOpen(p) && !isReady(p));
+  const filled = positions.filter(p => !isOpen(p));
+
+  if (!positions.length) {
+    list.innerHTML = `<div class="empty">No positions match this filter.</div>`;
+  } else {
+    const idx = { n: 0 };
+    const cards = arr => arr.map(p => cfCardHTML(p, idx.n++)).join('');
+    list.innerHTML = `
+      ${openReady.length ? `<div class="roles-group">${cards(openReady)}</div>` : ''}
+      ${openingSoon.length ? `<div class="roles-subhead">Opening soon</div><div class="roles-group">${cards(openingSoon)}</div>` : ''}
+      ${filled.length ? `
+        <button class="filled-toggle" id="filledToggle" type="button" aria-expanded="false">
+          Filled positions · ${filled.length} <span class="filled-toggle-arrow">+</span>
+        </button>
+        <div class="roles-group is-collapsed" id="filledGroup">${cards(filled)}</div>
+      ` : ''}
+      ${!openReady.length && !openingSoon.length && !filled.length ? `<div class="empty">No positions match this filter.</div>` : ''}
+    `;
+  }
   list.querySelectorAll('[data-apply]').forEach(b =>
     b.addEventListener('click', e => { openApply(b.dataset.apply, e); }));
+  const toggle = $('#filledToggle'), group = $('#filledGroup');
+  if (toggle && group) {
+    toggle.addEventListener('click', () => {
+      const show = group.classList.toggle('is-collapsed') === false;
+      toggle.setAttribute('aria-expanded', String(show));
+      toggle.querySelector('.filled-toggle-arrow').textContent = show ? '−' : '+';
+    });
+  }
   const totalEl = $('#cfTotal');
   if (totalEl) totalEl.textContent = positions.length;
 }
@@ -2009,6 +2084,7 @@ const jdIcon = key => `<svg class="jd-icon" viewBox="0 0 24 24" aria-hidden="tru
 function stepJD() {
   const p = POSITIONS[draft.pos];
   const avail = p.total - p.filled;
+  const open = isOpen(p), ready = isReady(p);
   setStepper(null);
   sheetTitle.textContent = p.title;
   sheetStep.textContent = '';
@@ -2018,13 +2094,15 @@ function stepJD() {
       <div class="jd-meta-row">${jdIcon('pin')} ${esc(p.dept)} committee</div>
       <div class="jd-meta-row">${jdIcon('level')} ${esc(p.level)} level</div>
       ${p.hours ? `<div class="jd-meta-row">${jdIcon('clock')} ${esc(p.hours)}</div>` : ''}
-      <div class="jd-meta-row">${jdIcon('seats')} ${avail} of ${p.total} seat${p.total === 1 ? '' : 's'} open</div>
+      <div class="jd-meta-row">${jdIcon('seats')} ${open ? `${avail} of ${p.total} seat${p.total === 1 ? '' : 's'} open` : 'Filled'}</div>
       ${p.reportsTo ? `<div class="jd-meta-row">${jdIcon('pin')} Reports to ${esc(p.reportsTo)}</div>` : ''}
     </div>
     ${STATE.settings?.deadline ? `<p class="jd-posted">Applications close ${esc(STATE.settings.deadline)}</p>` : ''}
     <div class="jd-ctas">
-      <button class="btn cta" id="fNext">Apply for this role
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></button>
+      ${open && ready
+        ? `<button class="btn cta" id="fNext">Apply for this role
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></button>`
+        : `<span class="jd-not-ready">${open ? 'Opening soon — not yet accepting applications.' : 'This position is filled.'}</span>`}
       <button class="btn cta-secondary" id="fCancel">Cancel</button>
     </div>
     <hr class="jd-divider">
@@ -2034,7 +2112,8 @@ function stepJD() {
     ${p.not?.length ? `<div class="not"><h4>What this role does not do</h4><ul>${p.not.map(d => `<li>${esc(d)}</li>`).join('')}</ul></div>` : ''}</div>`;
   sheetFoot.innerHTML = '';
   $('#fCancel').onclick = closeApply;
-  $('#fNext').onclick = stepIdentity;
+  const next = $('#fNext');
+  if (next) next.onclick = stepIdentity;
 }
 
 function stepIdentity() {
@@ -2780,9 +2859,10 @@ function setupStandardReveal(selector) {
   if (!list) return;
   const words = [];
   list.querySelectorAll('li').forEach(li => {
-    const text = li.textContent;
-    li.innerHTML = text.split(' ').map(w => `<span class="sw">${esc(w)}</span>`).join(' ');
-    li.querySelectorAll('.sw').forEach(s => words.push(s));
+    const target = li.querySelector('.pr-label') || li;
+    const text = target.textContent;
+    target.innerHTML = text.split(' ').map(w => `<span class="sw">${esc(w)}</span>`).join(' ');
+    target.querySelectorAll('.sw').forEach(s => words.push(s));
   });
   const total = words.length;
   if (!total) return;

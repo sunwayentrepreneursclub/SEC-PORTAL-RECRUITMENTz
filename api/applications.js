@@ -48,6 +48,20 @@ export default async function handler(req, res) {
     return send(res, 201, { ok: true });
   }
 
+  /* ---- applicant checks their own status (public, keyed by exact iMail) ---- */
+  if (req.method === 'GET') {
+    const url = new URL(req.url, 'http://x');
+    const lookupMail = (url.searchParams.get('imail') || '').trim().toLowerCase();
+    if (lookupMail) {
+      if (!IMAIL.test(lookupMail)) return send(res, 400, { error: 'That is not a Sunway iMail address.' });
+      const apps = await loadApps();
+      const mine = apps
+        .filter(a => a.imail === lookupMail)
+        .map(a => ({ posTitle: a.posTitle, dept: a.dept, status: a.status, when: a.when }));
+      return send(res, 200, { applications: mine });
+    }
+  }
+
   /* ---- everything below is admin ---- */
   if (!await requireAdmin(req, res)) return;
   const user = currentUser(req);

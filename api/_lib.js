@@ -262,7 +262,8 @@ export function publicState(state) {
         return {
           id: p.id, title: p.title, level: p.level, depth: p.depth,
           total: p.total, filled: p.filled, ready,
-          purpose: p.purpose || '', duties: p.duties || [], not: p.not || [], hours: p.hours || '',
+          purpose: p.purpose || '', duties: p.duties || [], not: p.not || [],
+          goodLooksLike: p.goodLooksLike || [], hours: p.hours || '', reportsTo: p.reportsTo || '',
           questions: open && ready ? p.questions : null,
         };
       }),

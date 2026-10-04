@@ -236,8 +236,9 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 }
 .topbar-word{
   font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--ink-weak);white-space:nowrap;
+  color:var(--ink-weak);white-space:nowrap;text-decoration:none;cursor:pointer;
 }
+.topbar-word:hover{color:var(--ink)}
 .topbar-inner .pubnav{margin:0;border-bottom:0;flex:1;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
 .topbar-inner .pubnav::-webkit-scrollbar{display:none}
 .topbar-inner .pubtab{padding:20px 16px;min-height:auto;color:rgba(246,245,242,.82);flex:none}
@@ -254,7 +255,7 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 .topbar-cta:active{transform:scale(.96)}
 @media (max-width:720px){
   .topbar-inner{padding:0 20px;gap:16px}
-  .topbar-word{display:none}
+  .topbar-word{font-size:11px}
   .topbar-cta{padding:9px 16px;font-size:13px}
 }
 /* ---------- masthead ---------- */
@@ -269,6 +270,8 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 }
 .hero-cta:hover{background:var(--open-dark)}
 .hero-cta:active{transform:scale(.97)}
+.hero-filter-line{font-family:var(--serif);font-weight:400;font-size:clamp(20px,2.6vw,28px);
+  color:var(--ink-weak);margin:4px 0 0}
 .eyebrow{
   font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
   color:var(--muted);margin:0 0 14px;
@@ -505,6 +508,7 @@ h1{
 .stage-track.is-visible .stage-step:nth-child(5){animation-delay:.24s}
 .stage-track.is-visible .stage-step:nth-child(7){animation-delay:.36s}
 @keyframes stageStepIn{to{opacity:1;transform:none}}
+.stage-step.is-reached{background:var(--open);border-color:var(--open);color:var(--navy);font-weight:700}
 .stage-arrow{font-family:var(--display);color:var(--open);display:inline-block;
   animation:arrowFlow 1.6s ease-in-out infinite}
 .stage-track.is-visible .stage-arrow:nth-of-type(2){animation-delay:.15s}
@@ -593,6 +597,21 @@ h1{
 /* Always portrait — a vertical rail with the step number on the left, not a horizontal
    row. Each step reveals independently (JS toggles .is-visible via IntersectionObserver)
    as it scrolls into view, so the rail visibly builds itself while you scroll. */
+/* ---------- standards / proof / how-we-work / final CTA (recruitment-filter blocks) ---------- */
+.standard-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--board-line)}
+@media (max-width:860px){.standard-grid{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.standard-grid{grid-template-columns:1fr}}
+.standard-card{padding:26px 22px;border-right:1px solid var(--board-line);border-bottom:1px solid var(--board-line)}
+.standard-card h3{font-family:var(--display);font-size:18px;font-weight:700;margin:0 0 8px;letter-spacing:-.01em}
+.standard-card p{margin:0;font-size:15px;color:var(--ink-weak);line-height:1.5}
+.proof-list{list-style:none;margin:0 0 24px;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px 32px;max-width:520px}
+.proof-list li{font-family:var(--serif);font-size:20px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line)}
+.plain-rows{list-style:none;margin:0 0 24px;padding:0;max-width:420px}
+.plain-rows li{font-family:var(--body);font-size:15px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:14px 0;border-bottom:1px solid var(--board-line);color:var(--ink)}
+.proof-closing{margin:0;font-size:16px;color:var(--muted)}
+.final-cta-section{text-align:left}
+.final-cta-section .hero-cta{margin-top:20px}
 .process-track{display:flex;flex-direction:column;gap:4px;max-width:460px;position:relative}
 .process-track::before{
   content:"";position:absolute;left:16px;top:17px;width:2px;height:calc(100% - 34px);
@@ -721,6 +740,13 @@ h1{
   transition:opacity .55s ease-out,transform .55s ease-out;
 }
 .footnote.is-visible{opacity:1;transform:none}
+.site-footer{padding:40px 0 64px;border-top:1px solid var(--board-line);margin-top:32px}
+.site-footer-name{font-family:var(--serif);font-size:18px;margin:0 0 14px;color:var(--ink)}
+.site-footer-links{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--muted);margin:0 0 14px}
+.site-footer-links a{color:var(--muted);text-decoration:none}
+.site-footer-links a:hover{color:var(--ink)}
+.site-footer-links span{margin:0 8px;color:var(--board-line)}
+.site-footer-copy{font-size:12px;color:var(--muted);margin:0}
 @media (prefers-reduced-motion:reduce){
   .footnote{transition:none;opacity:1;transform:none}
   .apply::after,.btn::after{display:none}
@@ -1115,14 +1141,11 @@ textarea{min-height:110px;resize:vertical}
 
 <nav class="topbar">
   <div class="topbar-inner">
-    <span class="topbar-word">Sunway Entrepreneurs Club</span>
+    <a href="#" class="topbar-word" id="topbarHome">Sunway Entrepreneurs Club</a>
     <div class="pubnav" role="tablist" aria-label="Recruitment sections">
-      <button class="pubtab" role="tab" id="pt-overview" aria-controls="pp-overview" data-pub="overview" aria-selected="true" type="button">Overview</button>
-      <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Apply</button>
-      <button class="pubtab" role="tab" id="pt-ecosystem" aria-controls="pp-ecosystem" data-pub="ecosystem" aria-selected="false" type="button">Ecosystem</button>
-      <button class="pubtab" role="tab" id="pt-policies" aria-controls="pp-policies" data-pub="policies" aria-selected="false" type="button">Policies</button>
+      <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Roles</button>
     </div>
-    <button class="topbar-cta" id="topbarApply" type="button">Apply now</button>
+    <button class="topbar-cta" id="topbarApply" type="button">View open roles</button>
   </div>
 </nav>
 <div class="topbar-spacer" id="topbarSpacer" style="height:64px"></div>
@@ -1134,150 +1157,81 @@ textarea{min-height:110px;resize:vertical}
         <div class="hero-mark" aria-hidden="true">E</div>
         <div class="mast-copy">
           <p class="eyebrow">Committee recruitment</p>
-          <h1>For people who want to build.</h1>
-          <p class="lede">SEC is for people who want to build, take ownership, and grow with purpose. We are a growing committee of 25 people who believe that meaningful work comes from stepping up, learning fast, and contributing beyond what is expected. Titles, certificates, and a line on your resume may come along the way but they are not the reason we are here. We are here to build something better, together.</p>
+          <h1>Join the team.</h1>
+          <p class="hero-filter-line">No passengers.</p>
+          <p class="lede">Pick a seat. Own the work.</p>
+          <button class="hero-cta" id="heroApply" type="button">View open roles</button>
         </div>
       </div>
     </header>
 
-    <div class="pubpanel" id="pp-overview" role="tabpanel" aria-labelledby="pt-overview">
+    <div class="pubpanel" id="pp-overview" role="region" aria-label="Committee recruitment">
       <section class="abandsection" data-reveal>
         <div class="aband-head">
-          <p class="aband-eyebrow">Why join SEC</p>
-          <h2 class="aband-title">Leave with more than you came with.</h2>
+          <p class="aband-eyebrow">The standard</p>
+          <h2 class="aband-title">If you need to be chased, don't apply.</h2>
         </div>
-        <div class="why-grid">
-          <div class="why-card" style="animation-delay:0ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.6" fill="var(--open)"/></svg>
-            <span class="why-num">01</span>
-            <h3><span class="wbounce" style="animation-delay:.15s">Real</span> <span class="wbounce" style="animation-delay:.23s">ownership</span></h3>
-            <p>You own outcomes, not tasks. Every project has a name attached to it — yours.</p></div>
-          <div class="why-card" style="animation-delay:70ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-7h6v7"/></svg>
-            <span class="why-num">02</span>
-            <h3><span class="wbounce" style="animation-delay:.22s">Corporate</span> <span class="wbounce" style="animation-delay:.30s">exposure</span></h3>
-            <p>Work with founders, partners and external stakeholders — not simulations of them.</p></div>
-          <div class="why-card" style="animation-delay:140ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 6h6v6"/></svg>
-            <span class="why-num">03</span>
-            <h3><span class="wbounce" style="animation-delay:.29s">Built</span> <span class="wbounce" style="animation-delay:.37s">to</span> <span class="wbounce" style="animation-delay:.43s">lead</span></h3>
-            <p>Every role has a path upward. Leadership is earned through delivery, not tenure.</p></div>
-          <div class="why-card" style="animation-delay:210ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg>
-            <span class="why-num">04</span>
-            <h3><span class="wbounce" style="animation-delay:.36s">Cross-functional</span></h3>
-            <p>Work across brand, partnerships, operations and tech — not just one lane.</p></div>
+        <div class="standard-grid">
+          <div class="standard-card"><h3>Own it.</h3><p>If it's yours, carry it to the end.</p></div>
+          <div class="standard-card"><h3>Ship it.</h3><p>Ideas mean little until something gets delivered.</p></div>
+          <div class="standard-card"><h3>Speak early.</h3><p>Problems raised early can be solved. Silence can't.</p></div>
+          <div class="standard-card"><h3>Finish.</h3><p>Starting is easy. Closing the loop is the job.</p></div>
         </div>
       </section>
 
       <section class="abandsection" data-reveal>
         <div class="aband-head">
           <p class="aband-eyebrow">SEC, right now</p>
-          <h2 class="aband-title"><span class="dim">The committee in</span> numbers.</h2>
+          <h2 class="aband-title" id="numbersHeadline">Seats open now.</h2>
         </div>
         <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
-      </section>
-
-      <section class="abandsection" data-reveal id="deptSection" hidden>
-        <div class="aband-head">
-          <p class="aband-eyebrow">Meet the departments</p>
-          <h2 class="aband-title">Every team, <span class="dim">at a</span> glance.</h2>
-          <p class="aband-lede">Click a department to jump straight to its open roles on the Apply tab.</p>
-        </div>
-        <div class="dept-grid" id="deptGrid"></div>
+        <button class="hero-cta" id="findSeatCta" type="button" style="margin-top:28px">Find your seat</button>
       </section>
 
       <section class="abandsection" data-reveal>
         <div class="aband-head">
-          <p class="aband-eyebrow">How we're structured</p>
-          <h2 class="aband-title">Our organisation.</h2>
-          <p class="aband-lede">One executive team and six departments, each with a clear area of responsibility.</p>
+          <p class="aband-eyebrow">What you leave with</p>
+          <h2 class="aband-title">Proof, not participation.</h2>
         </div>
-        <div class="org-grid">
-          <div class="org-card org-card-exco">
-            <h3>Executive Leadership (EXCO)</h3>
-            <p>Sets SEC's direction and coordinates the club's departments, with Secretariat and Treasury supporting governance and operations.</p>
-            <div class="org-tags"><span>Secretariat</span><span>Treasury</span></div>
-          </div>
-          <div class="org-card">
-            <h3>Brand &amp; Communications</h3>
-            <p>Shapes SEC's identity, content and creative work.</p>
-            <div class="org-tags"><span>Content &amp; Communications</span><span>Creative Production</span></div>
-          </div>
-          <div class="org-card">
-            <h3>External Relations</h3>
-            <p>Builds relationships with companies and campus communities.</p>
-            <div class="org-tags"><span>Corporate Relations</span><span>Campus Relations</span></div>
-          </div>
-          <div class="org-card">
-            <h3>People &amp; Organisational Development</h3>
-            <p>Supports recruitment, member development and team operations.</p>
-            <div class="org-tags"><span>People Operations</span><span>Talent &amp; Performance</span></div>
-          </div>
-          <div class="org-card">
-            <h3>Programmes &amp; Ventures</h3>
-            <p>Oversees programmes and events while developing SEC's venture activities.</p>
-            <div class="org-tags"><span>Programmes &amp; Events</span><span>SEC Venture<small>Work in progress</small></span></div>
-          </div>
-          <div class="org-card">
-            <h3>Digital &amp; Innovation</h3>
-            <p>Builds websites, automation and digital tools.</p>
-            <div class="org-tags"><span>Automation</span><span>Web Development</span></div>
-          </div>
-          <div class="org-card">
-            <h3>Internal Audit</h3>
-            <p>Reviews club processes and supports accountability.</p>
-          </div>
-        </div>
+        <ul class="proof-list">
+          <li>Work shipped.</li><li>Events delivered.</li><li>Partners closed.</li>
+          <li>Budgets owned.</li><li>Systems built.</li><li>Problems solved.</li>
+        </ul>
+        <p class="proof-closing">Work you can point to. Not a title you have to explain.</p>
       </section>
 
       <section class="abandsection" data-reveal>
         <div class="aband-head">
-          <p class="aband-eyebrow">Where we're headed</p>
-          <h2 class="aband-title">Our direction.</h2>
+          <p class="aband-eyebrow">How we work</p>
+          <h2 class="aband-title">The standard is simple.</h2>
         </div>
-        <div class="direction-card">
-          <div class="direction-row">
-            <p class="direction-label">Our vision</p>
-            <p class="direction-text">To build the leading student platform where ambition connects with opportunity.</p>
-          </div>
-          <div class="direction-row">
-            <p class="direction-label">Our mission</p>
-            <p class="direction-text">To connect students with founders, industry and each other through real-world experiences, opportunities and initiatives that turn ambition into action.</p>
-          </div>
-          <p class="direction-note">SEC connects learning with enterprise and community contribution, reflecting Sunway University's focus on education, innovation and societal wellbeing.</p>
-        </div>
+        <ul class="plain-rows">
+          <li>Ownership</li><li>Reliability</li><li>Quality</li>
+          <li>Speed</li><li>Communication</li><li>Accountability</li>
+        </ul>
+        <p class="proof-closing">Your title means very little. Your work won't.</p>
       </section>
 
       <section class="abandsection" data-reveal>
         <div class="aband-head">
-          <p class="aband-eyebrow">Recruitment process</p>
-          <h2 class="aband-title"><span class="dim">How it works,</span> end to end.</h2>
-          <p class="aband-lede">Selection is only the start. Here's the full path — including what happens after you're in.</p>
+          <p class="aband-eyebrow">What happens next</p>
+          <h2 class="aband-title">How it works.</h2>
         </div>
         <div class="process-track">
-          <div class="process-step"><div class="process-num">1</div><div class="process-label">Explore roles</div></div>
+          <div class="process-step"><div class="process-num">1</div><div class="process-label">Pick a role</div></div>
           <div class="process-step"><div class="process-num">2</div><div class="process-label">Apply</div></div>
           <div class="process-step"><div class="process-num">3</div><div class="process-label">Assessment</div></div>
           <div class="process-step"><div class="process-num">4</div><div class="process-label">Interview</div></div>
-          <div class="process-step"><div class="process-num">5</div><div class="process-label">Selection</div></div>
-          <div class="process-step"><div class="process-num">6</div><div class="process-label">Learning portal</div></div>
-          <div class="process-step is-last"><div class="process-num">7</div><div class="process-label">Project deployment</div></div>
+          <div class="process-step"><div class="process-num">5</div><div class="process-label">Decision</div></div>
+          <div class="process-step"><div class="process-num">6</div><div class="process-label">Onboarding</div></div>
+          <div class="process-step is-last"><div class="process-num">7</div><div class="process-label">Get to work</div></div>
         </div>
       </section>
 
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">Where your application stands</p>
-          <h2 class="aband-title">Every stage, <span class="dim">made</span> visible.</h2>
-          <p class="aband-lede">No black box after you submit. Every application moves through the same stages below.</p>
-        </div>
-        <div class="stage-track" aria-label="Application stages">
-          <span class="stage-step"><svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>Submitted</span><span class="stage-arrow" aria-hidden="true">→</span>
-          <span class="stage-step"><svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/><circle cx="12" cy="12" r="3"/></svg>Under review</span><span class="stage-arrow" aria-hidden="true">→</span>
-          <span class="stage-step"><svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/><path d="M16.5 4.5a3.5 3.5 0 0 1 0 7"/><path d="M22 20c0-3-1.8-5.2-4.5-6.1"/></svg>Interview</span><span class="stage-arrow" aria-hidden="true">→</span>
-          <span class="stage-step"><svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V4"/><path d="M4 4h14l-3 4 3 4H4"/></svg>Hired / Not this round</span>
-        </div>
+      <section class="abandsection final-cta-section" data-reveal>
+        <p class="aband-eyebrow">Still want in?</p>
+        <h2 class="aband-title">Good. Pick a seat.</h2>
+        <button class="hero-cta" id="finalCta" type="button">View open roles</button>
       </section>
     </div>
 
@@ -1286,7 +1240,7 @@ textarea{min-height:110px;resize:vertical}
         <div class="aband-head">
           <p class="aband-eyebrow">Open positions</p>
           <h2 class="aband-title"><span class="dim">Pick a seat,</span> see the role.</h2>
-          <p class="aband-lede">Every position is here, whether open or filled. Click a card, read the job description, and apply straight from it.</p>
+          <p class="aband-lede">Read the role. Know what's expected. Apply when you're ready.</p>
         </div>
       </section>
       <main class="board" id="board"><div class="empty">Loading positions…</div></main>
@@ -1300,104 +1254,8 @@ textarea{min-height:110px;resize:vertical}
       </section>
     </div>
 
-    <div class="pubpanel" id="pp-ecosystem" role="tabpanel" aria-labelledby="pt-ecosystem" hidden>
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">What we run</p>
-          <h2 class="aband-title"><span class="dim">The work, not the</span> wallpaper.</h2>
-          <p class="aband-lede">SEC runs a full calendar of initiatives every term. Our committee members don't just show up — they build, lead, execute, and see things through. From developing ideas and pitching proposals to managing execution and closing the loop, you'll be involved in the work that makes SEC happen.</p>
-        </div>
-        <div class="why-grid">
-          <div class="why-card" style="animation-delay:0ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V9h16v11"/><path d="M2 9l10-5 10 5"/><path d="M9 20v-6h6v6"/></svg>
-            <span class="why-num">01</span>
-            <h3>Flagship events</h3>
-            <p>Large-format events with external speakers, sponsors and a real budget to answer for.</p></div>
-          <div class="why-card" style="animation-delay:70ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18v12H3z"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
-            <span class="why-num">02</span>
-            <h3>Workshops</h3>
-            <p>Hands-on sessions on pitching, finance, product and design — taught by people who do it.</p></div>
-          <div class="why-card" style="animation-delay:140ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg>
-            <span class="why-num">03</span>
-            <h3>Competitions</h3>
-            <p>Case and startup competitions — internal rounds, plus teams we send to external ones.</p></div>
-          <div class="why-card" style="animation-delay:210ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3.5 9h17"/><path d="M3.5 15h17"/><path d="M12 3a15 15 0 0 1 0 18a15 15 0 0 1 0-18z"/></svg>
-            <span class="why-num">04</span>
-            <h3>Community</h3>
-            <p>Socials, mixers and founder nights that keep the network warm between the big events.</p></div>
-        </div>
-      </section>
 
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">The network</p>
-          <h2 class="aband-title"><span class="dim">Who you get in</span> the room with.</h2>
-          <p class="aband-lede">A committee seat is access. These are the people you'll be dealing with directly, not through a middle layer.</p>
-        </div>
-        <div class="why-grid">
-          <div class="why-card" style="animation-delay:0ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21V7l7-4v18"/><path d="M10 10h11v11H10"/><path d="M14 14h3"/><path d="M14 18h3"/></svg>
-            <span class="why-num">01</span>
-            <h3>Corporate partners</h3>
-            <p>Sponsors and partner companies you'll pitch, negotiate with and report back to.</p></div>
-          <div class="why-card" style="animation-delay:70ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M21 12l-9 5-9-5"/><path d="M21 16l-9 5-9-5"/></svg>
-            <span class="why-num">02</span>
-            <h3>Founders &amp; alumni</h3>
-            <p>Student founders and SEC alumni already building — the shortest route to honest advice.</p></div>
-          <div class="why-card" style="animation-delay:140ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V6a2 2 0 0 1 2-2h9l5 5v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M15 4v5h5"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
-            <span class="why-num">03</span>
-            <h3>The university</h3>
-            <p>Student LIFE, faculty and campus bodies — how things actually get approved and funded.</p></div>
-          <div class="why-card" style="animation-delay:210ms">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/><path d="M16.5 4.5a3.5 3.5 0 0 1 0 7"/><path d="M22 20c0-3-1.8-5.2-4.5-6.1"/></svg>
-            <span class="why-num">04</span>
-            <h3>Your own committee</h3>
-            <p>Forty-odd people across six departments who are building things alongside you.</p></div>
-        </div>
-      </section>
-
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">What you walk away with</p>
-          <h2 class="aband-title">Proof, <span class="dim">not</span> participation.</h2>
-          <p class="aband-lede">By the end of a term you should be able to point at specific things and say you did them.</p>
-        </div>
-        <div class="standard-wrap">
-          <ul class="standard-list">
-            <li style="animation-delay:0ms">Work you can show — events run, decks pitched, systems shipped</li>
-            <li style="animation-delay:60ms">Numbers you own — budgets held, sponsors closed, attendance delivered</li>
-            <li style="animation-delay:120ms">References from people who actually watched you work</li>
-            <li style="animation-delay:180ms">A network that survives graduation</li>
-            <li style="animation-delay:240ms">A track record of shipping under a real deadline</li>
-          </ul>
-        </div>
-      </section>
-
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">Our standard</p>
-          <h2 class="aband-title">High standards, <span class="dim">not</span> burnout.</h2>
-          <p class="aband-lede">SEC is voluntary. That is not an excuse for low standards. This is what you'll be held to — and what you won't find here.</p>
-        </div>
-        <div class="standard-wrap">
-          <ul class="standard-list">
-            <li style="animation-delay:0ms">Ownership — see it through, not just start it</li>
-            <li style="animation-delay:60ms">Reliability — do what you said, when you said</li>
-            <li style="animation-delay:120ms">Quality — good enough isn't</li>
-            <li style="animation-delay:180ms">Learning speed — pick things up fast, without being told twice</li>
-            <li style="animation-delay:240ms">Communication — flag problems early; silence is not neutral</li>
-            <li style="animation-delay:300ms">Accountability — results, not effort, are the measure</li>
-          </ul>
-        </div>
-      </section>
-    </div>
-
-    <div class="pubpanel" id="pp-policies" role="tabpanel" aria-labelledby="pt-policies" hidden>
+    <div class="pubpanel" id="pp-policies" role="tabpanel" aria-label="Recruitment policies" hidden>
       <section class="abandsection" data-reveal>
         <div class="aband-head">
           <p class="aband-eyebrow">Before you apply</p>
@@ -1458,10 +1316,21 @@ textarea{min-height:110px;resize:vertical}
       </section>
     </div>
 
-    <p class="footnote">
-      Your answers are read by the SEC committee members responsible for that department, and are deleted within 60 days of recruitment closing. We collect your name and Sunway iMail only.
-      <br><a href="#" id="adminEntry" style="font-family:var(--mono);font-size:11px">Committee sign in</a>
-    </p>
+    <footer class="site-footer">
+      <p class="site-footer-name">Sunway Entrepreneurs Club</p>
+      <p class="site-footer-links">
+        <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website</a>
+        <span aria-hidden="true">·</span>
+        <a href="#" id="footerPolicies">Recruitment Policies</a>
+        <span aria-hidden="true">·</span>
+        <a href="#" id="footerPrivacy">Privacy</a>
+        <span aria-hidden="true">·</span>
+        <a href="#" id="footerStatus">Application Status</a>
+        <span aria-hidden="true">·</span>
+        <a href="#" id="adminEntry">Committee Sign In</a>
+      </p>
+      <p class="site-footer-copy">© 2026 Sunway Entrepreneurs Club</p>
+    </footer>
   </div>
 </section>
 
@@ -1521,6 +1390,25 @@ textarea{min-height:110px;resize:vertical}
     <div class="sheet-foot">
       <button class="btn ghost" id="cfNo">Cancel</button>
       <button class="btn" id="cfYes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="statusScrim" hidden>
+  <div class="sheet" style="max-width:480px" role="dialog" aria-modal="true" aria-labelledby="statusTitle">
+    <div class="sheet-head">
+      <div><h3 id="statusTitle">Application status</h3></div>
+      <button class="x" id="statusClose" aria-label="Close">&#10005;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="field"><label for="statusMail">Sunway iMail</label>
+        <input type="email" id="statusMail" placeholder="25000000@imail.sunway.edu.my" autocomplete="email">
+        <div class="err" id="statusErr" hidden></div></div>
+      <div id="statusResults"></div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn ghost" id="statusCancel">Close</button>
+      <button class="btn" id="statusCheck">Check status</button>
     </div>
   </div>
 </div>
@@ -1664,6 +1552,8 @@ function renderOverviewStats() {
   const openSeats = positions.reduce((n, p) => n + Math.max(0, p.total - p.filled), 0);
   const totalSeats = positions.reduce((n, p) => n + p.total, 0);
   const levels = new Set(positions.map(p => p.level)).size;
+  const headline = $('#numbersHeadline');
+  if (headline) headline.textContent = `${totalSeats} seats. ${openSeats} open.`;
   if (!depts.length) { el.innerHTML = `<div class="empty">No positions listed yet.</div>`; return; }
   const STAT_ICONS = [
     '<rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/>',
@@ -1672,10 +1562,10 @@ function renderOverviewStats() {
     '<path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M21 12l-9 5-9-5"/><path d="M21 16l-9 5-9-5"/>',
   ];
   el.innerHTML = [
-    [depts.length, 'Departments'],
     [totalSeats, 'Total seats'],
-    [openSeats, 'Seats open now'],
-    [levels, 'Levels of seniority'],
+    [openSeats, 'Open now'],
+    [depts.length, 'Teams'],
+    [levels, 'Levels'],
   ].map(([n, l], i) => `<div class="stat">
       <span class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${STAT_ICONS[i]}</svg></span>
       <span class="n" data-count-to="${n}">0</span><span class="l">${l}</span></div>`).join('');
@@ -1874,11 +1764,16 @@ function showPub(which) {
 }
 document.querySelectorAll('.pubtab').forEach(b => b.addEventListener('click', () => showPub(b.dataset.pub)));
 window.addEventListener('resize', () => moveGlide(document.querySelector('.pubtab[aria-selected="true"]')));
-requestAnimationFrame(() => moveGlide($('#pt-overview')));
+requestAnimationFrame(() => moveGlide($('#pt-apply')));
 
 // top-bar and hero CTAs both just jump to the same Apply tab the nav already offers
 $('#topbarApply')?.addEventListener('click', () => showPub('apply'));
 $('#heroApply')?.addEventListener('click', () => showPub('apply'));
+$('#findSeatCta')?.addEventListener('click', () => showPub('apply'));
+$('#topbarHome')?.addEventListener('click', e => { e.preventDefault(); showPub('overview'); window.scrollTo(0, 0); });
+$('#finalCta')?.addEventListener('click', () => showPub('apply'));
+$('#footerPolicies')?.addEventListener('click', e => { e.preventDefault(); showPub('policies'); window.scrollTo(0, 0); });
+$('#footerPrivacy')?.addEventListener('click', e => { e.preventDefault(); showPub('policies'); window.scrollTo(0, 0); });
 
 /* ================= FAQ smooth expand/collapse ================= */
 document.querySelectorAll('.faq-item').forEach(item => {
@@ -1961,7 +1856,7 @@ function cfCardHTML(p, i) {
     <div class="cf-card-ladder" aria-hidden="true">${seatLadderHTML(p)}</div>
     <div class="cf-card-foot">
       <span class="cf-status">${statusText}</span>
-      ${open && ready ? `<button class="apply cf-apply" data-apply="${p.id}">Apply</button>` : ''}
+      ${open && ready ? `<button class="apply cf-apply" data-apply="${p.id}">View role</button>` : ''}
     </div>
   </div>`;
 }
@@ -1994,6 +1889,8 @@ function renderBoard() {
 
   const ordered = [];
   depts.forEach(d => (d.positions || []).forEach(p => ordered.push(p)));
+  const statusRank = p => isOpen(p) ? (isReady(p) ? 0 : 1) : 2; // Open, Opening soon, Filled
+  ordered.sort((a, b) => statusRank(a) - statusRank(b));
 
   const chipDelay = i => `animation-delay:${i * 40}ms`;
   el.innerHTML = `
@@ -2100,6 +1997,7 @@ function stepJD() {
       <div class="jd-meta-row">${jdIcon('level')} ${esc(p.level)} level</div>
       ${p.hours ? `<div class="jd-meta-row">${jdIcon('clock')} ${esc(p.hours)}</div>` : ''}
       <div class="jd-meta-row">${jdIcon('seats')} ${avail} of ${p.total} seat${p.total === 1 ? '' : 's'} open</div>
+      ${p.reportsTo ? `<div class="jd-meta-row">${jdIcon('pin')} Reports to ${esc(p.reportsTo)}</div>` : ''}
     </div>
     ${STATE.settings?.deadline ? `<p class="jd-posted">Applications close ${esc(STATE.settings.deadline)}</p>` : ''}
     <div class="jd-ctas">
@@ -2109,7 +2007,8 @@ function stepJD() {
     </div>
     <hr class="jd-divider">
     ${p.purpose ? `<h4>Role overview</h4><p>${esc(p.purpose)}</p>` : ''}
-    ${p.duties?.length ? `<h4>Job Description</h4><ul>${p.duties.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
+    ${p.duties?.length ? `<h4>What you'll own</h4><ul>${p.duties.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
+    ${p.goodLooksLike?.length ? `<h4>What good looks like</h4><ul>${p.goodLooksLike.map(d => `<li>${esc(d)}</li>`).join('')}</ul>` : ''}
     ${p.not?.length ? `<div class="not"><h4>What this role does not do</h4><ul>${p.not.map(d => `<li>${esc(d)}</li>`).join('')}</ul></div>` : ''}</div>`;
   sheetFoot.innerHTML = '';
   $('#fCancel').onclick = closeApply;
@@ -2223,6 +2122,27 @@ function stepReview() {
   };
 }
 
+/* internal status -> candidate-facing label + stage index (0-3), per the
+   locked status-language table: new=Submitted, shortlisted=Interview,
+   offered=Offer/Selected, rejected=Not this round. There's no distinct
+   "Screening/Under review" state in the data model yet, so a fresh
+   application sits at stage 1 (Under review) rather than stage 0, since
+   "Submitted" is already true the instant it exists. */
+function statusStage(status) {
+  switch (status) {
+    case 'shortlisted': return { label: 'Interview', stage: 2 };
+    case 'offered': return { label: 'Offer / Selected', stage: 3 };
+    case 'rejected': return { label: 'Not this round', stage: 3 };
+    default: return { label: 'Under review', stage: 1 };
+  }
+}
+const STAGE_LABELS = ['Submitted', 'Under review', 'Interview', 'Decision'];
+function stageStripHTML(currentStage) {
+  return `<div class="stage-track is-visible" aria-label="Application progress">
+    ${STAGE_LABELS.map((label, i) => `<span class="stage-step ${i <= currentStage ? 'is-reached' : ''}">${esc(label)}</span>${i < STAGE_LABELS.length - 1 ? '<span class="stage-arrow" aria-hidden="true">→</span>' : ''}`).join('')}
+  </div>`;
+}
+
 function stepDone() {
   const link = STATE.settings?.qrTarget || FORM_LINK_DEFAULT;
   fireConfetti();
@@ -2234,10 +2154,55 @@ function stepDone() {
     <p style="max-width:42ch;margin:0 auto 22px;color:var(--muted)">The form collects your details and your resume. Your application isn't complete until you've submitted it.</p>
     <a class="btn cta" href="${esc(link)}" target="_blank" rel="noopener" style="display:inline-flex;margin:0 auto">Open the résumé form
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></a>
+    <p style="margin:24px 0 10px;color:var(--muted);font-size:13px">Application received</p>
+    ${stageStripHTML(0)}
+    <p style="margin:16px 0 0;color:var(--muted);font-size:13px">Check back anytime from <b>Application Status</b> in the footer.</p>
   </div>`;
   sheetFoot.innerHTML = `<button class="btn ghost" id="fCancel">Done</button>`;
   $('#fCancel').onclick = () => { closeApply(); loadState(); };
 }
+
+/* ================= public application-status lookup ================= */
+const statusScrim = $('#statusScrim');
+function openStatusCheck() {
+  $('#statusMail').value = '';
+  $('#statusErr').hidden = true;
+  $('#statusResults').innerHTML = '';
+  statusScrim.hidden = false;
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => $('#statusMail')?.focus(), 30);
+}
+function closeStatusCheck() { statusScrim.hidden = true; document.body.style.overflow = ''; }
+$('#statusClose')?.addEventListener('click', closeStatusCheck);
+$('#statusCancel')?.addEventListener('click', closeStatusCheck);
+statusScrim?.addEventListener('click', e => { if (e.target === statusScrim) closeStatusCheck(); });
+async function runStatusCheck() {
+  const mail = $('#statusMail').value.trim().toLowerCase();
+  const err = $('#statusErr'); err.hidden = true;
+  const results = $('#statusResults');
+  const btn = $('#statusCheck'); btn.disabled = true; btn.textContent = 'Checking…';
+  try {
+    const { applications } = await api(`/api/applications?imail=${encodeURIComponent(mail)}`);
+    if (!applications.length) {
+      results.innerHTML = `<p class="hint" style="margin-top:16px">No applications found for that address.</p>`;
+    } else {
+      results.innerHTML = applications.map(a => {
+        const { label, stage } = statusStage(a.status);
+        return `<div style="margin-top:20px">
+          <p style="font-weight:600;margin:0 0 2px">${esc(a.posTitle)}</p>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 10px">${esc(a.dept)} · currently: ${esc(label)}</p>
+          ${stageStripHTML(stage)}
+        </div>`;
+      }).join('');
+    }
+  } catch (e) {
+    err.textContent = e.message; err.hidden = false;
+  }
+  btn.disabled = false; btn.textContent = 'Check status';
+}
+$('#statusCheck')?.addEventListener('click', runStatusCheck);
+$('#statusMail')?.addEventListener('keydown', e => { if (e.key === 'Enter') runStatusCheck(); });
+$('#footerStatus')?.addEventListener('click', e => { e.preventDefault(); openStatusCheck(); });
 
 /* ================= auth ================= */
 function showView(which) {
@@ -2585,7 +2550,7 @@ function wirePositions() {
     const seats = Math.max(1, parseInt($('#npSeats').value, 10) || 1);
     const id = 'p' + Date.now();
     d.positions.push({ id, title, level, depth: depthFor(level), total: seats, filled: 0, dept: d.name,
-      purpose: '', duties: [], not: [], hours: '', questions: null, qState: 'none' });
+      purpose: '', duties: [], not: [], goodLooksLike: [], hours: '', reportsTo: '', questions: null, qState: 'none' });
     reindex();
     renderBoard(); renderPositions(); renderStats(); renderFilter(true); queueSave();
   });
@@ -2600,8 +2565,12 @@ function drawDescPanel(panel, p) {
     <textarea id="dDuties-${p.id}" data-d="duties" placeholder="One responsibility per line">${esc((p.duties || []).join('\n'))}</textarea>
     <label for="dNot-${p.id}">What this role does not do — one per line, optional</label>
     <textarea id="dNot-${p.id}" data-d="not" placeholder="One boundary per line">${esc((p.not || []).join('\n'))}</textarea>
+    <label for="dGood-${p.id}">What good looks like — observable behaviours, one per line</label>
+    <textarea id="dGood-${p.id}" data-d="goodLooksLike" placeholder="You follow up without being reminded.">${esc((p.goodLooksLike || []).join('\n'))}</textarea>
     <label for="dHours-${p.id}">Time commitment</label>
     <input type="text" id="dHours-${p.id}" data-d="hours" value="${esc(p.hours || '')}" placeholder="e.g. About 3–5 hours a week">
+    <label for="dReportsTo-${p.id}">Reports to</label>
+    <input type="text" id="dReportsTo-${p.id}" data-d="reportsTo" value="${esc(p.reportsTo || '')}" placeholder="e.g. Head of Department, Recruitment">
     <div class="controls" style="border-top:0;padding-top:16px;margin-top:16px">
       <button class="btn" data-a="savedesc">Save description</button>
       <span class="thinking" data-descstatus></span>
@@ -2612,7 +2581,9 @@ function drawDescPanel(panel, p) {
     p.purpose = panel.querySelector('[data-d="purpose"]').value.trim();
     p.duties = panel.querySelector('[data-d="duties"]').value.split('\n').map(s => s.trim()).filter(Boolean);
     p.not = panel.querySelector('[data-d="not"]').value.split('\n').map(s => s.trim()).filter(Boolean);
+    p.goodLooksLike = panel.querySelector('[data-d="goodLooksLike"]').value.split('\n').map(s => s.trim()).filter(Boolean);
     p.hours = panel.querySelector('[data-d="hours"]').value.trim();
+    p.reportsTo = panel.querySelector('[data-d="reportsTo"]').value.trim();
     queueSave();
     const trigger = panel.closest('.prow')?.querySelector('[data-act="desc"]');
     if (trigger) trigger.textContent = 'Edit description';

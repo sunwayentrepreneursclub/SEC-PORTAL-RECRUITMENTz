@@ -1147,6 +1147,7 @@ textarea{min-height:110px;resize:vertical}
     <a href="#" class="topbar-word" id="topbarHome">Sunway Entrepreneurs Club</a>
     <div class="pubnav" role="tablist" aria-label="Recruitment sections">
       <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Roles</button>
+      <button class="pubtab navstatus-btn" id="navStatus" type="button">Application Status</button>
     </div>
     <button class="topbar-cta" id="topbarApply" type="button">View open roles</button>
   </div>
@@ -1764,7 +1765,7 @@ function showPub(which) {
   document.querySelectorAll('.pubtab').forEach(b => b.setAttribute('aria-selected', String(b === active)));
   moveGlide(active);
 }
-document.querySelectorAll('.pubtab').forEach(b => b.addEventListener('click', () => showPub(b.dataset.pub)));
+document.querySelectorAll('.pubtab').forEach(b => { if (b.dataset.pub) b.addEventListener('click', () => showPub(b.dataset.pub)); });
 window.addEventListener('resize', () => moveGlide(document.querySelector('.pubtab[aria-selected="true"]')));
 requestAnimationFrame(() => moveGlide($('#pt-apply')));
 
@@ -2205,6 +2206,7 @@ async function runStatusCheck() {
 $('#statusCheck')?.addEventListener('click', runStatusCheck);
 $('#statusMail')?.addEventListener('keydown', e => { if (e.key === 'Enter') runStatusCheck(); });
 $('#footerStatus')?.addEventListener('click', e => { e.preventDefault(); openStatusCheck(); });
+$('#navStatus')?.addEventListener('click', () => openStatusCheck());
 
 /* ================= auth ================= */
 function showView(which) {

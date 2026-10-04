@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/sec-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Instrument+Serif:ital@0;1&family=Anton&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,500;1,700&display=swap" rel="stylesheet">
 <style>
 /* =========================================================================
    Editorial-serif theme — matched to sec-website-3-0.vercel.app: a near-
@@ -59,7 +59,7 @@
   --a-cyan:var(--ink-weak);   --t-cyan:var(--ink-weak);
   --s-blue:rgba(246,245,242,.05); --s-pink:rgba(246,245,242,.05);
   --s-gold:rgba(246,245,242,.05); --s-green:rgba(246,245,242,.05);
-  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
+  --serif:'Playfair Display',Georgia,'Times New Roman',serif;
   --display:Georgia,'Times New Roman',serif;
   --display-mega:'Anton',Impact,'Arial Black',sans-serif;
   --body:'Inter',Arial,Helvetica,sans-serif;
@@ -269,8 +269,7 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
   .topbar-cta{padding:9px 16px;font-size:13px}
 }
 /* ---------- masthead ---------- */
-.masthead{padding:88px 0 56px;display:flex;align-items:center}
-@media (min-width:768px){.masthead{padding:120px 0 72px}}
+.masthead{padding:64px 0;min-height:calc(100svh - 64px);display:flex;align-items:center}
 .masthead[hidden]{display:none}
 .masthead .hero-grid{width:100%}
 .hero-cta{
@@ -304,8 +303,7 @@ h1{
    glyph — same idea (one huge letterform anchoring the hero), built from a
    type character instead of an image so it needs no asset */
 .hero-mark{
-  font-family:var(--serif);font-weight:700;font-size:clamp(260px,38vw,560px);
-  -webkit-text-stroke:2px var(--ink);
+  font-family:var(--serif);font-weight:900;font-size:clamp(260px,38vw,560px);
   line-height:.75;color:var(--ink);opacity:.98;user-select:none;
   margin:0 0 -.08em;
 }

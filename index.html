@@ -303,11 +303,12 @@ h1{
    glyph — same idea (one huge letterform anchoring the hero), built from a
    type character instead of an image so it needs no asset */
 .hero-mark{
+  display:flex;align-items:center;justify-content:center;height:100%;
   font-family:var(--serif);font-weight:900;font-size:clamp(260px,38vw,560px);
   line-height:.75;color:var(--ink);opacity:.98;user-select:none;
-  margin:0 0 -.08em;
 }
-.hero-grid{display:grid;grid-template-columns:.85fr 1.5fr;gap:48px;align-items:center}
+.hero-grid{display:grid;grid-template-columns:.85fr 1.5fr;gap:48px;align-items:stretch}
+.mast-copy{display:flex;flex-direction:column;justify-content:center}
 @media (max-width:860px){.hero-grid{grid-template-columns:1fr}}
 /* ---------- envelope gate — click to open, then it reveals the site ---------- */
 .envelope-gate{

@@ -308,7 +308,7 @@ h1{
   line-height:.75;color:var(--ink);opacity:.98;user-select:none;
 }
 .hero-grid{display:grid;grid-template-columns:.85fr 1.5fr;gap:48px;align-items:stretch}
-.mast-copy{display:flex;flex-direction:column;justify-content:center}
+.mast-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
 @media (max-width:860px){.hero-grid{grid-template-columns:1fr}}
 /* ---------- envelope gate — click to open, then it reveals the site ---------- */
 .envelope-gate{
@@ -1232,7 +1232,6 @@ textarea{min-height:110px;resize:vertical}
       <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Roles</button>
       <button class="pubtab navstatus-btn" id="navStatus" type="button">Application Status</button>
     </div>
-    <button class="topbar-cta" id="topbarApply" type="button">View open roles</button>
   </div>
 </nav>
 <div class="topbar-spacer" id="topbarSpacer" style="height:64px"></div>

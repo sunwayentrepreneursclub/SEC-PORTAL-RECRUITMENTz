@@ -3,12 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SEC Committee Recruitment</title>
-<meta name="description" content="Sunway Entrepreneurs Club committee recruitment — open positions and applications.">
-<link rel="icon" href="/logo.png">
+<title>Committee Recruitment | Sunway Entrepreneurs Club</title>
+<meta name="description" content="Explore open committee roles at Sunway Entrepreneurs Club, see what each seat owns, and apply to join the team.">
+<meta property="og:title" content="Committee Recruitment | Sunway Entrepreneurs Club">
+<meta property="og:description" content="Explore open committee roles at Sunway Entrepreneurs Club, see what each seat owns, and apply to join the team.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Sunway Entrepreneurs Club">
+<link rel="icon" href="/sec-icon.png">
+<link rel="apple-touch-icon" href="/sec-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Instrument+Serif:ital@0;1&family=Anton&display=swap" rel="stylesheet">
 <style>
 /* =========================================================================
    Editorial-serif theme — matched to sec-website-3-0.vercel.app: a near-
@@ -54,8 +59,9 @@
   --a-cyan:var(--ink-weak);   --t-cyan:var(--ink-weak);
   --s-blue:rgba(246,245,242,.05); --s-pink:rgba(246,245,242,.05);
   --s-gold:rgba(246,245,242,.05); --s-green:rgba(246,245,242,.05);
-  --serif:Georgia,'Times New Roman',serif;
+  --serif:'Instrument Serif',Georgia,'Times New Roman',serif;
   --display:Georgia,'Times New Roman',serif;
+  --display-mega:'Anton',Impact,'Arial Black',sans-serif;
   --body:'Inter',Arial,Helvetica,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
   --r-sm:4px;
@@ -223,6 +229,11 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 
 
 .wrap{max-width:1100px;margin:0 auto;padding:0 28px}
+/* public site matches the main SEC website's exact container system
+   (1600px max-width, 24px/48px gutters) — admin dashboard keeps its own
+   narrower working width above, untouched */
+#viewPublic .wrap{max-width:1600px;padding:0 24px}
+@media (min-width:768px){#viewPublic .wrap{padding:0 48px}}
 .view[hidden]{display:none}
 
 /* ---------- top bar (persistent, matched to the reference's nav) ---------- */
@@ -231,9 +242,10 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
   border-bottom:1px solid var(--board-line);height:64px;
 }
 .topbar-inner{
-  max-width:1100px;margin:0 auto;padding:0 28px;height:100%;
+  max-width:1600px;margin:0 auto;padding:0 24px;height:100%;
   display:flex;align-items:center;gap:32px;
 }
+@media (min-width:768px){.topbar-inner{padding:0 48px}}
 .topbar-word{
   font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
   color:var(--ink-weak);white-space:nowrap;text-decoration:none;cursor:pointer;
@@ -248,8 +260,8 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 .topbar-inner .pubtab-glide{display:none}
 .topbar-cta{
   font-family:var(--body);font-size:14px;font-weight:600;white-space:nowrap;
-  background:var(--open);color:var(--navy);border:0;border-radius:var(--r-pill);
-  padding:10px 22px;transition:background .16s,transform .12s;
+  background:var(--open);color:var(--navy);border:2px solid var(--open);border-radius:0;
+  padding:9px 22px;transition:background .16s,transform .12s;
 }
 .topbar-cta:hover{background:var(--open-dark)}
 .topbar-cta:active{transform:scale(.96)}
@@ -265,10 +277,10 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 .hero-cta{
   display:inline-flex;align-items:center;gap:10px;margin-top:32px;
   font-family:var(--body);font-size:15px;font-weight:600;
-  background:var(--open);color:var(--navy);border:0;border-radius:var(--r-pill);
-  padding:13px 26px;transition:background .16s,transform .12s;
+  background:var(--open);color:var(--navy);border:2px solid var(--open);border-radius:0;
+  padding:12px 26px;transition:background .16s,border-color .16s,transform .12s;
 }
-.hero-cta:hover{background:var(--open-dark)}
+.hero-cta:hover{background:var(--open-dark);border-color:var(--open-dark)}
 .hero-cta:active{transform:scale(.97)}
 .hero-filter-line{font-family:var(--serif);font-weight:400;font-size:clamp(20px,2.6vw,28px);
   color:var(--ink-weak);margin:4px 0 0}
@@ -293,8 +305,9 @@ h1{
    glyph — same idea (one huge letterform anchoring the hero), built from a
    type character instead of an image so it needs no asset */
 .hero-mark{
-  font-family:var(--serif);font-weight:700;font-size:clamp(220px,32vw,460px);
-  line-height:.75;color:var(--ink);opacity:.92;user-select:none;
+  font-family:var(--display-mega);font-weight:400;font-size:clamp(200px,30vw,420px);
+  text-transform:uppercase;letter-spacing:-.02em;
+  line-height:.75;color:var(--ink);opacity:.95;user-select:none;
   margin:0 0 -.08em;
 }
 .hero-grid{display:grid;grid-template-columns:.85fr 1.5fr;gap:48px;align-items:center}
@@ -717,7 +730,7 @@ h1{
 .status.open{color:var(--open);font-weight:700}
 .apply{
   position:relative;overflow:hidden;
-  background:var(--cta);color:#fff;border:0;padding:11px 22px;border-radius:var(--r-pill);
+  background:var(--cta);color:#fff;border:2px solid var(--cta);padding:9px 22px;border-radius:0;
   font-family:var(--body);font-size:14px;font-weight:700;letter-spacing:.01em;
   transition:background .18s,transform .12s,box-shadow .18s;
 }
@@ -753,10 +766,10 @@ h1{
 .footer-status-cta{
   display:inline-flex;align-items:center;gap:8px;margin:0 0 20px;
   font-family:var(--body);font-size:14px;font-weight:700;
-  background:var(--open);color:var(--navy);text-decoration:none;
-  padding:10px 20px;border-radius:var(--r-pill);transition:background .16s,transform .12s;
+  background:var(--open);color:var(--navy);text-decoration:none;border:2px solid var(--open);
+  padding:8px 20px;border-radius:0;transition:background .16s,transform .12s;
 }
-.footer-status-cta:hover{background:var(--open-dark)}
+.footer-status-cta:hover{background:var(--open-dark);border-color:var(--open-dark)}
 .footer-status-cta:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){
   .footnote{transition:none;opacity:1;transform:none}
@@ -930,7 +943,7 @@ h1 .tcursor{
 .jd-icon{width:19px;height:19px;flex:none;stroke:var(--muted);stroke-width:1.7;fill:none;stroke-linecap:round;stroke-linejoin:round}
 .jd-posted{font-size:14px;color:var(--muted);margin:2px 0 20px}
 .jd-ctas{display:flex;gap:12px;flex-wrap:wrap;margin:0 0 26px}
-.btn.cta{background:var(--cta);border-color:var(--cta);color:var(--navy);display:inline-flex;align-items:center;gap:8px}
+.btn.cta{background:var(--cta);border-color:var(--cta);color:var(--navy);display:inline-flex;align-items:center;gap:8px;border-radius:0}
 #viewAdmin .btn.cta,#viewAdmin .btn.cta:hover{color:#fff}
 .btn.cta:hover{background:var(--cta-dark);border-color:var(--cta-dark);box-shadow:0 4px 14px rgba(214,0,122,.28)}
 .btn.cta-secondary{background:var(--open-soft);border-color:var(--open-soft);color:var(--open)}

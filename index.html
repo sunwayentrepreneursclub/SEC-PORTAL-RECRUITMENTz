@@ -108,7 +108,7 @@ body{
 #viewAdmin{background:var(--paper)}
 /* big, quiet serif display type — the reference runs its headline across two
    lines at a generous size with tight leading, the emphasis word in italic */
-#viewPublic h1{font-family:var(--serif);font-weight:400;font-size:clamp(34px,5.2vw,68px);line-height:1.08;letter-spacing:-.01em}
+#viewPublic h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.04;letter-spacing:-.01em}
 #viewPublic .aband-title{font-family:var(--serif);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.05;letter-spacing:-.01em}
 #viewPublic .aband-title em,#viewPublic h1 em{font-style:italic}
 #viewPublic .lede,#viewPublic .aband-lede{font-weight:400;letter-spacing:0}
@@ -293,7 +293,7 @@ h1{
    glyph — same idea (one huge letterform anchoring the hero), built from a
    type character instead of an image so it needs no asset */
 .hero-mark{
-  font-family:var(--serif);font-weight:700;font-size:clamp(180px,26vw,360px);
+  font-family:var(--serif);font-weight:700;font-size:clamp(220px,32vw,460px);
   line-height:.75;color:var(--ink);opacity:.92;user-select:none;
   margin:0 0 -.08em;
 }
@@ -605,7 +605,10 @@ h1{
 .standard-card h3{font-family:var(--display);font-size:18px;font-weight:700;margin:0 0 8px;letter-spacing:-.01em}
 .standard-card p{margin:0;font-size:15px;color:var(--ink-weak);line-height:1.5}
 .proof-list{list-style:none;margin:0 0 24px;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:10px 32px;max-width:520px}
-.proof-list li{font-family:var(--serif);font-size:20px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line)}
+.proof-list li{font-family:var(--serif);font-size:20px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line);
+  opacity:0;transform:translateX(-18px);transition:opacity .5s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1)}
+.proof-list li.is-visible{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.proof-list li{transition:none;opacity:1;transform:none}}
 .plain-rows{list-style:none;margin:0 0 24px;padding:0;max-width:420px}
 .plain-rows li{font-family:var(--body);font-size:15px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
   padding:14px 0;border-bottom:1px solid var(--board-line);color:var(--ink)}
@@ -1158,7 +1161,6 @@ textarea{min-height:110px;resize:vertical}
         <div class="mast-copy">
           <p class="eyebrow">Committee recruitment</p>
           <h1>Join the team.</h1>
-          <p class="hero-filter-line">No passengers.</p>
           <p class="lede">Pick a seat. Own the work.</p>
           <button class="hero-cta" id="heroApply" type="button">View open roles</button>
         </div>
@@ -2753,8 +2755,8 @@ document.querySelectorAll('.footnote, [data-reveal]').forEach(observeReveal);
 // the whole list has scrolled through the viewport — words light up in order as you scroll,
 // the same mechanic as a scroll-driven text reveal, not a one-shot fade.
 const REDUCE_MOTION = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-function setupStandardReveal() {
-  const list = $('.standard-list');
+function setupStandardReveal(selector) {
+  const list = document.querySelector(selector);
   if (!list) return;
   const words = [];
   list.querySelectorAll('li').forEach(li => {
@@ -2764,7 +2766,7 @@ function setupStandardReveal() {
   });
   const total = words.length;
   if (!total) return;
-  if (REDUCE_MOTION) { words.forEach(w => { w.style.opacity = '1'; }); return; }
+  if (REDUCE_MOTION) { words.forEach(w => { w.style.opacity = '1'; w.style.fontWeight = '700'; }); return; }
   let ticking = false;
   function update() {
     ticking = false;
@@ -2776,6 +2778,7 @@ function setupStandardReveal() {
       const wStart = i / total, wEnd = (i + 1) / total;
       const local = Math.min(1, Math.max(0, (progress - wStart) / (wEnd - wStart)));
       w.style.opacity = String(0.22 + local * 0.78);
+      w.style.fontWeight = local > 0.5 ? '700' : '400';
     });
   }
   function onScroll() {
@@ -2787,7 +2790,23 @@ function setupStandardReveal() {
   window.addEventListener('resize', onScroll);
   update();
 }
-setupStandardReveal();
+setupStandardReveal('.plain-rows');
+
+/* ================= "What you leave with" — staggered scroll-in ================= */
+(function setupProofReveal() {
+  const list = document.querySelector('.proof-list');
+  if (!list) return;
+  const items = list.querySelectorAll('li');
+  items.forEach((li, i) => { li.style.transitionDelay = `${i * 70}ms`; });
+  if (REDUCE_MOTION || !('IntersectionObserver' in window)) {
+    items.forEach(li => li.classList.add('is-visible'));
+    return;
+  }
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('is-visible'); obs.unobserve(en.target); } });
+  }, { threshold: 0.3 });
+  items.forEach(li => obs.observe(li));
+})();
 
 /* ================= wow layer: magnetic buttons, ripples ================= */
 const FINE_POINTER = window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches;

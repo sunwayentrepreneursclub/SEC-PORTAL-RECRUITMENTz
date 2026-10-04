@@ -750,6 +750,14 @@ h1{
 .site-footer-links a:hover{color:var(--ink)}
 .site-footer-links span{margin:0 8px;color:var(--board-line)}
 .site-footer-copy{font-size:12px;color:var(--muted);margin:0}
+.footer-status-cta{
+  display:inline-flex;align-items:center;gap:8px;margin:0 0 20px;
+  font-family:var(--body);font-size:14px;font-weight:700;
+  background:var(--open);color:var(--navy);text-decoration:none;
+  padding:10px 20px;border-radius:var(--r-pill);transition:background .16s,transform .12s;
+}
+.footer-status-cta:hover{background:var(--open-dark)}
+.footer-status-cta:active{transform:scale(.97)}
 @media (prefers-reduced-motion:reduce){
   .footnote{transition:none;opacity:1;transform:none}
   .apply::after,.btn::after{display:none}
@@ -1147,7 +1155,6 @@ textarea{min-height:110px;resize:vertical}
     <a href="#" class="topbar-word" id="topbarHome">Sunway Entrepreneurs Club</a>
     <div class="pubnav" role="tablist" aria-label="Recruitment sections">
       <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Roles</button>
-      <button class="pubtab navstatus-btn" id="navStatus" type="button">Application Status</button>
     </div>
     <button class="topbar-cta" id="topbarApply" type="button">View open roles</button>
   </div>
@@ -1328,10 +1335,9 @@ textarea{min-height:110px;resize:vertical}
         <span aria-hidden="true">·</span>
         <a href="#" id="footerPrivacy">Privacy</a>
         <span aria-hidden="true">·</span>
-        <a href="#" id="footerStatus">Application Status</a>
-        <span aria-hidden="true">·</span>
         <a href="#" id="adminEntry">Committee Sign In</a>
       </p>
+      <a href="#" id="footerStatus" class="footer-status-cta">Check your application status →</a>
       <p class="site-footer-copy">© 2026 Sunway Entrepreneurs Club</p>
     </footer>
   </div>
@@ -2206,7 +2212,6 @@ async function runStatusCheck() {
 $('#statusCheck')?.addEventListener('click', runStatusCheck);
 $('#statusMail')?.addEventListener('keydown', e => { if (e.key === 'Enter') runStatusCheck(); });
 $('#footerStatus')?.addEventListener('click', e => { e.preventDefault(); openStatusCheck(); });
-$('#navStatus')?.addEventListener('click', () => openStatusCheck());
 
 /* ================= auth ================= */
 function showView(which) {

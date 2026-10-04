@@ -1155,6 +1155,7 @@ textarea{min-height:110px;resize:vertical}
     <a href="#" class="topbar-word" id="topbarHome">Sunway Entrepreneurs Club</a>
     <div class="pubnav" role="tablist" aria-label="Recruitment sections">
       <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Roles</button>
+      <button class="pubtab navstatus-btn" id="navStatus" type="button">Application Status</button>
     </div>
     <button class="topbar-cta" id="topbarApply" type="button">View open roles</button>
   </div>
@@ -1337,7 +1338,6 @@ textarea{min-height:110px;resize:vertical}
         <span aria-hidden="true">·</span>
         <a href="#" id="adminEntry">Committee Sign In</a>
       </p>
-      <a href="#" id="footerStatus" class="footer-status-cta">Check your application status →</a>
       <p class="site-footer-copy">© 2026 Sunway Entrepreneurs Club</p>
     </footer>
   </div>
@@ -2211,7 +2211,7 @@ async function runStatusCheck() {
 }
 $('#statusCheck')?.addEventListener('click', runStatusCheck);
 $('#statusMail')?.addEventListener('keydown', e => { if (e.key === 'Enter') runStatusCheck(); });
-$('#footerStatus')?.addEventListener('click', e => { e.preventDefault(); openStatusCheck(); });
+$('#navStatus')?.addEventListener('click', () => openStatusCheck());
 
 /* ================= auth ================= */
 function showView(which) {

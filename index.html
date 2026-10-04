@@ -1250,7 +1250,6 @@ textarea{min-height:110px;resize:vertical}
       <section class="abandsection" data-reveal>
         <div class="aband-head">
           <p class="aband-eyebrow">SEC, right now</p>
-          <h2 class="aband-title" id="numbersHeadline">Seats open now.</h2>
         </div>
         <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
         <button class="hero-cta" id="findSeatCta" type="button" style="margin-top:28px">Find your seat</button>
@@ -1648,7 +1647,7 @@ function animateCountUps(scope) {
   const run = (el) => {
     const target = parseInt(el.dataset.countTo, 10) || 0;
     if (REDUCE_MOTION || !target) { el.textContent = target; return; }
-    const dur = 900, start = performance.now();
+    const dur = 1100, start = performance.now();
     const ease = t => 1 - Math.pow(1 - t, 3);
     function tick(now) {
       const p = Math.min(1, (now - start) / dur);
@@ -1657,11 +1656,16 @@ function animateCountUps(scope) {
     }
     requestAnimationFrame(tick);
   };
-  if (!('IntersectionObserver' in window)) { nodes.forEach(run); return; }
+  const runAll = () => nodes.forEach(run);
+  if (!('IntersectionObserver' in window)) { runAll(); return; }
+  // observe the whole container, not each individual (inline) number span —
+  // a container with real block layout is a much more reliable intersection
+  // target than small inline text nodes, and firing all counters together
+  // reads better than each one triggering at a slightly different scroll depth
   const obs = new IntersectionObserver(entries => {
-    entries.forEach(en => { if (en.isIntersecting) { run(en.target); obs.unobserve(en.target); } });
-  }, { threshold: 0.4 });
-  nodes.forEach(n => obs.observe(n));
+    entries.forEach(en => { if (en.isIntersecting) { runAll(); obs.unobserve(en.target); } });
+  }, { threshold: 0.15 });
+  obs.observe(scope);
 }
 
 function renderDeptGrid() {
@@ -2999,7 +3003,6 @@ if ('IntersectionObserver' in window) {
   } catch (e) {
     $('#board').innerHTML = `<div class="dept"><div class="row" style="display:block;padding:30px 18px;color:var(--err)">
       <b>Could not load positions.</b><br>${esc(e.message)}</div></div>`;
-    $('#headline').textContent = 'Not available';
   }
   updateScrollBar();
 })();

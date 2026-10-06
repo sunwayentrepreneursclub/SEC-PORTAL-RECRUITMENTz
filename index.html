@@ -392,7 +392,8 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
   color:var(--ink-weak);white-space:nowrap;text-decoration:none;cursor:pointer;
 }
 .topbar-word:hover{color:var(--ink)}
-.topbar-inner .pubnav{margin:0;border-bottom:0;flex:1;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+/* Nav links sit right, like the main site's .nav-links{margin-left:auto}. */
+.topbar-inner .pubnav{margin:0 0 0 auto;border-bottom:0;flex:none;flex-wrap:nowrap;overflow:visible;scrollbar-width:none}
 .topbar-inner .pubnav::-webkit-scrollbar{display:none}
 .topbar-inner .pubtab{padding:20px 16px;min-height:auto;color:rgba(246,245,242,.82);flex:none}
 .topbar-inner .pubtab:hover{color:var(--ink);background:none}
@@ -406,6 +407,58 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 }
 .topbar-cta:hover{background:var(--open-dark)}
 .topbar-cta:active{transform:scale(.96)}
+
+/* ---------- menu (mirrors the main site's Nav: inline links on desktop,
+   a full-screen dialog behind a "Menu" button on narrow screens) ---------- */
+.menu-toggle{
+  display:none;align-items:center;justify-content:flex-end;gap:8px;
+  margin-left:auto;min-width:44px;min-height:44px;flex-shrink:0;
+  background:none;border:0;cursor:pointer;color:var(--ink);
+  font-family:var(--body);font-size:14px;
+}
+.site-menu{
+  margin:0;padding:0;border:0;width:100vw;max-width:none;height:100dvh;max-height:none;
+  background:var(--navy);color:var(--ink);
+}
+.site-menu::backdrop{background:var(--navy)}
+.menu-panel{
+  min-height:100%;display:flex;flex-direction:column;
+  max-width:1600px;margin:0 auto;padding:0 20px 36px;
+}
+.menu-toolbar{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:64px;flex-shrink:0}
+.menu-toolbar .menu-toggle{display:flex}
+.menu-primary{display:grid;margin-block:auto;padding-block:24px 40px}
+.menu-primary a{
+  font-family:var(--serif);font-size:clamp(34px,9vw,56px);font-weight:400;
+  letter-spacing:-.04em;line-height:1.2;padding-block:10px;color:var(--ink);text-decoration:none;
+}
+.menu-primary a + a{margin-top:6px}
+.menu-bottom{
+  display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:auto;
+  padding-top:24px;border-top:1px solid var(--board-line);
+  font-family:var(--body);font-size:13px;
+}
+.menu-bottom a{color:var(--muted);text-decoration:none}
+.menu-bottom a:hover{color:var(--ink)}
+@media (prefers-reduced-motion:no-preference){
+  .menu-toggle{transition:opacity 200ms ease,transform 300ms cubic-bezier(.22,1,.36,1)}
+  .menu-toggle:hover{opacity:.7}
+  .menu-toggle:active{transform:scale(.97)}
+  .site-menu[open]{animation:menuIn 420ms ease both}
+  .site-menu[data-phase="closing"]{animation:menuOut 340ms cubic-bezier(.4,0,.8,1) both}
+  .site-menu[open] .menu-primary a{animation:menuLink 760ms cubic-bezier(.22,1,.36,1) both}
+  .site-menu[open] .menu-primary a:nth-child(1){animation-delay:80ms}
+  .site-menu[open] .menu-primary a:nth-child(2){animation-delay:135ms}
+  .site-menu[open] .menu-primary a:nth-child(3){animation-delay:190ms}
+  .site-menu[open] .menu-bottom{animation:menuLink 680ms 220ms cubic-bezier(.22,1,.36,1) both}
+  @keyframes menuIn{from{opacity:0}to{opacity:1}}
+  @keyframes menuOut{from{opacity:1}to{opacity:0}}
+  @keyframes menuLink{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+}
+@media (max-width:860px){
+  .topbar-inner .pubnav{display:none}
+  .menu-toggle{display:flex}
+}
 @media (max-width:720px){
   .topbar-inner{padding:0 20px;gap:16px}
   .topbar-word{font-size:11px}
@@ -590,31 +643,75 @@ h1{
 .direction-note{margin:22px 0 0;padding-top:22px;border-top:1px solid rgba(17,18,20,.12);font-size:15px;color:#53575F;line-height:1.6}
 
 /* ---------- recruitment roadmap (admin-editable timeline) ---------- */
-.roadmap{display:flex;gap:0;overflow-x:auto;padding:38px 6px 14px;position:relative}
-.roadmap::before{content:"";position:absolute;top:50px;left:30px;right:30px;height:2px;background:var(--board-line)}
-.rm-stage{position:relative;flex:1;min-width:160px;text-align:center;padding:0 12px;opacity:0;transform:translateY(10px)}
-.roadmap.is-visible .rm-stage{animation:rmIn .5s cubic-bezier(.16,1,.3,1) forwards}
-.roadmap.is-visible .rm-stage:nth-child(2){animation-delay:.09s}
-.roadmap.is-visible .rm-stage:nth-child(3){animation-delay:.18s}
-.roadmap.is-visible .rm-stage:nth-child(4){animation-delay:.27s}
-.roadmap.is-visible .rm-stage:nth-child(5){animation-delay:.36s}
-@keyframes rmIn{to{opacity:1;transform:none}}
-.rm-dot{width:16px;height:16px;border-radius:50%;background:var(--rm-a,var(--paper));border:3px solid var(--rm-a,var(--line-strong));margin:0 auto 16px;position:relative;z-index:1}
-.rm-stage:nth-child(5n+1){--rm-a:var(--a-blue)}
-.rm-stage:nth-child(5n+2){--rm-a:var(--a-gold)}
-.rm-stage:nth-child(5n+3){--rm-a:var(--a-pink)}
-.rm-stage:nth-child(5n+4){--rm-a:var(--a-green)}
-.rm-stage:nth-child(5n+5){--rm-a:var(--a-cyan)}
-.rm-stage:first-child .rm-dot,.rm-stage:last-child .rm-dot{box-shadow:0 0 0 4px var(--open-soft)}
-.rm-label{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:-.005em;margin-bottom:5px}
-.rm-date{font-family:var(--body);font-size:13px;color:var(--muted);letter-spacing:.02em}
-@media (max-width:720px){
-  .roadmap{flex-direction:column;align-items:stretch;padding-top:10px}
-  .roadmap::before{left:20px;right:auto;top:10px;bottom:10px;width:2px;height:auto}
-  .rm-stage{text-align:left;display:flex;gap:16px;align-items:center;min-width:0;padding:10px 0}
-  .rm-dot{margin:0}
+/* Horizontal progress track at every width: a single rule through all the
+   stages, each one numbered, with the rule filled up to wherever the
+   recruitment currently is. Stages read as done / now / still ahead rather
+   than six identical dots, so the thing actually shows progress. */
+.roadmap{
+  --rm-progress:0%;
+  position:relative;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(132px,1fr);
+  gap:0;padding:0 0 4px;overflow-x:auto;scrollbar-width:none;
 }
-@media (prefers-reduced-motion:reduce){.rm-stage{animation:none;opacity:1;transform:none}}
+.roadmap::-webkit-scrollbar{display:none}
+/* the rule, and the filled part of it, both inset by half a column so they
+   start and end at the first and last marker rather than the track edges */
+.roadmap::before,.roadmap::after{
+  content:"";position:absolute;top:13px;height:1px;pointer-events:none;
+  left:calc(50% / var(--rm-count,6));right:calc(50% / var(--rm-count,6));
+}
+.roadmap::before{background:var(--board-line)}
+.roadmap::after{
+  right:auto;width:calc((100% - (100% / var(--rm-count,6))) * var(--rm-fill,0));
+  background:var(--ink);opacity:.55;transform-origin:left;transform:scaleX(0);
+  transition:transform 1.1s cubic-bezier(.22,1,.36,1) .15s;
+}
+.roadmap.is-visible::after{transform:scaleX(1)}
+.rm-stage{
+  position:relative;min-width:0;padding:0 10px;text-align:center;
+  opacity:0;transform:translateY(8px);
+}
+.roadmap.is-visible .rm-stage{animation:rmIn .55s cubic-bezier(.22,1,.36,1) forwards}
+.roadmap.is-visible .rm-stage:nth-child(2){animation-delay:.07s}
+.roadmap.is-visible .rm-stage:nth-child(3){animation-delay:.14s}
+.roadmap.is-visible .rm-stage:nth-child(4){animation-delay:.21s}
+.roadmap.is-visible .rm-stage:nth-child(5){animation-delay:.28s}
+.roadmap.is-visible .rm-stage:nth-child(6){animation-delay:.35s}
+.roadmap.is-visible .rm-stage:nth-child(7){animation-delay:.42s}
+@keyframes rmIn{to{opacity:1;transform:none}}
+/* Fixed-height marker row so the rule (top:13px = half of 26px) lands exactly
+   on the dot centres instead of depending on the text above it. */
+.rm-marker{height:26px;display:flex;align-items:center;justify-content:center}
+.rm-dot{
+  position:relative;z-index:1;width:9px;height:9px;border-radius:50%;
+  background:var(--paper);box-shadow:0 0 0 1px var(--line-strong);
+  transition:background .3s,box-shadow .3s,width .3s,height .3s;
+}
+.rm-stage.is-done .rm-dot{background:var(--ink);box-shadow:0 0 0 1px var(--ink)}
+.rm-stage.is-now .rm-dot{
+  background:var(--ink);box-shadow:0 0 0 1px var(--ink),0 0 0 5px var(--open-soft);
+  width:11px;height:11px;
+}
+.rm-num{
+  display:block;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.12em;
+  color:var(--muted);margin:10px 0 6px;
+}
+.rm-label{
+  font-family:var(--body);font-size:13px;font-weight:600;line-height:1.3;
+  letter-spacing:-.005em;margin-bottom:4px;color:var(--ink);
+}
+.rm-date{font-family:var(--body);font-size:12px;line-height:1.4;color:var(--muted)}
+.rm-stage.is-now .rm-num{color:var(--ink)}
+.rm-stage.is-ahead .rm-label{color:var(--ink-weak)}
+@media (max-width:860px){
+  /* stays horizontal — it just scrolls, rather than collapsing to a list */
+  .roadmap{grid-auto-columns:minmax(124px,1fr);margin-inline:-20px;padding-inline:20px}
+  .rm-label{font-size:12px}
+  .rm-date{font-size:11px}
+}
+@media (prefers-reduced-motion:reduce){
+  .rm-stage{animation:none;opacity:1;transform:none}
+  .roadmap::after{transition:none;transform:scaleX(1)}
+}
 
 /* ---------- stage tracker (status pipeline) ---------- */
 .stage-track{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border:1px solid var(--board-line);
@@ -748,8 +845,11 @@ h1{
   padding:18px 0;border-bottom:1px solid var(--board-line);color:var(--ink)}
 .pr-num{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.1em;flex:none}
 .proof-closing{margin:0;font-size:16px;color:var(--muted)}
+/* No divider rule: this sits between two sections that already read as
+   separate through whitespace. The line was doing nothing but adding another
+   horizontal stripe to the page. */
 .final-cta-section{
-  text-align:center;border-top:1px solid var(--board-line);padding:72px 0 24px;
+  text-align:center;padding:72px 0 24px;
   display:flex;flex-direction:column;align-items:center;
 }
 .final-cta-section .aband-eyebrow{margin:0 0 18px}
@@ -879,10 +979,27 @@ h1{
 .footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:32px;padding-top:18px;border-top:1px solid var(--board-line);font-family:var(--body);font-size:12px;color:var(--muted)}
 .footer-bottom a{color:var(--muted);text-decoration:none}
 .footer-bottom a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+/* "Part of the Sunway community" — the block the main site's footer carries
+   and this one was missing. Same grid/placement: full identity row up top,
+   nav + social beside it, the community logos under the identity. */
+.footer-identity{grid-column:1;grid-row:1}
+.footer-nav{grid-column:2;grid-row:1}
+.footer-social{grid-column:3;grid-row:1}
+.footer-community{grid-column:1;grid-row:2;min-width:0;margin-top:4px}
+.footer-community > p{font-family:var(--body);font-size:13px;color:var(--muted);margin:0}
+.footer-community ul{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:12px;max-width:456px;padding:0;margin:14px 0 0;list-style:none}
+.footer-community li{background:#fff;border-radius:6px;min-width:0;height:72px;padding:10px;display:flex;align-items:center;justify-content:center}
+.footer-community img{width:100%;height:100%;object-fit:contain}
 @media (max-width:720px){
   .footer-main{grid-template-columns:1fr 1fr;gap:22px 16px}
-  .footer-identity{grid-column:1 / -1;font-size:16px;gap:12px}
+  .footer-identity{grid-column:1 / -1;grid-row:1;font-size:16px;gap:12px}
+  .footer-nav{grid-column:1;grid-row:2}
+  .footer-social{grid-column:2;grid-row:2}
+  .footer-community{grid-column:1 / -1;grid-row:3}
   .footer-identity img{width:34px;height:34px}
+  .footer-community > p{font-size:12px}
+  .footer-community ul{gap:8px;margin-top:10px}
+  .footer-community li{height:48px;padding:6px}
   .footer-bottom{flex-wrap:wrap;margin-top:22px;font-size:11px}
 }
 /* Terms & Privacy — duplicated verbatim from the main site's lib/policies.ts,
@@ -983,14 +1100,31 @@ h1 .tcursor{
 .roles-group.is-collapsed{display:none}
 .roles-subhead{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);margin:4px 0 16px}
-.filled-toggle{
-  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
-  background:none;border:0;border-top:1px solid var(--board-line);padding:20px 0;margin-bottom:16px;
-  font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
-  color:var(--muted);cursor:pointer;
+/* Status bands: one quiet heading each, with its count, so the page reads
+   "here's what you can apply to / what's coming / what's taken" at a glance. */
+.roles-band{margin-bottom:56px}
+.roles-band:last-child{margin-bottom:0}
+.roles-band .roles-subhead{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.roles-band .roles-subhead span{
+  font-family:var(--body);font-size:12px;font-weight:600;letter-spacing:0;
+  color:var(--muted);opacity:.8;
 }
-.filled-toggle:hover{color:var(--ink)}
-.filled-toggle-arrow{font-family:var(--body);font-size:16px}
+/* Filled seats as a roster, not cards — department name, then its people's
+   roles as plain lines. No borders, no boxes; they're context, not choices. */
+.filled-roster{display:grid;grid-template-columns:1fr;gap:28px 48px}
+@media (min-width:720px){.filled-roster{grid-template-columns:1fr 1fr}}
+@media (min-width:1100px){.filled-roster{grid-template-columns:repeat(3,1fr)}}
+.roster-dept h4{
+  font-family:var(--body);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin:0 0 10px;
+}
+.roster-dept ul{list-style:none;margin:0;padding:0}
+.roster-dept li{
+  display:flex;align-items:baseline;justify-content:space-between;gap:16px;
+  padding:5px 0;font-family:var(--body);font-size:14px;color:var(--ink-weak);
+}
+.roster-level{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.jd-not-ready{font-family:var(--body);font-size:14px;color:var(--muted);font-style:italic}
 .jd-not-ready{font-family:var(--body);font-size:14px;color:var(--muted);font-style:italic}
 
 .cf-card{
@@ -1015,8 +1149,10 @@ h1 .tcursor{
 .cf-card-ladder{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px}
 .cf-card-ladder .seat{width:10px;height:10px;transform:scale(0);animation:seatPop .35s cubic-bezier(.34,1.56,.64,1) forwards}
 @keyframes seatPop{to{transform:scale(1)}}
+/* No rule above the card footer: the card is already a bounded surface, so
+   the divider was just a line inside a box inside a grid. */
 .cf-card-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;
-  border-top:1px solid var(--board-line);padding-top:16px;margin-top:auto}
+  padding-top:16px;margin-top:auto}
 .cf-status{font-family:var(--body);font-size:12.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
 .cf-apply{padding:9px 18px;font-size:13.5px;transition:transform .12s,background .15s,box-shadow .18s}
 .cf-apply:active{transform:scale(.95)}
@@ -1356,8 +1492,27 @@ textarea{min-height:110px;resize:vertical}
       <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Roles</button>
       <button class="pubtab navstatus-btn" id="navStatus" type="button">Application Status</button>
     </div>
+    <button class="menu-toggle" id="menuOpen" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="main-menu">Menu</button>
   </div>
 </nav>
+
+<dialog id="main-menu" class="site-menu" aria-label="Main menu">
+  <div class="menu-panel">
+    <div class="menu-toolbar">
+      <span class="topbar-word">Sunway Entrepreneurs Club</span>
+      <button class="menu-toggle menu-close" id="menuClose" type="button">Close &#10005;</button>
+    </div>
+    <nav class="menu-primary" aria-label="Pages">
+      <a href="#" data-menu-go="overview">Home</a>
+      <a href="#" data-menu-go="apply">Roles</a>
+      <a href="#" data-menu-go="status">Application Status</a>
+    </nav>
+    <div class="menu-bottom">
+      <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website</a>
+      <a href="#" data-menu-go="admin">Committee Sign In</a>
+    </div>
+  </div>
+</dialog>
 <div class="topbar-spacer" id="topbarSpacer" style="height:64px"></div>
 
 <section class="view" id="viewPublic">
@@ -1425,6 +1580,14 @@ textarea{min-height:110px;resize:vertical}
           <a href="https://www.linkedin.com/company/sunway-entrepreneurs-club/" target="_blank" rel="noopener">LinkedIn</a>
           <a href="https://whatsapp.com/channel/0029VbDoiWoEFeXcwUjDcg2g" target="_blank" rel="noopener">WhatsApp Channel</a>
         </nav>
+        <div class="footer-community">
+          <p>Part of the Sunway community</p>
+          <ul aria-label="Sunway community">
+            <li><img src="/images/community/sunway-university.webp" alt="Sunway University" width="648" height="385"></li>
+            <li><img src="/images/community/sunway-college.webp" alt="Sunway College" width="500" height="269"></li>
+            <li><img src="/images/community/jeffrey-cheah-foundation.webp" alt="Jeffrey Cheah Foundation" width="766" height="326"></li>
+          </ul>
+        </div>
       </div>
       <div class="footer-bottom">
         <span>© 2026 Sunway Entrepreneurs Club</span>
@@ -1746,6 +1909,55 @@ function observeReveal(el) {
   REVEAL_OBSERVER.observe(el);
 }
 
+/* ================= scroll weight =================
+   Ported from the main site's ScrollWeight.tsx, same settings: light wheel
+   damping on desktop pointers only, touch/keyboard/anchors left native,
+   paused while a dialog is open, and an in-flight smooth scroll interrupted
+   on link clicks and navigation keys so it never fights the user. */
+(function () {
+  const desktop = window.matchMedia('(min-width: 900px) and (pointer: fine)');
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let instance = null, generation = 0;
+  const syncDialog = () => {
+    if (document.querySelector('dialog[open]')) instance?.stop();
+    else instance?.start();
+  };
+  async function configure() {
+    const current = ++generation;
+    instance?.destroy();
+    instance = null;
+    if (!desktop.matches || motion.matches) return;
+    const { default: Lenis } = await import('https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.mjs');
+    if (current !== generation) return;
+    instance = new Lenis({
+      autoRaf: true,
+      lerp: 0.12,
+      smoothWheel: true,
+      syncTouch: false,
+      allowNestedScroll: true,
+      anchors: false,
+      stopInertiaOnNavigate: true,
+      respectReducedMotion: true,
+      prevent: el => el.tagName === 'DIALOG' || el.isContentEditable,
+    });
+    syncDialog();
+  }
+  const configureSafely = () => { configure().catch(() => { /* native scroll is the fallback */ }); };
+  const interrupt = () => {
+    if (instance?.isScrolling === 'smooth') instance.scrollTo(instance.actualScroll, { immediate: true });
+  };
+  new MutationObserver(syncDialog).observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true });
+  desktop.addEventListener('change', configureSafely);
+  motion.addEventListener('change', configureSafely);
+  document.addEventListener('click', e => {
+    if (e.target instanceof Element && e.target.closest('a[href], button')) interrupt();
+  }, true);
+  document.addEventListener('keydown', e => {
+    if (['Tab', 'ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(e.key)) interrupt();
+  }, true);
+  configureSafely();
+})();
+
 const LEVELS = ['Exco', 'Head', 'Vice head', 'Executive'];
 const DEPTH_FOR = { 'Exco': 0, 'Head': 0, 'Vice head': 1, 'Executive': 2 };
 const WORDS = ['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
@@ -1910,12 +2122,39 @@ function renderTimeline() {
   if (!stages.length) { section.hidden = true; return; }
   section.hidden = false;
   observeReveal(section);
-  track.innerHTML = stages.map(t => `
-    <div class="rm-stage">
-      <div class="rm-dot"></div>
+  // Work out where we are in the run so the track can show real progress.
+  // Dates are free text an admin typed ("16-30 November 2026", "1-4 Dec
+  // 2026"), so parse the last date mentioned in each stage and treat a stage
+  // as done once that date has passed. Anything unparseable just stays
+  // neutral rather than guessing.
+  const endOf = text => {
+    if (!text) return null;
+    const m = String(text).match(/(\d{1,2})\s*(?:[–—-]\s*(\d{1,2}))?\s*([A-Za-z]{3,})\w*\s*(\d{4})/);
+    if (!m) return null;
+    const day = Number(m[2] || m[1]);
+    const month = new Date(`${m[3]} 1, 2000`).getMonth();
+    if (Number.isNaN(month)) return null;
+    const d = new Date(Number(m[4]), month, day);
+    return Number.isNaN(d.getTime()) ? null : d;
+  };
+  const today = new Date();
+  const ends = stages.map(t => endOf(t.date));
+  let current = ends.findIndex(d => d && d >= today);
+  if (current === -1) current = ends.some(d => d) ? stages.length : -1;
+  track.style.setProperty('--rm-count', stages.length);
+  // fill stops at the current marker (0 when nothing has started yet)
+  const fill = current <= 0 ? 0 : Math.min(current, stages.length - 1) / (stages.length - 1);
+  track.style.setProperty('--rm-fill', String(fill));
+  track.innerHTML = stages.map((t, i) => {
+    const state = current === -1 ? '' : i < current ? 'is-done' : i === current ? 'is-now' : 'is-ahead';
+    return `
+    <div class="rm-stage ${state}">
+      <div class="rm-marker"><span class="rm-dot"></span></div>
+      <span class="rm-num">${String(i + 1).padStart(2, '0')}</span>
       <div class="rm-label">${esc(t.label)}</div>
       ${t.date ? `<div class="rm-date">${esc(t.date)}</div>` : ''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
   if ('IntersectionObserver' in window) {
     const obs = new IntersectionObserver(entries => {
       entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('is-visible'); obs.unobserve(en.target); } });
@@ -2021,6 +2260,48 @@ $('#topbarApply')?.addEventListener('click', () => showPub('apply'));
 $('#heroApply')?.addEventListener('click', () => showPub('apply'));
 $('#topbarHome')?.addEventListener('click', e => { e.preventDefault(); showPub('overview'); window.scrollTo(0, 0); });
 $('#finalCta')?.addEventListener('click', () => showPub('apply'));
+
+/* Mobile menu — same shape as the main site's Nav: a native <dialog> opened
+   modally, faded out on close before it's actually closed, and Escape routed
+   through the same close path so the exit animation always plays. */
+(function () {
+  const dialog = $('#main-menu'), openBtn = $('#menuOpen'), closeBtn = $('#menuClose');
+  if (!dialog || !openBtn) return;
+  const reduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let closing = null;
+  function open() {
+    if (closing) return;
+    dialog.showModal();
+    openBtn.setAttribute('aria-expanded', 'true');
+    closeBtn?.focus({ preventScroll: true });
+  }
+  function close() {
+    if (closing || !dialog.open) return Promise.resolve();
+    openBtn.setAttribute('aria-expanded', 'false');
+    if (reduced()) { dialog.close(); return Promise.resolve(); }
+    dialog.dataset.phase = 'closing';
+    closing = new Promise(resolve => {
+      const done = () => { dialog.close(); delete dialog.dataset.phase; closing = null; resolve(); };
+      dialog.addEventListener('animationend', done, { once: true });
+      setTimeout(done, 400); // animationend can be missed if the tab is backgrounded
+    });
+    return closing;
+  }
+  openBtn.addEventListener('click', open);
+  closeBtn?.addEventListener('click', close);
+  dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });
+  dialog.querySelectorAll('[data-menu-go]').forEach(link => {
+    link.addEventListener('click', async e => {
+      e.preventDefault();
+      const where = link.dataset.menuGo;
+      await close();
+      if (where === 'admin') { showView('admin'); applyLock(); return; }
+      if (where === 'status') { openStatusCheck(); return; }
+      showPub(where);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    });
+  });
+})();
 
 /* Terms & Privacy dialogs — same open/close/backdrop behaviour as the main site's. */
 function openPolicyDialog(dialog) {
@@ -2138,11 +2419,26 @@ function buildJobList(positions) {
   } else {
     const idx = { n: 0 };
     const cards = arr => arr.map(p => cfCardHTML(p, idx.n++)).join('');
+    // Filled seats aren't actionable, and as cards they outnumbered the open
+    // ones several to one. They're a roster: grouped under their department,
+    // listed as plain lines, no card chrome.
+    const roster = arr => {
+      const byDept = [];
+      arr.forEach(p => {
+        let g = byDept.find(d => d.name === p.dept);
+        if (!g) byDept.push(g = { name: p.dept, items: [] });
+        g.items.push(p);
+      });
+      return byDept.map(g => `
+        <div class="roster-dept">
+          <h4>${esc(g.name)}</h4>
+          <ul>${g.items.map(p => `<li><span>${esc(p.title)}</span><span class="roster-level">${esc(p.level)}</span></li>`).join('')}</ul>
+        </div>`).join('');
+    };
     list.innerHTML = `
-      ${openReady.length ? `<div class="roles-group">${cards(openReady)}</div>` : ''}
-      ${openingSoon.length ? `<div class="roles-subhead">Opening soon</div><div class="roles-group">${cards(openingSoon)}</div>` : ''}
-      ${filled.length ? `<div class="roles-subhead">Filled positions · ${filled.length}</div><div class="roles-group">${cards(filled)}</div>` : ''}
-      ${!openReady.length && !openingSoon.length && !filled.length ? `<div class="empty">No positions match this filter.</div>` : ''}
+      ${openReady.length ? `<div class="roles-band"><h3 class="roles-subhead">Open now <span>${openReady.length}</span></h3><div class="roles-group">${cards(openReady)}</div></div>` : ''}
+      ${openingSoon.length ? `<div class="roles-band"><h3 class="roles-subhead">Opening soon <span>${openingSoon.length}</span></h3><div class="roles-group">${cards(openingSoon)}</div></div>` : ''}
+      ${filled.length ? `<div class="roles-band"><h3 class="roles-subhead">Already filled <span>${filled.length}</span></h3><div class="filled-roster">${roster(filled)}</div></div>` : ''}
     `;
   }
   list.querySelectorAll('[data-apply]').forEach(b =>
@@ -2201,6 +2497,10 @@ function renderBoard() {
     glide.style.height = active.offsetHeight + 'px';
     glide.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
   }
+  // The row scrolls horizontally and there are more departments than fit; always
+  // start it at the beginning so "All" is visible on arrival rather than
+  // scrolled off to the left.
+  $('#deptFilters').scrollLeft = 0;
   requestAnimationFrame(updateChipGlide);
   window.addEventListener('resize', updateChipGlide);
 

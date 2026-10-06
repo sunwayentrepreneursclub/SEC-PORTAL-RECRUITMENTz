@@ -6,7 +6,7 @@ import { extname, join, normalize } from 'node:path';
 import { seedState, publicState } from './api/_lib.js';
 
 const PORT = process.env.PORT || 3000;
-const TYPES = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.ico': 'image/x-icon' };
+const TYPES = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webp': 'image/webp' };
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');

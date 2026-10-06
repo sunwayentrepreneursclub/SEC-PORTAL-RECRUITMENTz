@@ -69,8 +69,10 @@ Open the site → **Committee sign in** at the bottom → your `ADMIN_USERS` cre
 On first load the database is seeded with SEC's current structure and the five open positions.
 From the admin panel you can then:
 
-- **Positions & questions** — rename, re-level, move between departments, change seat counts,
-  reorder, add, delete. Generate and publish question sets.
+- **Positions & questions** — edit one department at a time; roles still hiring appear first,
+  with filled roles collapsed below. Rename, re-level, move, reorder, add, or remove roles;
+  switch each role between **Still hiring** and **Filled**. Generate and publish question sets.
+  Existing seat-count data stays stored for compatibility but no longer needs manual updates.
 - **Settings** — set the QR destination, the application deadline, and the Gemini API key.
 - **Applicants** — read answers, set decisions, leave attributed notes, export CSV.
 
@@ -78,9 +80,9 @@ From the admin panel you can then:
 
 - [ ] Set the **application deadline** in Settings. The board says "to be announced" until you do.
 - [ ] Set the **QR destination** in Settings.
-- [ ] Check every open position shows a real seat count and published questions.
+- [ ] Check each role marked **Still hiring** appears publicly and has published questions before applications open.
 - [ ] Submit one test application in a staging environment, end to end, then clear that test database.
-- [ ] Confirm a filled position shows **Filled** and has no Apply button.
+- [ ] Confirm a role marked **Filled** disappears from the public site but remains editable in admin.
 
 ---
 

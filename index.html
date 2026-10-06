@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Committee Recruitment | Sunway Entrepreneurs Club</title>
-<meta name="description" content="Explore open committee roles at Sunway Entrepreneurs Club, see what each seat owns, and apply to join the team.">
+<meta name="description" content="Explore committee roles at Sunway Entrepreneurs Club, see what each role owns, and apply to join the team.">
 <meta property="og:title" content="Committee Recruitment | Sunway Entrepreneurs Club">
-<meta property="og:description" content="Explore open committee roles at Sunway Entrepreneurs Club, see what each seat owns, and apply to join the team.">
+<meta property="og:description" content="Explore committee roles at Sunway Entrepreneurs Club, see what each role owns, and apply to join the team.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Sunway Entrepreneurs Club">
 <!-- Same icon set as the main site: the E mark, not the full SEC wordmark. -->
@@ -1393,6 +1393,32 @@ textarea{min-height:110px;resize:vertical}
 .rolelabel{font-family:var(--body);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
 
 /* ---------- position editor ---------- */
+.pos-intro{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin:0 0 18px}
+.pos-intro p{margin:0;color:var(--muted);font-size:14px}
+.pos-dept-tabs{display:flex;gap:8px;overflow-x:auto;max-width:100%;padding:2px 0 14px;margin-bottom:10px;scrollbar-width:thin}
+.pos-dept-tabs button{flex:none;background:var(--paper);border:1px solid var(--board-line);border-radius:var(--r-pill);
+  padding:10px 15px;color:var(--muted);font:600 13px var(--body);white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.pos-dept-tabs button:hover{border-color:var(--ink);color:var(--ink)}
+.pos-dept-tabs button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.pos-dept-tabs button span{opacity:.7;margin-left:5px;font-variant-numeric:tabular-nums}
+.pos-section-title{font:700 12px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  padding:15px 22px 9px;margin:0}
+.pos-section-empty{padding:16px 22px 24px;color:var(--muted);font-size:14px;margin:0}
+.admin-filled{border-top:1px solid var(--board-line)}
+.admin-filled summary{cursor:pointer;list-style:none;padding:16px 22px;display:flex;justify-content:space-between;
+  align-items:center;font:700 13px var(--body);color:var(--muted)}
+.admin-filled summary::-webkit-details-marker{display:none}
+.admin-filled summary::after{content:"+";font-size:20px;line-height:1}
+.admin-filled[open] summary::after{content:"−"}
+.admin-filled .prow:first-of-type{border-top:1px solid var(--board-line)}
+.pavailability{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:15px}
+.availability-toggle{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--r-pill);overflow:hidden}
+.availability-toggle button{border:0;background:transparent;color:var(--muted);padding:9px 15px;font:600 13px var(--body);
+  transition:background .15s,color .15s}
+.availability-toggle button + button{border-left:1px solid var(--line-strong)}
+.availability-toggle button:hover{background:var(--board);color:var(--ink)}
+.availability-toggle button[aria-pressed="true"]{background:var(--navy);color:#fff}
+.availability-toggle button[aria-pressed="true"]:hover{background:var(--navy);color:#fff}
 .pdept{border:1px solid var(--board-line);background:var(--paper);margin-bottom:18px;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-1)}
 .pdept > h3{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.01em;
   margin:0;padding:16px 22px;border-bottom:1px solid var(--board-line);background:var(--board);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
@@ -1444,7 +1470,7 @@ textarea{min-height:110px;resize:vertical}
 .pcross:hover{background:var(--err);border-color:var(--err);color:#fff}
 .pf-title input{padding-right:38px}
 .pgrid{display:grid;grid-template-columns:2fr 1fr 1.3fr;gap:14px;margin-bottom:14px}
-.pgrid2{display:grid;grid-template-columns:auto auto 1fr;gap:18px;align-items:end;margin-bottom:14px}
+.pgrid2{display:grid;grid-template-columns:1fr;gap:14px;margin-bottom:14px}
 .pfield label{font-family:var(--body);font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block}
 .pfield input[type=text],.pfield select{padding:10px 12px;font-size:15px}
 .pf-title input{font-weight:600}
@@ -1465,8 +1491,7 @@ textarea{min-height:110px;resize:vertical}
 .restrict{background:rgba(214,48,58,.08);border-left:3px solid var(--err);border-radius:0 var(--r-md) var(--r-md) 0;padding:11px 14px;font-size:14.5px;margin-bottom:14px}
 @media (max-width:720px){
   .pgrid{grid-template-columns:1fr}
-  .pgrid2{grid-template-columns:1fr 1fr;gap:14px}
-  .pf-status{grid-column:1/-1}
+  .pavailability{align-items:flex-start}
 }
 
 .applrow{display:flex;align-items:stretch;border-bottom:1px solid var(--board-line)}
@@ -1589,13 +1614,9 @@ textarea{min-height:110px;resize:vertical}
       <section class="abandsection" data-reveal>
         <div class="aband-head">
           <p class="aband-eyebrow">Open positions</p>
-          <h2 class="aband-title"><span class="dim">Pick a seat,</span> see the role.</h2>
+          <h2 class="aband-title"><span class="dim">Pick a role,</span> see the work.</h2>
           <p class="aband-lede">Read the role. Know what's expected. Apply when you're ready.</p>
         </div>
-      </section>
-      <section class="roles-overview" aria-labelledby="overviewTitle">
-        <h3 id="overviewTitle">SEC, right now.</h3>
-        <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
       </section>
       <main class="board" id="board"><div class="empty">Loading positions…</div></main>
     </div>
@@ -1902,6 +1923,7 @@ let APPLICATIONS = [];
 let ADMIN = false, USER = null, KEY_SET = false, selected = null;
 let STATE_REVISION = null;
 let APP_SHOW_ARCHIVED = false;
+let ADMIN_DEPT = null, ADMIN_FILLED_OPEN = false;
 const REMOVED_IDS = new Set();
 const POSITIONS = {};
 
@@ -2007,7 +2029,6 @@ function observeReveal(el) {
 
 const LEVELS = ['Exco', 'Head', 'Vice head', 'Executive'];
 const DEPTH_FOR = { 'Exco': 0, 'Head': 0, 'Vice head': 1, 'Executive': 2 };
-const WORDS = ['Zero','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten'];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
@@ -2034,7 +2055,8 @@ function reindex() {
     (d.positions || []).forEach(p => { p.dept = d.name; POSITIONS[p.id] = p; }));
 }
 
-const isOpen = p => p.filled < p.total;
+const isOpen = p => p.availability === 'hiring' ? true
+  : p.availability === 'filled' ? false : p.filled < p.total;
 const qState = p => p.qState || (p.ready ? 'published' : (p.questions ? 'published' : 'none'));
 const isReady = p => ADMIN ? qState(p) === 'published' : !!p.ready;
 const appsFor = id => APPLICATIONS.filter(a => a.pos === id).length;
@@ -2052,27 +2074,7 @@ async function loadState() {
   renderTimeline();
 }
 
-/* ================= overview stats + department cards + timeline (data-driven) ================= */
-function renderOverviewStats() {
-  const el = $('#overviewStats'); if (!el) return;
-  const depts = STATE.departments || [];
-  const positions = Object.values(POSITIONS);
-  const openNowSeats = positions.filter(isReady).reduce((n, p) => n + Math.max(0, p.total - p.filled), 0);
-  const totalSeats = positions.reduce((n, p) => n + p.total, 0);
-  const levels = new Set(positions.map(p => p.level)).size;
-  const headline = $('#numbersHeadline');
-  if (headline) headline.textContent = `${totalSeats} seats. ${openNowSeats} open now.`;
-  if (!depts.length) { el.innerHTML = `<div class="empty">No positions listed yet.</div>`; return; }
-  el.innerHTML = `<div class="overview-primary">
-      <span class="n" data-count-to="${openNowSeats}">0</span>
-      <span class="l">seat${openNowSeats === 1 ? '' : 's'} open now</span>
-    </div>
-    <div class="overview-secondary">
-      ${[[totalSeats, 'total seats'], [depts.length, 'teams'], [levels, 'levels']]
-        .map(([n, label]) => `<div class="stat"><span class="n" data-count-to="${n}">0</span><span class="l">${label}</span></div>`).join('')}
-    </div>`;
-  animateCountUps(el);
-}
+/* ================= department cards + timeline (data-driven) ================= */
 
 function renderHomeRoles() {
   const el = $('#homeRoles');
@@ -2099,50 +2101,15 @@ function renderHomeRoles() {
   });
 }
 
-function animateCountUps(scope) {
-  const nodes = scope.querySelectorAll('[data-count-to]');
-  if (!nodes.length) return;
-  // The figures now live in the hidden Roles tab at initial load. Render the
-  // real values immediately so switching tabs never exposes a row of zeroes.
-  if (!scope.getClientRects().length) {
-    nodes.forEach(el => { el.textContent = el.dataset.countTo; });
-    return;
-  }
-  const run = (el) => {
-    const target = parseInt(el.dataset.countTo, 10) || 0;
-    if (REDUCE_MOTION || !target) { el.textContent = target; return; }
-    const dur = 1100, start = performance.now();
-    const ease = t => 1 - Math.pow(1 - t, 3);
-    function tick(now) {
-      const p = Math.min(1, (now - start) / dur);
-      el.textContent = Math.round(ease(p) * target);
-      if (p < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  };
-  const runAll = () => nodes.forEach(run);
-  if (!('IntersectionObserver' in window)) { runAll(); return; }
-  // observe the whole container, not each individual (inline) number span —
-  // a container with real block layout is a much more reliable intersection
-  // target than small inline text nodes, and firing all counters together
-  // reads better than each one triggering at a slightly different scroll depth
-  const obs = new IntersectionObserver(entries => {
-    entries.forEach(en => { if (en.isIntersecting) { runAll(); obs.unobserve(en.target); } });
-  }, { threshold: 0.15 });
-  obs.observe(scope);
-}
-
 function renderDeptGrid() {
   const section = $('#deptSection'), grid = $('#deptGrid');
   if (!section || !grid) return;
-  const depts = STATE.departments || [];
+  const depts = (STATE.departments || []).filter(d => (d.positions || []).some(isOpen));
   if (!depts.length) { section.hidden = true; return; }
   section.hidden = false;
   grid.innerHTML = depts.map(d => {
-    const open = (d.positions || []).reduce((n, p) => n + Math.max(0, p.total - p.filled), 0);
     return `<div class="dept-card" style="--dc:${deptColor(d.name)}" data-dept-jump="${esc(d.name)}" tabindex="0" role="button">
       <h3>${esc(d.name)}</h3>
-      <p>${(d.positions || []).length} position${(d.positions || []).length === 1 ? '' : 's'} · ${open} open now</p>
     </div>`;
   }).join('');
   grid.querySelectorAll('.dept-card').forEach(card => {
@@ -2174,7 +2141,7 @@ function renderDeptGrid() {
 function renderHeroRoles() {
   const wrap = $('#heroRoles');
   if (!wrap) return;
-  const depts = STATE.departments || [];
+  const depts = (STATE.departments || []).filter(d => (d.positions || []).some(isOpen));
   if (!depts.length) { wrap.innerHTML = ''; return; }
   wrap.innerHTML = depts.map(d => `
     <button type="button" class="hero-tag" role="listitem"
@@ -2273,7 +2240,8 @@ $('#btnReloadState').addEventListener('click', async () => {
   } catch (e) { $('#saveState').textContent = `Reload failed: ${e.message}. Your draft is still on this page.`; }
 });
 window.addEventListener('beforeunload', e => {
-  if (!ADMIN || (!savePending && !saveInFlight && !saveBlocked && !hasUnsavedNote())) return;
+  if (!ADMIN || (!savePending && !saveInFlight && !saveBlocked &&
+      !hasUnsavedNote() && !hasUnsavedPositionDraft())) return;
   e.preventDefault(); e.returnValue = '';
 });
 
@@ -2437,29 +2405,7 @@ if ('IntersectionObserver' in window) {
   document.querySelectorAll('.stage-track').forEach(el => stageObserver.observe(el));
 }
 
-/* ================= headline reveal ================= */
-// Typewriter: characters appear one at a time (not word-by-word) — re-runs whenever
-// the seat count changes, so the headline visibly "retypes" as data updates.
-function animateHeadline(n) {
-  const h = $('#headline');
-  if (!h) return; // the hero now shows a fixed headline instead of the live seat count
-  const text = `${WORDS[n] || n} seat${n === 1 ? '' : 's'} ${n === 1 ? 'is' : 'are'} open.`;
-  const STEP_MS = 26;
-  const chars = text.split('').map((c, i) => {
-    const glyph = c === ' ' ? '&nbsp;' : esc(c);
-    return `<span class="tch" style="animation-delay:${i * STEP_MS}ms">${glyph}</span>`;
-  }).join('');
-  h.innerHTML = chars + `<span class="tcursor" style="animation-delay:${text.length * STEP_MS}ms"></span>`;
-}
-
 /* ================= job list (single-column, page-scrolls — jobstreet-style) ================= */
-let CF_POSITIONS = [];
-
-function seatLadderHTML(p) {
-  return Array.from({ length: p.total }, (_, i) =>
-    `<span class="seat ${i < p.filled ? 'filled' : 'open'}" style="animation-delay:${i * 40}ms"></span>`).join('');
-}
-
 // Darker relatives of the main site's department and programme colours keep
 // department labels readable on the shared neutral role-card surface.
 const deptColor = name => {
@@ -2476,16 +2422,16 @@ const deptColor = name => {
   return '#424b56';
 };
 
-function cfCardHTML(p, i) {
-  const open = isOpen(p), ready = isReady(p), avail = p.total - p.filled;
-  const statusText = ready ? `${avail} ${avail === 1 ? 'seat' : 'seats'} open now` : 'Opening soon';
-  return `<article class="cf-card dept-role ${ready ? 'is-open' : 'is-soon'}" data-pid="${p.id}" data-index="${i}"
-      aria-label="${esc(p.title)}, ${i + 1} of ${CF_POSITIONS.length}">
+function cfCardHTML(p) {
+  const open = isOpen(p), ready = isReady(p);
+  const statusText = ready ? 'Still hiring' : 'Opening soon';
+  return `<article class="cf-card dept-role ${ready ? 'is-open' : 'is-soon'}" data-pid="${p.id}"
+      aria-label="${esc(p.title)}">
     <div class="cf-card-top"><span class="cf-level">${esc(p.level)}</span><span class="cf-status">${statusText}</span></div>
     <h4 class="cf-card-title">${esc(p.title)}</h4>
     ${p.purpose ? `<p class="cf-card-desc">${esc(p.purpose)}</p>` : ''}
     <div class="cf-card-foot">
-      ${p.total > 1 && p.filled > 0 ? `<span class="cf-card-sub">${p.filled} of ${p.total} seats filled</span>` : '<span></span>'}
+      <span></span>
       ${open ? `<button class="apply cf-apply" type="button" data-apply="${p.id}" aria-label="View ${esc(p.title)} role">View role</button>` : ''}
     </div>
   </article>`;
@@ -2503,10 +2449,8 @@ function roleRank(level) {
 }
 
 function buildJobList(positions) {
-  CF_POSITIONS = positions;
   const list = $('#jobList');
   const actionable = positions.filter(isOpen);
-  const filled = positions.filter(p => !isOpen(p));
 
   if (!positions.length) {
     list.innerHTML = `<div class="empty">No positions match this filter.</div>`;
@@ -2518,72 +2462,40 @@ function buildJobList(positions) {
       group.items.push(p);
     });
     const chapters = byDept.map(group => {
-      const readySeats = group.items.filter(isReady).reduce((sum, p) => sum + p.total - p.filled, 0);
-      const soonCount = group.items.filter(p => !isReady(p)).length;
-      const summary = [readySeats ? `${readySeats} ${readySeats === 1 ? 'seat' : 'seats'} open now` : '',
-        soonCount ? `${soonCount} ${soonCount === 1 ? 'role' : 'roles'} opening soon` : ''].filter(Boolean).join(' · ');
       const items = group.items.map((p, index) => ({ p, index })).sort((a, b) => roleRank(a.p.level) - roleRank(b.p.level) || a.index - b.index);
       return `<section class="department-group" style="--deptc:${deptColor(group.name)}" aria-label="${esc(group.name)} roles">
-        <div class="department-heading"><h3>${esc(group.name)}</h3><p>${summary}</p></div>
-        <div class="roles-group">${items.map(({ p }) => cfCardHTML(p, positions.indexOf(p))).join('')}</div>
+        <div class="department-heading"><h3>${esc(group.name)}</h3></div>
+        <div class="roles-group">${items.map(({ p }) => cfCardHTML(p)).join('')}</div>
       </section>`;
     }).join('');
-    // Filled seats aren't actionable, and as cards they outnumbered the open
-    // ones several to one. They're a roster: grouped under their department,
-    // listed as plain lines, no card chrome.
-    const roster = arr => {
-      const byDept = [];
-      arr.forEach(p => {
-        let g = byDept.find(d => d.name === p.dept);
-        if (!g) byDept.push(g = { name: p.dept, items: [] });
-        g.items.push(p);
-      });
-      return byDept.map(g => `
-        <div class="roster-dept">
-          <h4>${esc(g.name)}</h4>
-          <ul>${g.items.map(p => `<li><span>${esc(p.title)}</span><span class="roster-level">${esc(p.level)}</span></li>`).join('')}</ul>
-        </div>`).join('');
-    };
-    list.innerHTML = `
-      ${chapters || '<p class="empty department-empty">No available roles in this department right now.</p>'}
-      ${filled.length ? `<details class="roles-band filled-band"><summary class="roles-subhead">Already filled <span>${filled.length}</span></summary><div class="filled-roster">${roster(filled)}</div></details>` : ''}
-    `;
+    list.innerHTML = chapters || '<p class="empty department-empty">No roles are available in this department right now.</p>';
   }
   list.querySelectorAll('[data-apply]').forEach(b =>
     b.addEventListener('click', e => { openApply(b.dataset.apply, e); }));
-  const totalEl = $('#cfTotal');
-  if (totalEl) totalEl.textContent = actionable.length;
-  const countLabel = $('#cfCountLabel');
-  if (countLabel) countLabel.textContent = `available role${actionable.length === 1 ? '' : 's'}${filled.length ? ` · ${filled.length} filled` : ''}`;
 }
 
 function renderBoard() {
   const el = $('#board');
   const depts = STATE.departments || [];
-  const allPositions = Object.values(POSITIONS);
-  renderOverviewStats();
   renderHomeRoles();
-  const n = allPositions.reduce((t, p) => t + Math.max(0, p.total - p.filled), 0);
-  animateHeadline(n);
   const dot = $('#pubtabDot');
-  if (dot) { dot.hidden = n === 0; dot.textContent = n; }
+  if (dot) dot.hidden = true;
 
-  if (!depts.length || !allPositions.length) {
-    el.innerHTML = `<div class="empty">No positions are listed yet. Check back shortly.</div>`;
+  if (!depts.some(d => (d.positions || []).some(isOpen))) {
+    el.innerHTML = `<div class="empty">No roles are available right now. Check back soon.</div>`;
     return;
   }
 
   const ordered = [];
-  depts.forEach(d => (d.positions || []).forEach(p => ordered.push(p)));
+  depts.forEach(d => (d.positions || []).filter(isOpen).forEach(p => ordered.push(p)));
 
   const chipDelay = i => `animation-delay:${i * 40}ms`;
   el.innerHTML = `
     <div class="cf-head">
       <div class="cf-filters" id="deptFilters">
-        <button class="cf-chip is-active" data-dept="all" type="button" style="${chipDelay(0)}">All <span>${ordered.length}</span></button>
-        ${depts.map((d, i) => `<button class="cf-chip" data-dept="${esc(d.name)}" type="button" style="${chipDelay(i + 1)}">${esc(d.name)} <span>${(d.positions || []).length}</span></button>`).join('')}
+        <button class="cf-chip is-active" data-dept="all" type="button" style="${chipDelay(0)}">All</button>
+        ${depts.filter(d => (d.positions || []).some(isOpen)).map((d, i) => `<button class="cf-chip" data-dept="${esc(d.name)}" type="button" style="${chipDelay(i + 1)}">${esc(d.name)}</button>`).join('')}
       </div>
-      <div class="cf-count" aria-live="polite"><b id="cfTotal">${ordered.length}</b> <span id="cfCountLabel">positions shown</span></div>
     </div>
     <div class="job-list" id="jobList"></div>
   `;
@@ -2665,7 +2577,6 @@ const jdIcon = key => `<svg class="jd-icon" viewBox="0 0 24 24" aria-hidden="tru
 
 function stepJD() {
   const p = POSITIONS[draft.pos];
-  const avail = p.total - p.filled;
   const open = isOpen(p), ready = isReady(p);
   setStepper(null);
   sheetTitle.textContent = p.title;
@@ -2676,7 +2587,7 @@ function stepJD() {
       <div class="jd-meta-row">${jdIcon('pin')} ${esc(p.dept)} committee</div>
       <div class="jd-meta-row">${jdIcon('level')} ${esc(p.level)} level</div>
       ${p.hours ? `<div class="jd-meta-row">${jdIcon('clock')} ${esc(p.hours)}</div>` : ''}
-      <div class="jd-meta-row">${jdIcon('seats')} ${open ? `${avail} of ${p.total} seat${p.total === 1 ? '' : 's'} open` : 'Filled'}</div>
+      <div class="jd-meta-row">${jdIcon('seats')} ${open ? (ready ? 'Still hiring' : 'Opening soon') : 'Filled'}</div>
       ${p.reportsTo ? `<div class="jd-meta-row">${jdIcon('pin')} Reports to ${esc(p.reportsTo)}</div>` : ''}
     </div>
     ${STATE.settings?.deadline ? `<p class="jd-posted">Applications close ${esc(STATE.settings.deadline)}</p>` : ''}
@@ -2921,7 +2832,7 @@ $('#btnLogin').addEventListener('click', doLogin);
 $('#lgPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 $('#btnLock').addEventListener('click', async () => {
-  if ((savePending || saveInFlight || saveBlocked || hasUnsavedNote()) &&
+  if ((savePending || saveInFlight || saveBlocked || hasUnsavedNote() || hasUnsavedPositionDraft()) &&
       !await uiConfirm('Sign out with unsaved changes?',
         'Unsaved roles, settings, or reviewer notes may be lost. Save or download your draft first.', 'Sign out')) return;
   clearTimeout(saveTimer);
@@ -2947,6 +2858,7 @@ function showPanel(which) {
 async function switchPanel(which) {
   if (!$('#panelApps').hidden && which !== 'apps' && hasUnsavedNote() &&
       !await uiConfirm('Leave this unsaved note?', 'Save the reviewer note before switching sections.', 'Leave')) return;
+  if (!$('#panelPos').hidden && which !== 'pos' && !await confirmPositionDraftChange()) return;
   showPanel(which);
 }
 $('#tabApps').addEventListener('click', () => switchPanel('apps'));
@@ -2965,9 +2877,9 @@ async function refreshAdmin() {
 /* ================= applicants ================= */
 function renderStats() {
   const activeApps = APPLICATIONS.filter(a => !a.archivedAt);
-  const openSeats = Object.values(POSITIONS).reduce((n, p) => n + Math.max(0, p.total - p.filled), 0);
+  const hiringRoles = Object.values(POSITIONS).filter(isOpen).length;
   $('#stats').innerHTML = [
-    [openSeats, 'Seats open'],
+    [hiringRoles, 'Roles hiring'],
     [activeApps.length, 'Applications'],
     [activeApps.filter(a => a.status === 'new').length, 'Not yet reviewed'],
     [activeApps.filter(a => !a.form).length, 'Form not matched'],
@@ -3149,16 +3061,59 @@ function depthFor(level) {
   return k ? DEPTH_FOR[k] : 2;
 }
 
+function markPanelDraft(panel) {
+  panel.querySelectorAll('input,textarea').forEach(field => { field.dataset.initial = field.value; });
+}
+function hasUnsavedPositionDraft(scope = $('#posEditor')) {
+  if (!scope || $('#panelPos').hidden) return false;
+  if ([...scope.querySelectorAll('input[data-initial],textarea[data-initial]')]
+      .some(field => field.value !== field.dataset.initial)) return true;
+  return scope === $('#posEditor') && !!$('#npTitle')?.value.trim();
+}
+async function confirmPositionDraftChange(scope) {
+  if (!hasUnsavedPositionDraft(scope || $('#posEditor'))) return true;
+  return uiConfirm('Leave unsaved role edits?',
+    'Save the description or question draft, or add the new role, before leaving this view.', 'Leave');
+}
+
 function renderPositions() {
   const el = $('#posEditor'); if (!el) return;
   const focusId = document.activeElement?.dataset?.focus || null;
-  el.innerHTML = (STATE.departments || []).map(d => `
-    <section class="pdept">
-      <h3>${esc(d.name)}<span class="slab">${d.positions.length} position${d.positions.length === 1 ? '' : 's'} · ${d.positions.reduce((n, p) => n + Math.max(0, p.total - p.filled), 0)} open</span></h3>
-      ${d.positions.map((p, i) => positionRow(p, d, i)).join('')}
-    </section>`).join('') + addPositionBlock() +
-    `<datalist id="deptList">${STATE.departments.map(x => `<option value="${esc(x.name)}">`).join('')}</datalist>
+  const depts = STATE.departments || [];
+  let d = depts.find(x => x.name === ADMIN_DEPT);
+  if (!d) d = depts.find(x => x.positions.some(isOpen)) || depts[0];
+  ADMIN_DEPT = d?.name || null;
+  const hiring = (d?.positions || []).filter(isOpen);
+  const filled = (d?.positions || []).filter(p => !isOpen(p));
+  el.innerHTML = `<div class="pos-intro"><p>Choose a department. Hiring roles stay in focus; filled roles sit below.</p></div>
+    <nav class="pos-dept-tabs" aria-label="Edit a department">
+      ${depts.map(x => `<button type="button" data-admin-dept="${esc(x.name)}" aria-pressed="${x === d}">
+        ${esc(x.name)} <span>${x.positions.filter(isOpen).length}</span></button>`).join('')}
+    </nav>
+    ${d ? `<section class="pdept" aria-label="${esc(d.name)} positions">
+      <h3>${esc(d.name)}<span class="slab">${hiring.length} still hiring · ${filled.length} filled</span></h3>
+      <h4 class="pos-section-title">Still hiring · ${hiring.length}</h4>
+      ${hiring.length ? hiring.map((p, i) => positionRow(p, d, i, hiring.length)).join('')
+        : '<p class="pos-section-empty">No roles hiring in this department.</p>'}
+      ${filled.length ? `<details class="admin-filled" ${ADMIN_FILLED_OPEN ? 'open' : ''}>
+        <summary>Filled · ${filled.length}</summary>
+        ${filled.map((p, i) => positionRow(p, d, i, filled.length)).join('')}
+      </details>` : ''}
+    </section>` : '<p class="empty">No departments yet. Add the first role below.</p>'}
+    ${addPositionBlock(d)}
+    <datalist id="deptList">${STATE.departments.map(x => `<option value="${esc(x.name)}">`).join('')}</datalist>
      <datalist id="levelList">${LEVELS.map(l => `<option value="${l}">`).join('')}</datalist>`;
+  el.querySelectorAll('[data-admin-dept]').forEach(tab => tab.addEventListener('click', async () => {
+    if (tab.dataset.adminDept === ADMIN_DEPT) return;
+    if (!await confirmPositionDraftChange()) return;
+    ADMIN_DEPT = tab.dataset.adminDept;
+    ADMIN_FILLED_OPEN = false;
+    renderPositions();
+    [...el.querySelectorAll('[data-admin-dept]')].find(b => b.dataset.adminDept === ADMIN_DEPT)?.focus();
+  }));
+  el.querySelector('.admin-filled')?.addEventListener('toggle', e => {
+    ADMIN_FILLED_OPEN = e.currentTarget.open;
+  });
   wirePositions();
   if (focusId) {
     const back = el.querySelector(`[data-focus="${focusId}"]`);
@@ -3166,9 +3121,8 @@ function renderPositions() {
   }
 }
 
-function positionRow(p, d, idx) {
-  const st = qState(p), open = isOpen(p), avail = p.total - p.filled;
-  const seats = Array.from({ length: p.total }, (_, i) => `<span class="seat ${i < p.filled ? 'filled' : 'open'}"></span>`).join('');
+function positionRow(p, d, idx, groupLength) {
+  const st = qState(p), open = isOpen(p);
   return `<div class="prow pcard" data-pid="${p.id}">
     <button class="pcross" data-act="del" aria-label="Remove ${esc(p.title)}">&#10005;</button>
     <div class="pgrid">
@@ -3179,41 +3133,36 @@ function positionRow(p, d, idx) {
       <div class="pfield"><label>Department</label>
         <input type="text" list="deptList" value="${esc(d.name)}" data-f="dept" data-focus="dp-${p.id}" aria-label="Department for ${esc(p.title)}"></div>
     </div>
-    <div class="pgrid2">
-      <div class="pfield"><label>Total seats</label><div class="stepper">
-        <button class="sbtn" data-step="total-" aria-label="Fewer seats">&minus;</button>
-        <input type="text" inputmode="numeric" value="${p.total}" data-f="total" data-focus="tot-${p.id}" aria-label="Total seats for ${esc(p.title)}">
-        <button class="sbtn" data-step="total+" aria-label="More seats">+</button></div></div>
-      <div class="pfield"><label>Seats filled</label><div class="stepper">
-        <button class="sbtn" data-step="filled-" aria-label="Fewer filled">&minus;</button>
-        <input type="text" inputmode="numeric" value="${p.filled}" data-f="filled" data-focus="fil-${p.id}" aria-label="Filled seats for ${esc(p.title)}">
-        <button class="sbtn" data-step="filled+" aria-label="More filled">+</button></div></div>
-      <div class="pfield pf-status"><label>On the public board</label>
-        <div class="pstatus"><span class="ladder">${seats}</span>
-          <span class="status ${open && st === 'published' ? 'open' : ''}">${open ? (st === 'published' ? avail + ' open' : 'Opening soon') : 'Filled'}</span>
-          <span class="state ${st}">${st === 'none' ? 'No questions' : st}</span></div></div>
+    <div class="pavailability">
+      <div class="pfield"><label>Availability</label><div class="availability-toggle" role="group" aria-label="Availability for ${esc(p.title)}">
+        <button type="button" data-availability="hiring" aria-pressed="${open}">Still hiring</button>
+        <button type="button" data-availability="filled" aria-pressed="${!open}">Filled</button>
+      </div></div>
+      <div class="pstatus">
+        <span class="status ${open && st === 'published' ? 'open' : ''}">${open ? (st === 'published' ? 'Accepting applications' : 'Opening soon') : 'Filled'}</span>
+        <span class="state ${st}">${st === 'none' ? 'No questions' : st}</span>
+      </div>
     </div>
     <div class="pactions">
       <button class="mini" data-act="desc">${p.purpose || p.duties?.length || p.not?.length || p.hours ? 'Edit description' : 'Add description'}</button>
-      ${open ? `<button class="mini" data-act="edit">${st === 'none' ? 'Add questions' : 'Edit questions'}</button>` : ''}
+      <button class="mini" data-act="edit">${st === 'none' ? 'Add questions' : 'Edit questions'}</button>
       <span class="pspacer"></span>
       ${appsFor(p.id) ? `<span class="slab">${appsFor(p.id)} application${appsFor(p.id) === 1 ? '' : 's'}</span>` : ''}
       <button class="mini" data-act="up" ${idx === 0 ? 'disabled' : ''} aria-label="Move up">&uarr;</button>
-      <button class="mini" data-act="down" ${idx === d.positions.length - 1 ? 'disabled' : ''} aria-label="Move down">&darr;</button>
+      <button class="mini" data-act="down" ${idx === groupLength - 1 ? 'disabled' : ''} aria-label="Move down">&darr;</button>
     </div>
     <div class="qpanel descpanel" data-descpanel hidden></div>
     <div class="qpanel" data-panel hidden></div>
   </div>`;
 }
 
-function addPositionBlock() {
+function addPositionBlock(dept) {
   return `<div class="addrow"><h4>Add a position</h4>
     <div class="addgrid">
       <div><label for="npDept">Department</label>
-        <input type="text" id="npDept" list="deptList" value="${esc(STATE.departments[0]?.name || '')}" placeholder="type or pick"></div>
+        <input type="text" id="npDept" list="deptList" value="${esc(dept?.name || '')}" placeholder="type or pick"></div>
       <div><label for="npTitle">Position name</label><input type="text" id="npTitle" placeholder="e.g. Media Executive"></div>
       <div><label for="npLevel">Level</label><input type="text" id="npLevel" list="levelList" value="Executive" placeholder="type or pick"></div>
-      <div><label for="npSeats">Seats</label><input type="text" id="npSeats" value="1"></div>
     </div>
     <div class="okbox">A new position appears on the public board as <b>Opening soon</b> until questions are generated and published — never as an Apply button that leads nowhere.</div>
     <div class="err" id="addErr" hidden></div>
@@ -3231,59 +3180,74 @@ function wirePositions() {
     title.addEventListener('input', () => { p.title = title.value; renderBoard(); queueSave(); });
     title.addEventListener('change', () => {
       if (!p.title.trim()) p.title = 'Untitled position';
-      renderBoard(); renderPositions(); renderFilter(true); queueSave();
+      renderBoard(); if (!hasUnsavedPositionDraft()) renderPositions();
+      renderFilter(true); queueSave();
     });
 
     row.querySelector('[data-f="level"]').addEventListener('change', e => {
       p.level = e.target.value.trim() || 'Executive'; p.depth = depthFor(p.level);
-      renderBoard(); renderPositions(); queueSave();
+      renderBoard(); if (!hasUnsavedPositionDraft()) renderPositions(); queueSave();
     });
 
-    row.querySelector('[data-f="dept"]').addEventListener('change', e => {
+    row.querySelector('[data-f="dept"]').addEventListener('change', async e => {
+      if (!await confirmPositionDraftChange()) { e.target.value = d.name; return; }
       const target = ensureDept(e.target.value);
       if (!target || target === d) { renderPositions(); return; }
       d.positions.splice(d.positions.indexOf(p), 1);
       target.positions.push(p); p.dept = target.name;
       pruneDepts(); reindex();
+      ADMIN_DEPT = target.name;
       renderBoard(); renderPositions(); renderFilter(true); queueSave();
     });
 
-    const setSeats = (f, v) => {
-      v = Math.max(0, v);
-      if (f === 'total') { p.total = Math.max(1, v); if (p.filled > p.total) p.filled = p.total; }
-      else p.filled = Math.min(Math.max(0, v), p.total);
+    row.querySelectorAll('[data-availability]').forEach(button => button.addEventListener('click', async () => {
+      const next = button.dataset.availability;
+      if (isOpen(p) === (next === 'hiring')) return;
+      if (!await confirmPositionDraftChange()) return;
+      const message = next === 'filled'
+        ? 'This role moves into Filled and stops accepting new applications. Existing applications stay untouched.'
+        : qState(p) === 'published'
+          ? 'This role moves into Still hiring and starts accepting applications again.'
+          : 'This role moves into Still hiring. It will show Opening soon until its questions are published.';
+      if (!await uiConfirm(`${next === 'filled' ? 'Mark as filled' : 'Reopen'}: ${p.title}?`, message,
+        next === 'filled' ? 'Mark filled' : 'Reopen role')) return;
+      p.availability = next;
       renderBoard(); renderPositions(); renderStats(); queueSave();
-    };
-    row.querySelectorAll('[data-f="total"],[data-f="filled"]').forEach(inp =>
-      inp.addEventListener('change', () => setSeats(inp.dataset.f, parseInt(inp.value, 10) || 0)));
-    row.querySelectorAll('[data-step]').forEach(b => b.addEventListener('click', () => {
-      const f = b.dataset.step.slice(0, -1), op = b.dataset.step.slice(-1);
-      setSeats(f, (f === 'total' ? p.total : p.filled) + (op === '+' ? 1 : -1));
     }));
 
     const edit = row.querySelector('[data-act="edit"]');
-    if (edit) edit.addEventListener('click', () => {
+    if (edit) edit.addEventListener('click', async () => {
       const panel = row.querySelector('[data-panel]');
-      if (!panel.hidden) { panel.hidden = true; panel.innerHTML = ''; return; }
+      if (!panel.hidden) {
+        if (!await confirmPositionDraftChange(panel)) return;
+        panel.hidden = true; panel.innerHTML = ''; return;
+      }
       panel.hidden = false; drawQuestionPanel(panel, p);
     });
 
-    row.querySelector('[data-act="desc"]').addEventListener('click', () => {
+    row.querySelector('[data-act="desc"]').addEventListener('click', async () => {
       const panel = row.querySelector('[data-descpanel]');
-      if (!panel.hidden) { panel.hidden = true; panel.innerHTML = ''; return; }
+      if (!panel.hidden) {
+        if (!await confirmPositionDraftChange(panel)) return;
+        panel.hidden = true; panel.innerHTML = ''; return;
+      }
       panel.hidden = false; drawDescPanel(panel, p);
     });
 
-    const move = dir => {
-      const i = d.positions.indexOf(p), j = i + dir;
-      if (j < 0 || j >= d.positions.length) return;
-      d.positions.splice(i, 1); d.positions.splice(j, 0, p);
+    const move = async dir => {
+      if (!await confirmPositionDraftChange()) return;
+      const group = d.positions.filter(x => isOpen(x) === isOpen(p));
+      const peer = group[group.indexOf(p) + dir];
+      if (!peer) return;
+      const i = d.positions.indexOf(p), j = d.positions.indexOf(peer);
+      d.positions[i] = peer; d.positions[j] = p;
       renderBoard(); renderPositions(); queueSave();
     };
     row.querySelector('[data-act="up"]')?.addEventListener('click', () => move(-1));
     row.querySelector('[data-act="down"]')?.addEventListener('click', () => move(1));
 
     row.querySelector('[data-act="del"]').addEventListener('click', async () => {
+      if (!await confirmPositionDraftChange()) return;
       const n = appsFor(p.id);
       const msg = n
         ? `${n} submitted application${n === 1 ? '' : 's'} will remain in the database with their original role title and answers. The position will be removed from the public board and a server backup will be kept.`
@@ -3302,10 +3266,10 @@ function wirePositions() {
     const d = ensureDept($('#npDept').value);
     if (!d) { $('#npDept').focus(); showAddErr('Give the position a department.'); return; }
     const level = $('#npLevel').value.trim() || 'Executive';
-    const seats = Math.max(1, parseInt($('#npSeats').value, 10) || 1);
     const id = 'p' + Date.now();
-    d.positions.push({ id, title, level, depth: depthFor(level), total: seats, filled: 0, dept: d.name,
+    d.positions.push({ id, title, level, depth: depthFor(level), total: 1, filled: 0, availability: 'hiring', dept: d.name,
       purpose: '', duties: [], not: [], goodLooksLike: [], hours: '', reportsTo: '', questions: null, qState: 'none' });
+    ADMIN_DEPT = d.name;
     reindex();
     renderBoard(); renderPositions(); renderStats(); renderFilter(true); queueSave();
   });
@@ -3330,6 +3294,7 @@ function drawDescPanel(panel, p) {
       <button class="btn" data-a="savedesc">Save description</button>
       <span class="thinking" data-descstatus></span>
     </div>`;
+  markPanelDraft(panel);
 
   const statusEl = panel.querySelector('[data-descstatus]');
   panel.querySelector('[data-a="savedesc"]').addEventListener('click', () => {
@@ -3340,6 +3305,7 @@ function drawDescPanel(panel, p) {
     p.hours = panel.querySelector('[data-d="hours"]').value.trim();
     p.reportsTo = panel.querySelector('[data-d="reportsTo"]').value.trim();
     queueSave();
+    markPanelDraft(panel);
     const trigger = panel.closest('.prow')?.querySelector('[data-act="desc"]');
     if (trigger) trigger.textContent = 'Edit description';
     statusEl.textContent = 'Queued for saving. Check the status above.';
@@ -3361,11 +3327,14 @@ function drawQuestionPanel(panel, p) {
       <span class="thinking" data-status></span>
     </div>
     <p class="hint" style="margin-top:8px">${p.frozenAt ? `Published by ${esc(p.approvedBy || '—')} on ${esc(p.frozenAt)}.` : 'Publishing records your name and the time.'}</p>`;
+  markPanelDraft(panel);
 
   const statusEl = panel.querySelector('[data-status]');
   const read = () => [...panel.querySelectorAll('textarea')].map(t => t.value.trim());
 
   panel.querySelector('[data-a="gen"]').addEventListener('click', async e => {
+    if (hasUnsavedPositionDraft(panel) && !await uiConfirm('Replace unsaved questions?',
+      'Your edits in this question set will be replaced by the generated draft.', 'Replace')) return;
     if (!KEY_SET) { askForKey(() => drawQuestionPanel(panel, p)); return; }
     e.target.disabled = true; statusEl.textContent = 'Asking Gemini…';
     try {
@@ -3381,6 +3350,7 @@ function drawQuestionPanel(panel, p) {
 
   panel.querySelector('[data-a="save"]').addEventListener('click', () => {
     p.draftQuestions = read(); p.qState = 'draft'; queueSave();
+    markPanelDraft(panel);
     statusEl.textContent = 'Draft queued for saving. Not public.';
   });
 

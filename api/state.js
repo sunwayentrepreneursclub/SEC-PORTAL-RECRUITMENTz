@@ -14,6 +14,7 @@ function validateDepartments(departments) {
     for (const p of dept.positions) {
       if (!p || typeof p.id !== 'string' || !p.id || ids.has(p.id) ||
           typeof p.title !== 'string' || !p.title.trim() ||
+          (p.availability !== undefined && !['hiring', 'filled'].includes(p.availability)) ||
           !Number.isSafeInteger(p.total) || p.total < 1 || p.total > 500 ||
           !Number.isSafeInteger(p.filled) || p.filled < 0 || p.filled > p.total)
         return 'A position has a missing or duplicate ID, invalid name, or invalid seat count.';

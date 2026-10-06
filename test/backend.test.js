@@ -36,7 +36,7 @@ globalThis.fetch = async (_url, opts) => {
   return { ok: true, json: async () => ({ result }) };
 };
 
-const { issueSession } = await import('../api/_lib.js');
+const { issueSession, positionIsHiring } = await import('../api/_lib.js');
 const { default: stateHandler } = await import('../api/state.js');
 const { default: appsHandler } = await import('../api/applications.js');
 const { default: backupHandler } = await import('../api/backup.js');
@@ -167,4 +167,52 @@ test('removing a reviewer revokes an existing session', async () => {
   const response = await call(backupHandler, 'GET', '/api/backup', null, true);
   assert.equal(response.status, 401);
   process.env.ADMIN_USERS = 'reviewer:test-password';
+});
+
+test('explicit availability overrides legacy seat counts without deleting them', async () => {
+  assert.equal(positionIsHiring({ total: 3, filled: 1 }), true);
+  assert.equal(positionIsHiring({ total: 3, filled: 3 }), false);
+  assert.equal(positionIsHiring({ total: 3, filled: 3, availability: 'hiring' }), true);
+  assert.equal(positionIsHiring({ total: 3, filled: 1, availability: 'filled' }), false);
+
+  const current = await call(stateHandler, 'GET', '/api/state', null, true);
+  const next = structuredClone(current.data.departments);
+  next[0].positions[0].availability = 'filled';
+  const saved = await call(stateHandler, 'PUT', '/api/state', {
+    departments: next, settings: current.data.settings, revision: current.data.revision,
+  }, true);
+  assert.equal(saved.status, 200);
+  const stored = JSON.parse(data.get('sec:state')).departments[0].positions[0];
+  assert.equal(stored.availability, 'filled');
+  assert.equal(stored.total, 2);
+  assert.equal(stored.filled, 0);
+});
+
+test('public state hides filled roles and seat counts; application endpoint blocks them', async () => {
+  const before = await call(stateHandler, 'GET', '/api/state');
+  assert.equal(before.data.departments.length, 0);
+  const denied = await call(appsHandler, 'POST', '/api/applications', {
+    name: 'Blocked Applicant', imail: 'blocked@imail.sunway.edu.my', positionId: 'web',
+    answers: ['1', '2', '3', '4', '5'],
+  });
+  assert.equal(denied.status, 409);
+
+  const current = await call(stateHandler, 'GET', '/api/state', null, true);
+  const next = structuredClone(current.data.departments);
+  next[0].positions[0].availability = 'hiring';
+  next[0].positions[0].filled = next[0].positions[0].total;
+  const saved = await call(stateHandler, 'PUT', '/api/state', {
+    departments: next, settings: current.data.settings, revision: current.data.revision,
+  }, true);
+  assert.equal(saved.status, 200);
+  const publicView = await call(stateHandler, 'GET', '/api/state');
+  const role = publicView.data.departments[0].positions[0];
+  assert.equal(role.availability, 'hiring');
+  assert.equal('total' in role, false);
+  assert.equal('filled' in role, false);
+  const accepted = await call(appsHandler, 'POST', '/api/applications', {
+    name: 'New Applicant', imail: 'new@imail.sunway.edu.my', positionId: 'web',
+    answers: ['1', '2', '3', '4', '5'],
+  });
+  assert.equal(accepted.status, 201);
 });

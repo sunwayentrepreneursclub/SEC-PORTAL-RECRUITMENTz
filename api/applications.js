@@ -1,6 +1,7 @@
 import crypto from 'node:crypto';
 import { send, readBody, requireAdmin, currentUser, loadState, loadApps,
-         loadAppsRecord, kvReplaceSafely, K_APPS, K_APPS_HISTORY, guardEnv } from './_lib.js';
+         loadAppsRecord, kvReplaceSafely, K_APPS, K_APPS_HISTORY,
+         positionIsHiring, guardEnv } from './_lib.js';
 
 const IMAIL = /^[^@\s]+@imail\.sunway\.edu\.my$/;
 const words = s => (s || '').trim() ? s.trim().split(/\s+/).length : 0;
@@ -40,7 +41,7 @@ export default async function handler(req, res) {
     const found = findPosition(state, String(body.positionId || ''));
     if (!found) return send(res, 404, { error: 'That position no longer exists.' });
     const { p, dept } = found;
-    if (p.filled >= p.total) return send(res, 409, { error: 'That position has closed.' });
+    if (!positionIsHiring(p)) return send(res, 409, { error: 'That position has closed.' });
     if (p.qState !== 'published') return send(res, 409, { error: 'That position is not open for applications yet.' });
     if (answers.length !== 5 || answers.some(a => !a)) return send(res, 400, { error: 'All five questions need an answer.' });
     if (answers.some(a => words(a) > 150)) return send(res, 400, { error: 'One or more answers is over 150 words.' });

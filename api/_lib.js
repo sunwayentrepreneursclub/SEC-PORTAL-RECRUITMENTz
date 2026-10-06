@@ -292,6 +292,14 @@ export function seedState() {
   };
 }
 
+/* New roles use a simple hiring/filled switch. Existing records keep their
+   saved seat counts and derive the same availability until an admin changes it. */
+export function positionIsHiring(p) {
+  if (p.availability === 'hiring') return true;
+  if (p.availability === 'filled') return false;
+  return p.filled < p.total;
+}
+
 /* Strip anything the public must not see: draft questions, and questions for closed roles. */
 export function publicState(state) {
   return {
@@ -302,18 +310,17 @@ export function publicState(state) {
     },
     departments: (state.departments || []).map(d => ({
       name: d.name, note: d.note,
-      positions: (d.positions || []).map(p => {
-        const open = p.filled < p.total;
+      positions: (d.positions || []).filter(positionIsHiring).map(p => {
         const ready = p.qState === 'published' && Array.isArray(p.questions) && p.questions.length === 5;
         return {
           id: p.id, title: p.title, level: p.level, depth: p.depth,
-          total: p.total, filled: p.filled, ready,
+          availability: 'hiring', ready,
           purpose: p.purpose || '', duties: p.duties || [], not: p.not || [],
           goodLooksLike: p.goodLooksLike || [], hours: p.hours || '', reportsTo: p.reportsTo || '',
-          questions: open && ready ? p.questions : null,
+          questions: ready ? p.questions : null,
         };
       }),
-    })),
+    })).filter(d => d.positions.length),
   };
 }
 

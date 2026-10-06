@@ -1495,6 +1495,48 @@ textarea{min-height:110px;resize:vertical}
 .pstatus{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:8px}
 .pactions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--board-line);padding-top:16px}
 .pspacer{flex:1}
+/* The department is a workspace; each position is its own editable record. */
+#viewAdmin .pdept{background:#F3F6FA;border-color:#CCD7E3;box-shadow:none}
+#viewAdmin .pdept > h3{background:#E7EEF7;border-color:#CCD7E3;color:#173554;padding:20px 24px;font-size:20px}
+#viewAdmin .pdept > h3 .slab{font-size:11px;color:#53677D}
+#viewAdmin .pos-section-title{padding:20px 24px 12px;color:#526478}
+#viewAdmin .pdept .pcard{
+  padding:0;margin:0 20px 16px;background:#fff;border:1px solid #C7D2DF;
+  border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(20,47,78,.055);
+}
+#viewAdmin .pdept .pcard:focus-within{border-color:#638BB7;box-shadow:0 0 0 2px rgba(0,94,217,.12)}
+#viewAdmin .pcard-head{
+  display:flex;justify-content:space-between;align-items:flex-start;gap:18px;
+  padding:17px 20px;background:#EAF2FC;border-bottom:1px solid #CBD9E9;
+}
+#viewAdmin .pcard.is-filled .pcard-head{background:#ECEFF2;border-bottom-color:#D5DBE1}
+#viewAdmin .pcard-identity{min-width:0}
+#viewAdmin .pcard-index{display:block;margin-bottom:4px;color:#47688C;font:700 10px/1.3 var(--body);letter-spacing:.11em;text-transform:uppercase}
+#viewAdmin .pcard.is-filled .pcard-index{color:#66717C}
+#viewAdmin .pcard-title{margin:0;color:#10283F;font:700 clamp(17px,1.55vw,21px)/1.25 var(--body);letter-spacing:-.025em;overflow-wrap:anywhere}
+#viewAdmin .pcard.is-filled .pcard-title{color:#35424F}
+#viewAdmin .pcard-head-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;flex:none;max-width:55%}
+#viewAdmin .pcard-head .status{
+  display:inline-flex;align-items:center;border-radius:100px;padding:5px 10px;
+  font-size:10px;letter-spacing:.035em;line-height:1.2;text-transform:none;
+}
+#viewAdmin .pcard-head .status.open{color:#17633E;background:#DBF2E6}
+#viewAdmin .pcard-head .status.soon{color:#76500B;background:#FFF0CF}
+#viewAdmin .pcard-head .status.filled{color:#56616D;background:#DFE3E7}
+#viewAdmin .pcard .pcross{position:static;width:40px;height:40px;flex:none;background:#fff;border-color:#BDC9D4;color:#526173}
+#viewAdmin .pcard-body{padding:20px 20px 0}
+#viewAdmin .pcard-section-label{margin:0 0 14px;color:#33475B;font:700 11px/1.3 var(--body);letter-spacing:.09em;text-transform:uppercase}
+#viewAdmin .pcard .pgrid{gap:12px;margin-bottom:20px}
+#viewAdmin .pcard .pfield label{color:#526478}
+#viewAdmin .pcard .pfield input[type=text]{background:#FAFCFE;border-color:#BDC9D5}
+#viewAdmin .pcard .pf-title input{font-weight:600}
+#viewAdmin .pcard .pavailability{padding:16px 0;margin:0;border-top:1px solid #E1E7ED}
+#viewAdmin .pcard .pstatus{padding:0}
+#viewAdmin .pcard .pactions{margin:0 -20px;padding:14px 20px;background:#F7F9FC;border-top:1px solid #E1E7ED}
+#viewAdmin .pcard .qpanel{margin:0 -20px;padding:20px;background:#FBFCFE;border-top:2px solid #C9D9EA}
+#viewAdmin .admin-filled{border-top-color:#CBD7E2}
+#viewAdmin .admin-filled summary{color:#475C70;padding:18px 24px}
+#viewAdmin .admin-filled .prow:first-of-type{border-top:1px solid #C7D2DF}
 .mini.danger{border-color:var(--err);color:var(--err)}
 .btn.danger{background:var(--err);border-color:var(--err)}
 .btn.danger:hover{background:#B8262F;border-color:#B8262F;box-shadow:0 4px 14px rgba(214,48,58,.3)}
@@ -1503,6 +1545,15 @@ textarea{min-height:110px;resize:vertical}
 @media (max-width:720px){
   .pgrid{grid-template-columns:1fr}
   .pavailability{align-items:flex-start}
+  #viewAdmin .pdept > h3{padding:16px 18px}
+  #viewAdmin .pos-section-title{padding:16px 18px 10px}
+  #viewAdmin .pdept .pcard{margin:0 10px 12px}
+  #viewAdmin .pcard-head{padding:14px 16px}
+  #viewAdmin .pcard-head-actions{max-width:50%;gap:8px}
+  #viewAdmin .pcard-body{padding:16px 16px 0}
+  #viewAdmin .pcard .pactions{margin:0 -16px;padding:14px 16px}
+  #viewAdmin .pcard .qpanel{margin:0 -16px;padding:16px}
+  #viewAdmin .pcard .pactions .mini{min-height:44px}
 }
 
 .applrow{display:flex;align-items:stretch;border-bottom:1px solid var(--board-line)}
@@ -3164,23 +3215,31 @@ function renderPositions() {
 
 function positionRow(p, d, idx, groupLength) {
   const st = qState(p), open = isOpen(p);
-  return `<div class="prow pcard" data-pid="${p.id}">
-    <button class="pcross" data-act="del" aria-label="Remove ${esc(p.title)}">&#10005;</button>
+  const statusText = !open ? 'Filled' : st === 'published' ? 'Accepting applications' : 'Opening soon';
+  const statusClass = !open ? 'filled' : st === 'published' ? 'open' : 'soon';
+  return `<article class="prow pcard ${open ? 'is-hiring' : 'is-filled'}" data-pid="${esc(p.id)}" aria-labelledby="pos-title-${esc(p.id)}">
+    <header class="pcard-head">
+      <div class="pcard-identity"><span class="pcard-index">Role ${String(idx + 1).padStart(2, '0')}</span>
+        <h5 class="pcard-title" id="pos-title-${esc(p.id)}">${esc(p.title)}</h5></div>
+      <div class="pcard-head-actions"><span class="status ${statusClass}">${statusText}</span>
+        <button class="pcross" type="button" data-act="del" aria-label="Remove ${esc(p.title)}">&#10005;</button></div>
+    </header>
+    <div class="pcard-body">
+    <p class="pcard-section-label">Edit role details</p>
     <div class="pgrid">
-      <div class="pfield pf-title"><label>Position name</label>
-        <input type="text" value="${esc(p.title)}" data-f="title" data-focus="t-${p.id}" aria-label="Position name for ${esc(p.title)}"></div>
-      <div class="pfield"><label>Level</label>
-        <input type="text" list="levelList" value="${esc(p.level)}" data-f="level" data-focus="lv-${p.id}" aria-label="Level for ${esc(p.title)}"></div>
-      <div class="pfield"><label>Department</label>
-        <input type="text" list="deptList" value="${esc(d.name)}" data-f="dept" data-focus="dp-${p.id}" aria-label="Department for ${esc(p.title)}"></div>
+      <div class="pfield pf-title"><label for="p-title-${esc(p.id)}">Position name</label>
+        <input type="text" id="p-title-${esc(p.id)}" value="${esc(p.title)}" data-f="title" data-focus="t-${p.id}" aria-label="Position name for ${esc(p.title)}"></div>
+      <div class="pfield"><label for="p-level-${esc(p.id)}">Level</label>
+        <input type="text" id="p-level-${esc(p.id)}" list="levelList" value="${esc(p.level)}" data-f="level" data-focus="lv-${p.id}" aria-label="Level for ${esc(p.title)}"></div>
+      <div class="pfield"><label for="p-dept-${esc(p.id)}">Department</label>
+        <input type="text" id="p-dept-${esc(p.id)}" list="deptList" value="${esc(d.name)}" data-f="dept" data-focus="dp-${p.id}" aria-label="Department for ${esc(p.title)}"></div>
     </div>
     <div class="pavailability">
       <div class="pfield"><label>Availability</label><div class="availability-toggle" role="group" aria-label="Availability for ${esc(p.title)}">
         <button type="button" data-availability="hiring" aria-pressed="${open}">Still hiring</button>
         <button type="button" data-availability="filled" aria-pressed="${!open}">Filled</button>
       </div></div>
-      <div class="pstatus">
-        <span class="status ${open && st === 'published' ? 'open' : ''}">${open ? (st === 'published' ? 'Accepting applications' : 'Opening soon') : 'Filled'}</span>
+      <div class="pstatus"><span class="slab">Questions</span>
         <span class="state ${st}">${st === 'none' ? 'No questions' : st}</span>
       </div>
     </div>
@@ -3189,12 +3248,13 @@ function positionRow(p, d, idx, groupLength) {
       <button class="mini" data-act="edit">${st === 'none' ? 'Add questions' : 'Edit questions'}</button>
       <span class="pspacer"></span>
       ${appsFor(p.id) ? `<span class="slab">${appsFor(p.id)} application${appsFor(p.id) === 1 ? '' : 's'}</span>` : ''}
-      <button class="mini" data-act="up" ${idx === 0 ? 'disabled' : ''} aria-label="Move up">&uarr;</button>
-      <button class="mini" data-act="down" ${idx === groupLength - 1 ? 'disabled' : ''} aria-label="Move down">&darr;</button>
+      <button class="mini" data-act="up" ${idx === 0 ? 'disabled' : ''} aria-label="Move ${esc(p.title)} up">&uarr;</button>
+      <button class="mini" data-act="down" ${idx === groupLength - 1 ? 'disabled' : ''} aria-label="Move ${esc(p.title)} down">&darr;</button>
     </div>
     <div class="qpanel descpanel" data-descpanel hidden></div>
     <div class="qpanel" data-panel hidden></div>
-  </div>`;
+    </div>
+  </article>`;
 }
 
 function addPositionBlock(dept) {
@@ -3218,7 +3278,11 @@ function wirePositions() {
     const d = deptOf(p);
 
     const title = row.querySelector('[data-f="title"]');
-    title.addEventListener('input', () => { p.title = title.value; renderBoard(); queueSave(); });
+    title.addEventListener('input', () => {
+      p.title = title.value;
+      row.querySelector('.pcard-title').textContent = title.value.trim() || 'Untitled position';
+      renderBoard(); queueSave();
+    });
     title.addEventListener('change', () => {
       if (!p.title.trim()) p.title = 'Untitled position';
       renderBoard(); if (!hasUnsavedPositionDraft()) renderPositions();

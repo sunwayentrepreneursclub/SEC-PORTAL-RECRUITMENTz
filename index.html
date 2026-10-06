@@ -184,6 +184,34 @@ body{
 #viewPublic .abandsection{margin-bottom:112px}
 #pp-overview>.abandsection:first-child{border-top:0}
 
+/* ---- scale: the main site runs its section titles at 74px, stats at 86px and
+   the closing call-to-action at 104px. Everything here was well under that. ---- */
+#viewPublic .aband-title{font-size:clamp(44px,5.4vw,80px)}
+#pp-overview>.abandsection:first-child .aband-title{font-size:clamp(52px,6.6vw,100px)}
+#viewPublic .aband-lede,#viewPublic .proof-closing{font-size:19px;max-width:52ch}
+#viewPublic .standard-card h3{font-size:clamp(30px,3vw,44px);margin-bottom:16px}
+#viewPublic .standard-card p{font-size:18px;max-width:30ch}
+#viewPublic #overviewStats .n,#viewPublic .stat .n{font-size:clamp(64px,8.4vw,128px);color:var(--ink)!important}
+#viewPublic .stat .l{font-family:var(--body);font-size:19px;font-weight:500;letter-spacing:-.02em;text-transform:none;color:var(--ink);margin-top:18px}
+#viewPublic .proof-list{gap:6px 48px;max-width:none}
+#viewPublic .proof-list li{font-size:clamp(32px,3.6vw,54px);letter-spacing:-.035em;line-height:1.15;padding:14px 0}
+#viewPublic .plain-rows{max-width:none}
+#viewPublic .plain-rows li{font-size:clamp(28px,3.2vw,48px);font-weight:500;letter-spacing:-.04em;padding:12px 0}
+#viewPublic .how-we-work-split{gap:96px}
+#viewPublic .process-num{width:56px;height:56px;font-size:20px}
+#viewPublic .process-label{font-size:19px}
+#viewPublic .final-cta-section{text-align:center;padding-block:48px}
+#viewPublic .final-cta-section .aband-title{font-size:clamp(60px,9vw,128px);margin-bottom:44px}
+#viewPublic .final-cta-section .hero-cta{padding:22px 56px;font-size:19px}
+#viewPublic .chapter-light{padding-block:120px 24px}
+#viewPublic .masthead .lede{font-size:19px}
+#viewPublic .process-step.is-last .process-num{color:#111214}
+@media (min-width:960px){
+  #viewPublic .process-track::before{left:28px;right:28px;top:28px}
+  #viewPublic .process-track::after{left:28px;top:28px}
+  #viewPublic .process-label{font-size:19px}
+}
+
 /* ---- scroll motion, matched to the main site: nothing is ever hidden or
    staggered; each heading/card eases up 16px from 45% opacity (620ms,
    cubic-bezier(.22,1,.36,1)) via the script at the end of the page. The old

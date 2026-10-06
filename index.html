@@ -13,7 +13,7 @@
 <link rel="apple-touch-icon" href="/sec-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,500;1,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
 <style>
 /* =========================================================================
    Editorial-serif theme — matched to sec-website-3-0.vercel.app: a near-
@@ -27,17 +27,17 @@
    ========================================================================= */
 :root{
   --ink:#F6F5F2;
-  --ink-weak:rgba(246,245,242,.68);
-  --paper:#000000;
-  --board:#0A0A0A;
+  --ink-weak:#B7B9BF;
+  --paper:#111214;
+  --board:#1D2025;
   --board-line:rgba(246,245,242,.10);
   --line-strong:rgba(246,245,242,.22);
-  --muted:#CBD0CF;
+  --muted:#B7B9BF;
   --open:#F6F5F2;
   --open-dark:#D8D6D0;
   --open-deep:#B8B6B0;
   --open-soft:rgba(246,245,242,.12);
-  --navy:#000000;
+  --navy:#111214;
   --err:#E8756B;
   --cta:#F6F5F2;
   --cta-dark:#D8D6D0;
@@ -59,7 +59,7 @@
   --a-cyan:var(--ink-weak);   --t-cyan:var(--ink-weak);
   --s-blue:rgba(246,245,242,.05); --s-pink:rgba(246,245,242,.05);
   --s-gold:rgba(246,245,242,.05); --s-green:rgba(246,245,242,.05);
-  --serif:'Playfair Display',Georgia,'Times New Roman',serif;
+  --serif:Georgia,'Times New Roman',serif;
   --display:Georgia,'Times New Roman',serif;
   --display-mega:'Anton',Impact,'Arial Black',sans-serif;
   --body:'Inter',Arial,Helvetica,sans-serif;
@@ -114,8 +114,8 @@ body{
 #viewAdmin{background:var(--paper)}
 /* big, quiet serif display type — the reference runs its headline across two
    lines at a generous size with tight leading, the emphasis word in italic */
-#viewPublic h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.04;letter-spacing:-.01em}
-#viewPublic .aband-title{font-family:var(--serif);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.05;letter-spacing:-.01em}
+#viewPublic h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.08;letter-spacing:-.05em}
+#viewPublic .aband-title{font-family:var(--serif);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.08;letter-spacing:-.045em}
 #viewPublic .aband-title em,#viewPublic h1 em{font-style:italic}
 #viewPublic .lede,#viewPublic .aband-lede{font-weight:400;letter-spacing:0}
 /* flat surfaces instead of a visible border — a 1px inset line (nearly
@@ -152,6 +152,54 @@ body{
    vertical rhythm (it runs 64-80px section padding, well past this site's
    default spacing) */
 #viewPublic .abandsection{margin:0 0 96px}
+/* light "chapter" — same device as the main site: dark by default, one run of
+   information-dense sections flips to warm off-white, then back to dark */
+#viewPublic .chapter-light{
+  --ink:#181C20;--ink-weak:#535B60;--muted:#535B60;
+  --board-line:rgba(24,28,32,.20);--line-strong:rgba(24,28,32,.30);
+  --board:#E7E9E7;--paper:#F6F5F2;
+  position:relative;color:var(--ink);background:#F6F5F2;
+  box-shadow:0 0 0 100vmax #F6F5F2;clip-path:inset(0 -100vmax);
+  padding-block:72px 8px;margin-bottom:96px;
+}
+#viewPublic .chapter-light .abandsection:last-child{margin-bottom:64px}
+#viewPublic .chapter-light .stats{box-shadow:none}
+#viewPublic .chapter-light .hero-cta{background:#181C20;color:#F6F5F2}
+/* ---- plainer, like the main site: no eyebrow labels, no bracket/dash/hash
+   decoration, no ruled boxes. The title carries the section; any supporting
+   line sits under it in muted sans. ---- */
+#viewPublic .aband-eyebrow,#viewPublic .masthead .eyebrow{display:none}
+#viewPublic .why-num::before,#viewPublic .level::before,#viewPublic .cf-level::before{content:none}
+#viewPublic .standard-grid,#viewPublic .standard-card,#viewPublic .proof-list li,
+#viewPublic .plain-rows li,#viewPublic #overviewStats .stat,
+#viewPublic .faq,#viewPublic .faq-item{border:0!important;box-shadow:none!important}
+#viewPublic .standard-card{padding:8px 24px 8px 0}
+#viewPublic .standard-num,#viewPublic .pr-num{display:none}
+#viewPublic .standard-card h3{font-size:26px;letter-spacing:-.04em}
+#viewPublic #overviewStats{gap:30px}
+#viewPublic #overviewStats .stat{padding:0}
+#viewPublic #overviewStats .n,#viewPublic .stat .n{
+  font-family:var(--body);font-weight:500;font-size:clamp(52px,6vw,86px);letter-spacing:-.065em;line-height:1}
+#viewPublic .lede{color:var(--muted);font-size:17px;line-height:1.6;max-width:470px;margin-top:22px}
+#viewPublic .abandsection{margin-bottom:112px}
+#pp-overview>.abandsection:first-child{border-top:0}
+
+/* ---- scroll motion, matched to the main site: nothing is ever hidden or
+   staggered; each heading/card eases up 16px from 45% opacity (620ms,
+   cubic-bezier(.22,1,.36,1)) via the script at the end of the page. The old
+   hide-then-bounce reveals are neutralised here. ---- */
+#viewPublic .abandsection,#viewPublic .abandsection.is-visible,
+#viewPublic .why-card,#viewPublic .wbounce,#viewPublic .abandsection.is-visible .wbounce,
+#viewPublic .proof-list li,#viewPublic .proof-list li.is-visible,
+#viewPublic .dept-card,#viewPublic .dept-card.is-visible,
+#viewPublic .faq-item,#viewPublic .faq-item.is-visible{
+  opacity:1;transform:none;animation:none;transition:none;
+}
+@keyframes heroEnter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+#viewPublic .masthead .mast-copy,#viewPublic .masthead .hero-mark{animation:heroEnter .8s cubic-bezier(.22,1,.36,1) both}
+@media (prefers-reduced-motion:reduce){#viewPublic .masthead .mast-copy,#viewPublic .masthead .hero-mark{animation:none}}
+
+
 #pp-overview>.abandsection:first-child{padding-top:15vh;border-top:1px solid var(--board-line);margin-top:24px}
 #pp-overview>.abandsection:first-child .aband-title{font-size:clamp(36px,5.4vw,68px)}
 #pp-overview>.abandsection:first-child .why-grid{background:#000;border:0;border-radius:0;gap:3px}
@@ -1264,9 +1312,10 @@ textarea{min-height:110px;resize:vertical}
         </div>
       </section>
 
+      <div class="chapter-light">
       <section class="abandsection" data-reveal>
         <div class="aband-head">
-          <p class="aband-eyebrow">SEC, right now</p>
+          <h2 class="aband-title">SEC, right now.</h2>
         </div>
         <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
         <button class="hero-cta" id="findSeatCta" type="button" style="margin-top:28px">Find your seat</button>
@@ -1283,6 +1332,7 @@ textarea{min-height:110px;resize:vertical}
         </ul>
         <p class="proof-closing">Work you can point to. Not a title you have to explain.</p>
       </section>
+      </div>
 
       <section class="abandsection how-we-work-split" data-reveal>
         <div class="hww-left">
@@ -3024,6 +3074,33 @@ if ('IntersectionObserver' in window) {
   updateScrollBar();
 })();
 
+</script>
+
+<script>
+/* scroll reveal — same behaviour as the main site: fade 45%→100% and rise 16px
+   once 12% of the element is in view; cancelled and replayed on re-entry */
+(function(){
+  if(!('IntersectionObserver' in window)||(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches))return;
+  const running=new Map(),seen=new Set();
+  const io=new IntersectionObserver(es=>{
+    es.forEach(e=>{
+      if(e.isIntersecting){
+        if(e.intersectionRatio>=.12&&!seen.has(e.target)){
+          seen.add(e.target);
+          if(e.target.contains(document.activeElement))return;
+          const a=e.target.animate([{opacity:.45,transform:'translateY(16px)'},{opacity:1,transform:'translateY(0)'}],{duration:620,easing:'cubic-bezier(0.22, 1, 0.36, 1)'});
+          running.set(e.target,a);
+          a.finished.then(()=>running.delete(e.target)).catch(()=>{});
+        }
+      }else{seen.delete(e.target);const a=running.get(e.target);if(a)a.cancel();running.delete(e.target);}
+    });
+  },{threshold:[0,.12]});
+  const sel='#viewPublic .aband-head,#viewPublic .standard-card,#viewPublic .stat,#viewPublic .proof-list li,#viewPublic .plain-rows li,#viewPublic .dept-card,#viewPublic .faq-item,#viewPublic .hww-left,#viewPublic .final-cta-section .hero-cta';
+  const seenEl=new Set();
+  const scan=()=>document.querySelectorAll(sel).forEach(el=>{if(!seenEl.has(el)){seenEl.add(el);io.observe(el);}});
+  scan();
+  new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
+})();
 </script>
 </body>
 </html>

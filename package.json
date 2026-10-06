@@ -4,5 +4,10 @@
   "private": true,
   "description": "Sunway Entrepreneurs Club committee recruitment portal",
   "type": "module",
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "node dev-server.mjs"
+  }
 }

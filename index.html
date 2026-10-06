@@ -2004,11 +2004,11 @@ function renderOverviewStats() {
   const el = $('#overviewStats'); if (!el) return;
   const depts = STATE.departments || [];
   const positions = Object.values(POSITIONS);
-  const openSeats = positions.reduce((n, p) => n + Math.max(0, p.total - p.filled), 0);
+  const openNowSeats = positions.filter(isReady).reduce((n, p) => n + Math.max(0, p.total - p.filled), 0);
   const totalSeats = positions.reduce((n, p) => n + p.total, 0);
   const levels = new Set(positions.map(p => p.level)).size;
   const headline = $('#numbersHeadline');
-  if (headline) headline.textContent = `${totalSeats} seats. ${openSeats} open.`;
+  if (headline) headline.textContent = `${totalSeats} seats. ${openNowSeats} open now.`;
   if (!depts.length) { el.innerHTML = `<div class="empty">No positions listed yet.</div>`; return; }
   const STAT_ICONS = [
     '<rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/>',
@@ -2018,7 +2018,7 @@ function renderOverviewStats() {
   ];
   el.innerHTML = [
     [totalSeats, 'Total seats'],
-    [openSeats, 'Open now'],
+    [openNowSeats, 'Open now'],
     [depts.length, 'Teams'],
     [levels, 'Levels'],
   ].map(([n, l], i) => `<div class="stat">

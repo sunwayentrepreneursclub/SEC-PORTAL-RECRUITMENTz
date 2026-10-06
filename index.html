@@ -258,6 +258,65 @@ body{
 #viewPublic .roles-chapter .cf-card.is-filled:hover{box-shadow:none}
 #viewPublic .roles-chapter .empty{color:#535B60}
 
+/* Department-first role index: colour identifies the team, while the role
+   surface stays quiet and the status remains explicit in words. */
+#viewPublic .roles-chapter .department-group{margin:0 0 64px;min-width:0;scroll-margin-top:156px}
+#viewPublic .roles-chapter .department-heading{
+  border-left:4px solid var(--deptc);padding:2px 0 2px 20px;margin:0 0 24px;
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px 28px;
+}
+#viewPublic .roles-chapter .department-heading h3{
+  font-family:var(--serif);font-size:clamp(28px,3vw,42px);font-weight:400;
+  line-height:1.1;letter-spacing:-.045em;color:var(--deptc);margin:0;
+}
+#viewPublic .roles-chapter .department-heading p{
+  font-family:var(--body);font-size:13px;font-weight:600;line-height:1.4;
+  color:#535B60;text-align:right;margin:0;
+}
+#viewPublic .roles-chapter .roles-group,
+#viewPublic .roles-chapter .roles-group:not(:last-child){
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 36px;margin:0;
+}
+#viewPublic .roles-chapter .dept-role{
+  min-width:0;background:transparent;border:0;border-top:1px solid rgba(24,28,32,.22);
+  border-radius:0;box-shadow:none;padding:18px 0 22px;animation:none;
+  opacity:1;transform:none;transition:none;
+}
+#viewPublic .roles-chapter .dept-role:hover{box-shadow:none;transform:none}
+#viewPublic .roles-chapter .dept-role .cf-card-top{align-items:center;gap:12px;margin-bottom:12px}
+#viewPublic .roles-chapter .dept-role .cf-level{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;
+  color:#535B60;
+}
+#viewPublic .roles-chapter .dept-role .cf-status{
+  color:#181C20;font-size:11px;letter-spacing:.01em;text-transform:none;
+  text-align:right;white-space:nowrap;
+}
+#viewPublic .roles-chapter .dept-role.is-soon .cf-status{color:#535B60}
+#viewPublic .roles-chapter .dept-role .cf-card-title{
+  font-family:var(--serif);font-size:clamp(22px,2vw,28px);font-weight:400;
+  line-height:1.15;letter-spacing:-.035em;margin:0 0 10px;
+}
+#viewPublic .roles-chapter .dept-role .cf-card-desc{
+  font-size:14px;line-height:1.55;min-height:0;margin:0 0 18px;
+  display:block;overflow:visible;
+}
+#viewPublic .roles-chapter .dept-role .cf-card-foot{padding:0;gap:12px}
+#viewPublic .roles-chapter .dept-role .cf-card-sub{font-size:12px;color:#535B60;margin:0}
+#viewPublic .roles-chapter .dept-role .cf-apply{padding:8px 15px;font-size:12px;min-height:38px}
+#viewPublic .roles-chapter .filled-band{border-top:1px solid rgba(24,28,32,.22);padding-top:16px;margin-top:4px}
+#viewPublic .roles-chapter .department-empty{margin:0 0 40px}
+@media (max-width:720px){
+  #viewPublic .roles-chapter .department-group{margin-bottom:44px}
+  #viewPublic .roles-chapter .department-heading{display:block;padding-left:14px;margin-bottom:18px}
+  #viewPublic .roles-chapter .department-heading h3{font-size:clamp(27px,7.8vw,34px)}
+  #viewPublic .roles-chapter .department-heading p{text-align:left;margin-top:7px;font-size:12px}
+  #viewPublic .roles-chapter .roles-group,
+  #viewPublic .roles-chapter .roles-group:not(:last-child){grid-template-columns:minmax(0,1fr);gap:0}
+  #viewPublic .roles-chapter .dept-role{padding:17px 0 20px}
+  #viewPublic .roles-chapter .dept-role .cf-card-title{font-size:clamp(22px,6vw,26px)}
+}
+
 
 /* ---- scroll motion, matched to the main site: nothing is ever hidden or
    staggered; each heading/card eases up 16px from 45% opacity (620ms,
@@ -1586,8 +1645,8 @@ textarea{min-height:110px;resize:vertical}
       <div class="hero-grid">
         <div class="mast-copy">
           <p class="eyebrow">Committee recruitment</p>
-          <h1>If you need to be chased, don't apply.</h1>
-          <p class="lede">Own it. Ship it. Speak early. Finish. This is the standard.</p>
+          <h1>The standard? Own it.</h1>
+          <p class="lede">Speak early. Follow through. Finish what you start.</p>
           <button class="hero-cta" id="heroApply" type="button">View open roles</button>
         </div>
       </div>
@@ -2473,34 +2532,56 @@ const deptColor = name => {
 
 function cfCardHTML(p, i) {
   const open = isOpen(p), ready = isReady(p), avail = p.total - p.filled;
-  const statusText = open ? (ready ? avail + ' open' : 'Opening soon') : 'Filled';
-  return `<div class="cf-card ${open && ready ? 'is-open' : ''} ${!open ? 'is-filled' : ''}" data-pid="${p.id}" data-index="${i}"
-      style="--deptc:${deptColor(p.dept)}"
+  const statusText = ready ? `${avail} ${avail === 1 ? 'seat' : 'seats'} open now` : 'Opening soon';
+  return `<article class="cf-card dept-role ${ready ? 'is-open' : 'is-soon'}" data-pid="${p.id}" data-index="${i}"
       aria-label="${esc(p.title)}, ${i + 1} of ${CF_POSITIONS.length}">
-    <div class="cf-card-top"><span class="cf-dept">${esc(p.dept)}</span><span class="cf-level">${esc(p.level)}</span></div>
-    <div class="cf-card-title">${esc(p.title)}</div>
-    ${p.total > 1 ? `<div class="cf-card-sub">${p.filled} of ${p.total} seats filled</div>` : ''}
+    <div class="cf-card-top"><span class="cf-level">${esc(p.level)}</span><span class="cf-status">${statusText}</span></div>
+    <h4 class="cf-card-title">${esc(p.title)}</h4>
     ${p.purpose ? `<p class="cf-card-desc">${esc(p.purpose)}</p>` : ''}
-    <div class="cf-card-ladder" aria-hidden="true">${seatLadderHTML(p)}</div>
     <div class="cf-card-foot">
-      <span class="cf-status">${statusText}</span>
-      ${open ? `<button class="apply cf-apply" data-apply="${p.id}">View role</button>` : ''}
+      ${p.total > 1 && p.filled > 0 ? `<span class="cf-card-sub">${p.filled} of ${p.total} seats filled</span>` : '<span></span>'}
+      ${open ? `<button class="apply cf-apply" type="button" data-apply="${p.id}" aria-label="View ${esc(p.title)} role">View role</button>` : ''}
     </div>
-  </div>`;
+  </article>`;
+}
+
+// The API's stored depth predates several current levels. Rank by the visible
+// level name, and keep admin order when two roles share the same level.
+function roleRank(level) {
+  const name = String(level || '').toLowerCase();
+  if (/president|secretary general|treasurer|^exco$/.test(name)) return 0;
+  if (/^director$|^head$/.test(name)) return 1;
+  if (/deputy|vice head/.test(name)) return 2;
+  if (/executive|officer|auditor|engineer|developer|analyst/.test(name)) return 3;
+  return 4;
 }
 
 function buildJobList(positions) {
   CF_POSITIONS = positions;
   const list = $('#jobList');
-  const openReady = positions.filter(p => isOpen(p) && isReady(p));
-  const openingSoon = positions.filter(p => isOpen(p) && !isReady(p));
+  const actionable = positions.filter(isOpen);
   const filled = positions.filter(p => !isOpen(p));
 
   if (!positions.length) {
     list.innerHTML = `<div class="empty">No positions match this filter.</div>`;
   } else {
-    const idx = { n: 0 };
-    const cards = arr => arr.map(p => cfCardHTML(p, idx.n++)).join('');
+    const byDept = [];
+    actionable.forEach(p => {
+      let group = byDept.find(d => d.name === p.dept);
+      if (!group) byDept.push(group = { name: p.dept, items: [] });
+      group.items.push(p);
+    });
+    const chapters = byDept.map(group => {
+      const readySeats = group.items.filter(isReady).reduce((sum, p) => sum + p.total - p.filled, 0);
+      const soonCount = group.items.filter(p => !isReady(p)).length;
+      const summary = [readySeats ? `${readySeats} ${readySeats === 1 ? 'seat' : 'seats'} open now` : '',
+        soonCount ? `${soonCount} ${soonCount === 1 ? 'role' : 'roles'} opening soon` : ''].filter(Boolean).join(' · ');
+      const items = group.items.map((p, index) => ({ p, index })).sort((a, b) => roleRank(a.p.level) - roleRank(b.p.level) || a.index - b.index);
+      return `<section class="department-group" style="--deptc:${deptColor(group.name)}" aria-label="${esc(group.name)} roles">
+        <div class="department-heading"><h3>${esc(group.name)}</h3><p>${summary}</p></div>
+        <div class="roles-group">${items.map(({ p }) => cfCardHTML(p, positions.indexOf(p))).join('')}</div>
+      </section>`;
+    }).join('');
     // Filled seats aren't actionable, and as cards they outnumbered the open
     // ones several to one. They're a roster: grouped under their department,
     // listed as plain lines, no card chrome.
@@ -2518,8 +2599,7 @@ function buildJobList(positions) {
         </div>`).join('');
     };
     list.innerHTML = `
-      ${openReady.length ? `<div class="roles-band"><h3 class="roles-subhead">Open now <span>${openReady.length}</span></h3><div class="roles-group">${cards(openReady)}</div></div>` : ''}
-      ${openingSoon.length ? `<div class="roles-band"><h3 class="roles-subhead">Opening soon <span>${openingSoon.length}</span></h3><div class="roles-group">${cards(openingSoon)}</div></div>` : ''}
+      ${chapters || '<p class="empty department-empty">No available roles in this department right now.</p>'}
       ${filled.length ? `<details class="roles-band filled-band"><summary class="roles-subhead">Already filled <span>${filled.length}</span></summary><div class="filled-roster">${roster(filled)}</div></details>` : ''}
     `;
   }
@@ -2548,8 +2628,6 @@ function renderBoard() {
 
   const ordered = [];
   depts.forEach(d => (d.positions || []).forEach(p => ordered.push(p)));
-  const statusRank = p => isOpen(p) ? (isReady(p) ? 0 : 1) : 2; // Open, Opening soon, Filled
-  ordered.sort((a, b) => statusRank(a) - statusRank(b));
 
   const chipDelay = i => `animation-delay:${i * 40}ms`;
   el.innerHTML = `

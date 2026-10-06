@@ -460,7 +460,7 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 }
 .site-menu{
   margin:0;padding:0;border:0;width:100vw;max-width:none;height:100dvh;max-height:none;
-  background:var(--navy);color:var(--ink);
+  background:var(--navy);color:var(--ink);overflow-y:auto;overscroll-behavior:contain;
 }
 .site-menu::backdrop{background:var(--navy)}
 .menu-panel{
@@ -1215,6 +1215,7 @@ h1 .tcursor{
 .scrim{
   position:fixed;inset:0;z-index:70;
   display:flex;align-items:flex-start;justify-content:center;padding:28px 16px;overflow-y:auto;
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
   animation:scrimIn .28s cubic-bezier(.16,1,.3,1) forwards;
 }
 @keyframes scrimIn{from{background:rgba(0,0,0,0);backdrop-filter:blur(0)}to{background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}}
@@ -1991,6 +1992,46 @@ const POSITIONS = {};
 
 const $ = s => document.querySelector(s);
 
+/* Fixed-body locking also works on mobile Safari, where overflow:hidden alone
+   can leave the page behind a scrollable overlay moving. Owners allow a
+   confirmation to open over another sheet without releasing its lock. */
+const SCROLL_LOCK_OWNERS = new Set();
+let scrollLockSnapshot = null;
+function lockPageScroll(owner) {
+  if (SCROLL_LOCK_OWNERS.has(owner)) return;
+  if (!SCROLL_LOCK_OWNERS.size) {
+    const html = document.documentElement, body = document.body;
+    const gutter = Math.max(0, window.innerWidth - html.clientWidth);
+    scrollLockSnapshot = {
+      y: window.scrollY, htmlOverflow: html.style.overflow,
+      position: body.style.position, top: body.style.top,
+      left: body.style.left, right: body.style.right,
+      width: body.style.width, paddingRight: body.style.paddingRight,
+    };
+    html.style.overflow = 'hidden';
+    body.style.position = 'fixed';
+    body.style.top = `-${scrollLockSnapshot.y}px`;
+    body.style.left = '0';
+    body.style.right = '0';
+    body.style.width = '100%';
+    if (gutter) body.style.paddingRight = `calc(${getComputedStyle(body).paddingRight} + ${gutter}px)`;
+  }
+  SCROLL_LOCK_OWNERS.add(owner);
+}
+function unlockPageScroll(owner) {
+  if (!SCROLL_LOCK_OWNERS.delete(owner) || SCROLL_LOCK_OWNERS.size || !scrollLockSnapshot) return;
+  const html = document.documentElement, body = document.body, saved = scrollLockSnapshot;
+  html.style.overflow = saved.htmlOverflow;
+  body.style.position = saved.position;
+  body.style.top = saved.top;
+  body.style.left = saved.left;
+  body.style.right = saved.right;
+  body.style.width = saved.width;
+  body.style.paddingRight = saved.paddingRight;
+  scrollLockSnapshot = null;
+  window.scrollTo(0, saved.y);
+}
+
 /* ================= envelope gate ================= */
 /* Plays itself on load — seal releases, flap opens, letter rises, same
    timing as the main site's "Join SEC" envelope — then the whole gate
@@ -2003,7 +2044,7 @@ function dismissIntro() {
   INTRO_DISMISSED = true;
   const gate = $('#introSplash');
   if (!gate || gate.hidden) return;
-  document.body.style.overflow = '';
+  unlockPageScroll('intro');
   if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { gate.hidden = true; return; }
   gate.classList.add('is-leaving');
   gate.addEventListener('animationend', () => { gate.hidden = true; }, { once: true });
@@ -2011,7 +2052,7 @@ function dismissIntro() {
 (function () {
   const gate = $('#introSplash');
   if (!gate) return;
-  document.body.style.overflow = 'hidden';
+  lockPageScroll('intro');
   gate.addEventListener('click', dismissIntro);
   gate.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dismissIntro(); } });
   // REDUCE_MOTION is declared later in this module; checked locally here so
@@ -2313,9 +2354,11 @@ function uiConfirm(title, body, yesLabel) {
     const yes = $('#cfYes'), no = $('#cfNo');
     yes.textContent = yesLabel || 'Confirm';
     yes.className = 'btn' + (/delete|remove/i.test(yesLabel || title) ? ' danger' : '');
+    lockPageScroll('confirm');
     sc.hidden = false; yes.focus();
     const done = v => {
       sc.hidden = true;
+      unlockPageScroll('confirm');
       yes.removeEventListener('click', oy); no.removeEventListener('click', on);
       sc.removeEventListener('click', ob); document.removeEventListener('keydown', ok);
       resolve(v);
@@ -2384,6 +2427,7 @@ $('#homeRolesAll')?.addEventListener('click', () => showPub('apply'));
   let closing = null;
   function open() {
     if (closing) return;
+    lockPageScroll('main-menu');
     dialog.showModal();
     openBtn.setAttribute('aria-expanded', 'true');
     closeBtn?.focus({ preventScroll: true });
@@ -2391,10 +2435,10 @@ $('#homeRolesAll')?.addEventListener('click', () => showPub('apply'));
   function close() {
     if (closing || !dialog.open) return Promise.resolve();
     openBtn.setAttribute('aria-expanded', 'false');
-    if (reduced()) { dialog.close(); return Promise.resolve(); }
+    if (reduced()) { dialog.close(); unlockPageScroll('main-menu'); return Promise.resolve(); }
     dialog.dataset.phase = 'closing';
     closing = new Promise(resolve => {
-      const done = () => { dialog.close(); delete dialog.dataset.phase; closing = null; resolve(); };
+      const done = () => { dialog.close(); unlockPageScroll('main-menu'); delete dialog.dataset.phase; closing = null; resolve(); };
       dialog.addEventListener('animationend', done, { once: true });
       setTimeout(done, 400); // animationend can be missed if the tab is backgrounded
     });
@@ -2402,6 +2446,7 @@ $('#homeRolesAll')?.addEventListener('click', () => showPub('apply'));
   }
   openBtn.addEventListener('click', open);
   closeBtn?.addEventListener('click', close);
+  dialog.addEventListener('close', () => unlockPageScroll('main-menu'));
   dialog.addEventListener('cancel', e => { e.preventDefault(); close(); });
   dialog.querySelectorAll('[data-menu-go]').forEach(link => {
     link.addEventListener('click', async e => {
@@ -2418,11 +2463,13 @@ $('#homeRolesAll')?.addEventListener('click', () => showPub('apply'));
 /* Terms & Privacy dialogs — same open/close/backdrop behaviour as the main site's. */
 function openPolicyDialog(dialog) {
   if (!dialog) return;
+  lockPageScroll(dialog.id);
   dialog.showModal();
   dialog.querySelector('.policy-content')?.scrollTo({ top: 0, behavior: 'instant' });
   dialog.querySelector('h1')?.focus({ preventScroll: true });
 }
 document.querySelectorAll('.policy-dialog').forEach(dialog => {
+  dialog.addEventListener('close', () => unlockPageScroll(dialog.id));
   dialog.querySelector('[data-close-policy]')?.addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
 });
@@ -2605,7 +2652,7 @@ function openApply(pid, e) {
   sheet.style.transformOrigin = '';
   const useGrow = e && typeof e.clientX === 'number' && !REDUCE_MOTION;
   if (useGrow) sheet.style.animation = 'none'; // hold off the default rise until origin is measured
-  stepJD(); scrim.hidden = false; document.body.style.overflow = 'hidden';
+  stepJD(); lockPageScroll('apply'); scrim.hidden = false;
   if (useGrow) {
     const originX = e.clientX, originY = e.clientY;
     requestAnimationFrame(() => {
@@ -2616,7 +2663,7 @@ function openApply(pid, e) {
     });
   }
 }
-function closeApply() { scrim.hidden = true; document.body.style.overflow = ''; draft = null; }
+function closeApply() { scrim.hidden = true; unlockPageScroll('apply'); draft = null; }
 $('#btnClose').addEventListener('click', closeApply);
 scrim.addEventListener('click', e => { if (e.target === scrim) closeApply(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && !scrim.hidden) closeApply(); });
@@ -2822,13 +2869,13 @@ function openStatusCheck() {
   $('#statusMail').value = '';
   $('#statusErr').hidden = true;
   $('#statusResults').innerHTML = '';
+  lockPageScroll('status');
   statusScrim.hidden = false;
-  document.body.style.overflow = 'hidden';
   setTimeout(() => $('#statusMail')?.focus(), 30);
 }
 function closeStatusCheck() {
   statusScrim.hidden = true;
-  document.body.style.overflow = '';
+  unlockPageScroll('status');
   if (statusReturnFocus?.getClientRects?.().length) statusReturnFocus.focus();
   else $('#menuOpen')?.focus();
 }
@@ -3473,13 +3520,13 @@ function drawQuestionPanel(panel, p) {
 /* ================= key modal ================= */
 let KEY_CALLBACK = null;
 function askForKey(after) {
-  const sc = $('#keyScrim'); sc.hidden = false;
+  const sc = $('#keyScrim'); lockPageScroll('key'); sc.hidden = false;
   const inp = $('#keyInput'); inp.value = ''; inp.focus();
   $('#keyErr').hidden = true; KEY_CALLBACK = after || null;
 }
 (function () {
   const sc = $('#keyScrim');
-  const close = () => { sc.hidden = true; KEY_CALLBACK = null; };
+  const close = () => { sc.hidden = true; unlockPageScroll('key'); KEY_CALLBACK = null; };
   $('#keyClose').addEventListener('click', close);
   $('#keyCancel').addEventListener('click', close);
   sc.addEventListener('click', e => { if (e.target === sc) close(); });
@@ -3720,7 +3767,7 @@ if ('IntersectionObserver' in window) {
     if (ADMIN) {
       showView('admin'); applyLock();
       const gate = $('#introSplash');
-      if (gate) { gate.hidden = true; INTRO_DISMISSED = true; document.body.style.overflow = ''; }
+      if (gate) { gate.hidden = true; INTRO_DISMISSED = true; unlockPageScroll('intro'); }
     } else showPub('overview');
   } catch (e) {
     $('#board').innerHTML = `<div class="dept"><div class="row" style="display:block;padding:30px 18px;color:var(--err)">

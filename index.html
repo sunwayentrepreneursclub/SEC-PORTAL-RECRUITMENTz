@@ -2606,9 +2606,9 @@ function buildJobList(positions) {
   list.querySelectorAll('[data-apply]').forEach(b =>
     b.addEventListener('click', e => { openApply(b.dataset.apply, e); }));
   const totalEl = $('#cfTotal');
-  if (totalEl) totalEl.textContent = positions.length;
+  if (totalEl) totalEl.textContent = actionable.length;
   const countLabel = $('#cfCountLabel');
-  if (countLabel) countLabel.textContent = `position${positions.length === 1 ? '' : 's'} shown`;
+  if (countLabel) countLabel.textContent = `available role${actionable.length === 1 ? '' : 's'}${filled.length ? ` · ${filled.length} filled` : ''}`;
 }
 
 function renderBoard() {

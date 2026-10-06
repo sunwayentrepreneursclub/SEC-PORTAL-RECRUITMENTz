@@ -1951,6 +1951,7 @@ function moveGlide(btn) {
 }
 
 function showPub(which) {
+  window.scrollTo({ top: 0, behavior: 'instant' }); // new tab = new page, start at its top
   const mast = document.querySelector('.masthead');
   if (mast) mast.hidden = which !== 'overview';
   document.querySelectorAll('.pubpanel').forEach(p => {
@@ -2083,25 +2084,12 @@ function buildJobList(positions) {
     list.innerHTML = `
       ${openReady.length ? `<div class="roles-group">${cards(openReady)}</div>` : ''}
       ${openingSoon.length ? `<div class="roles-subhead">Opening soon</div><div class="roles-group">${cards(openingSoon)}</div>` : ''}
-      ${filled.length ? `
-        <button class="filled-toggle" id="filledToggle" type="button" aria-expanded="false">
-          Filled positions · ${filled.length} <span class="filled-toggle-arrow">+</span>
-        </button>
-        <div class="roles-group is-collapsed" id="filledGroup">${cards(filled)}</div>
-      ` : ''}
+      ${filled.length ? `<div class="roles-subhead">Filled positions · ${filled.length}</div><div class="roles-group">${cards(filled)}</div>` : ''}
       ${!openReady.length && !openingSoon.length && !filled.length ? `<div class="empty">No positions match this filter.</div>` : ''}
     `;
   }
   list.querySelectorAll('[data-apply]').forEach(b =>
     b.addEventListener('click', e => { openApply(b.dataset.apply, e); }));
-  const toggle = $('#filledToggle'), group = $('#filledGroup');
-  if (toggle && group) {
-    toggle.addEventListener('click', () => {
-      const show = group.classList.toggle('is-collapsed') === false;
-      toggle.setAttribute('aria-expanded', String(show));
-      toggle.querySelector('.filled-toggle-arrow').textContent = show ? '−' : '+';
-    });
-  }
   const totalEl = $('#cfTotal');
   if (totalEl) totalEl.textContent = positions.length;
 }

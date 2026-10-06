@@ -208,8 +208,6 @@ body{
 #viewPublic .plain-rows{max-width:none}
 #viewPublic .plain-rows li{font-size:clamp(28px,3.2vw,48px);font-weight:500;letter-spacing:-.04em;padding:12px 0}
 #viewPublic .how-we-work-split{gap:96px}
-#viewPublic .process-num{width:56px;height:56px;font-size:20px}
-#viewPublic .process-label{font-size:19px}
 #viewPublic .final-cta-section{text-align:center;padding-block:48px}
 #viewPublic .final-cta-section .aband-title{font-size:clamp(60px,9vw,128px);margin-bottom:44px}
 #viewPublic .final-cta-section .hero-cta{padding:22px 56px;font-size:19px}
@@ -249,12 +247,6 @@ body{
 #viewPublic .roles-chapter .cf-card.is-filled:hover{box-shadow:none}
 #viewPublic .roles-chapter .empty{color:#535B60}
 
-#viewPublic .process-step.is-last .process-num{color:#111214}
-@media (min-width:960px){
-  #viewPublic .process-track::before{left:28px;right:28px;top:28px}
-  #viewPublic .process-track::after{left:28px;top:28px}
-  #viewPublic .process-label{font-size:19px}
-}
 
 /* ---- scroll motion, matched to the main site: nothing is ever hidden or
    staggered; each heading/card eases up 16px from 45% opacity (620ms,
@@ -268,8 +260,8 @@ body{
   opacity:1;transform:none;animation:none;transition:none;
 }
 @keyframes heroEnter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-#viewPublic .masthead .mast-copy,#viewPublic .masthead #overviewStats{animation:heroEnter .8s cubic-bezier(.22,1,.36,1) both}
-@media (prefers-reduced-motion:reduce){#viewPublic .masthead .mast-copy,#viewPublic .masthead #overviewStats{animation:none}}
+#viewPublic .masthead .mast-copy{animation:heroEnter .8s cubic-bezier(.22,1,.36,1) both}
+@media (prefers-reduced-motion:reduce){#viewPublic .masthead .mast-copy{animation:none}}
 
 
 #pp-overview>.abandsection:first-child{padding-top:15vh;border-top:1px solid var(--board-line);margin-top:24px}
@@ -419,14 +411,10 @@ h1{
 }
 
 /* ---------- hero (editorial serif, matched to sec-website-3-0.vercel.app) ----------
-   No decorative mark — the filter line is the hero, the stats are the proof it's
-   real, and nothing should compete with either for attention. */
+   No decorative mark — the filter line is the hero and nothing competes with it.
+   Stats get their own full-window section below instead of sharing this one. */
 .hero-grid{display:flex;flex-direction:column;align-items:flex-start;gap:44px;width:100%}
 .mast-copy{display:flex;flex-direction:column;align-items:flex-start}
-/* the stats were sized for a full dedicated section (clamp up to 128px); scaled
-   down here so they read as supporting proof under the hero, not a second hero */
-#viewPublic .masthead #overviewStats .n{font-size:clamp(28px,3.2vw,40px)!important}
-#viewPublic .masthead #overviewStats{align-self:stretch;max-width:640px}
 /* ---------- envelope gate — same envelope as the main site's "Join SEC"
    invitation (seal → flap → letter), but it plays itself on load instead
    of waiting for a click, then reveals the site underneath. ---------- */
@@ -737,71 +725,23 @@ h1{
 .final-cta-section .aband-title{font-size:clamp(40px,6vw,76px);margin:0 0 32px}
 .final-cta-section .hero-cta{margin-top:0;padding:16px 40px;font-size:16px}
 .final-cta-section .hero-cta{margin-top:20px}
-.process-track{display:flex;flex-direction:column;gap:4px;max-width:460px;position:relative}
-.process-track::before{
-  content:"";position:absolute;left:16px;top:17px;width:2px;height:calc(100% - 34px);
-  background:var(--board-line);transform-origin:top;transform:scaleY(0);
-  transition:transform 1.3s cubic-bezier(.16,1,.3,1);
+/* Process list — a plain numbered editorial list (index, title, one line of
+   real detail) instead of the old circle-badges-on-a-glowing-wire treatment.
+   Calmer and more substantive reads as more professional than a progress bar. */
+.process-list{list-style:none;margin:0;padding:0;max-width:720px;border-top:1px solid var(--board-line)}
+.process-list li{display:flex;gap:28px;padding:22px 0;border-bottom:1px solid var(--board-line)}
+.process-index{flex:none;font-family:var(--serif);font-size:22px;color:var(--muted);line-height:1.4}
+.process-list h3{margin:0 0 6px;font-family:var(--body);font-size:17px;font-weight:600;color:var(--ink)}
+.process-list p{margin:0;font-size:14px;line-height:1.55;color:var(--muted);max-width:52ch}
+/* Full-window sections — each major chapter of the home tab occupies roughly
+   one screen and vertically centres its content, matching the hero instead
+   of reading as a short strip between long stretches of empty scroll. */
+#viewPublic .fill-section{
+  min-height:calc(100svh - 64px);display:flex;flex-direction:column;justify-content:center;
 }
-.process-track.is-visible::before{transform:scaleY(1)}
-.process-track::after{
-  content:"";position:absolute;left:16px;top:17px;width:10px;height:10px;margin:-4px 0 0 -4px;
-  border-radius:50%;background:var(--ink);opacity:0;pointer-events:none;
-  box-shadow:0 0 16px 6px var(--ink),0 0 32px 12px rgba(246,245,242,.5);
-}
-.process-track.is-visible::after{animation:processGlow 1.3s cubic-bezier(.16,1,.3,1)}
-@keyframes processGlow{
-  0%{opacity:1;top:17px}
-  92%{opacity:1}
-  100%{opacity:0;top:calc(100% - 17px)}
-}
-.process-step{
-  display:flex;align-items:center;gap:18px;position:relative;padding:11px 0;
-  opacity:0;transform:translateX(-22px);
-}
-.process-step.is-visible{animation:stepIn .5s cubic-bezier(.16,1,.3,1) forwards}
-@keyframes stepIn{to{opacity:1;transform:none}}
-.process-step:nth-child(5n+1){--ps-a:var(--a-blue);--ps-t:var(--t-blue)}
-.process-step:nth-child(5n+2){--ps-a:var(--a-gold);--ps-t:var(--t-gold)}
-.process-step:nth-child(5n+3){--ps-a:var(--a-pink);--ps-t:var(--t-pink)}
-.process-step:nth-child(5n+4){--ps-a:var(--a-green);--ps-t:var(--t-green)}
-.process-step:nth-child(5n+5){--ps-a:var(--a-cyan);--ps-t:var(--t-cyan)}
-.process-num{
-  width:34px;height:34px;border:2px solid var(--ps-a,var(--open-soft));border-radius:50%;flex:none;
-  display:flex;align-items:center;justify-content:center;font-weight:700;
-  font-family:var(--body);font-size:14px;background:var(--ps-a,var(--open-soft));color:#111212;position:relative;z-index:1;
-}
-.process-step.is-last .process-num{background:var(--open);border-color:var(--open);color:#fff}
-.process-label{
-  font-family:var(--body);font-size:16px;font-weight:600;letter-spacing:0;
-  text-align:left;color:var(--ink);line-height:1.4;
-}
-@media (min-width:960px){
-  .process-track{flex-direction:row;max-width:none;gap:0;align-items:flex-start}
-  .process-track::before{
-    left:17px;right:17px;top:17px;width:auto;height:2px;
-    transform-origin:left;transform:scaleX(0);
-  }
-  .process-track.is-visible::before{transform:scaleX(1)}
-  .process-track::after{left:17px;top:17px}
-  .process-track.is-visible::after{animation:processGlowH 1.3s cubic-bezier(.16,1,.3,1)}
-  .process-step{
-    flex-direction:column;align-items:flex-start;gap:14px;flex:1;padding:0 16px 0 0;
-    transform:translateY(-14px);
-  }
-  .process-step.is-visible{animation:stepInH .5s cubic-bezier(.16,1,.3,1) forwards}
-  @keyframes stepInH{to{opacity:1;transform:none}}
-  .process-label{font-size:15px}
-}
-@keyframes processGlowH{
-  0%{opacity:1;left:17px}
-  92%{opacity:1}
-  100%{opacity:0;left:calc(100% - 17px)}
-}
-@media (prefers-reduced-motion:reduce){
-  .process-step{animation:none;opacity:1;transform:none}
-  .process-track::before{transition:none;transform:scaleY(1)}
-}
+/* the old first-child spacing hack (extra top padding/border/margin) fights
+   the centring above now that every section fills the window on its own */
+#pp-overview>.abandsection:first-child.fill-section{padding-top:0;border-top:0;margin-top:0}
 
 .abandsection{opacity:0;transform:translateY(16px)}
 .abandsection.is-visible{
@@ -1382,31 +1322,37 @@ textarea{min-height:110px;resize:vertical}
         <div class="mast-copy">
           <p class="eyebrow">Committee recruitment</p>
           <h1>If you need to be chased, don't apply.</h1>
-          <p class="lede">Own it. Ship it. Speak early. Finish. That's the bar — the numbers below are the proof we hold it.</p>
+          <p class="lede">Own it. Ship it. Speak early. Finish. That's the whole standard — no exceptions.</p>
           <button class="hero-cta" id="heroApply" type="button">View open roles</button>
         </div>
-        <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
       </div>
     </header>
 
     <div class="pubpanel" id="pp-overview" role="region" aria-label="Committee recruitment">
-      <section class="abandsection" data-reveal>
+      <section class="abandsection fill-section" data-reveal>
+        <div class="aband-head">
+          <h2 class="aband-title">SEC, right now.</h2>
+        </div>
+        <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
+      </section>
+
+      <section class="abandsection fill-section" data-reveal>
         <div class="aband-head">
           <p class="aband-eyebrow">What happens next</p>
           <h2 class="aband-title">How it works.</h2>
         </div>
-        <div class="process-track">
-          <div class="process-step"><div class="process-num">1</div><div class="process-label">Pick a role</div></div>
-          <div class="process-step"><div class="process-num">2</div><div class="process-label">Apply</div></div>
-          <div class="process-step"><div class="process-num">3</div><div class="process-label">Assessment</div></div>
-          <div class="process-step"><div class="process-num">4</div><div class="process-label">Interview</div></div>
-          <div class="process-step"><div class="process-num">5</div><div class="process-label">Decision</div></div>
-          <div class="process-step"><div class="process-num">6</div><div class="process-label">Onboarding</div></div>
-          <div class="process-step is-last"><div class="process-num">7</div><div class="process-label">Get to work</div></div>
-        </div>
+        <ol class="process-list">
+          <li><span class="process-index">01</span><div><h3>Pick a role</h3><p>Read the job description, not just the title. Each one states exactly what you'd own.</p></div></li>
+          <li><span class="process-index">02</span><div><h3>Apply</h3><p>Five questions, specific to that role. No cover letter, no generic motivation essay.</p></div></li>
+          <li><span class="process-index">03</span><div><h3>Assessment</h3><p>The committee reads for specifics — named examples, real numbers, actual judgment calls.</p></div></li>
+          <li><span class="process-index">04</span><div><h3>Interview</h3><p>A conversation, not an interrogation. You're assessing us as much as we're assessing you.</p></div></li>
+          <li><span class="process-index">05</span><div><h3>Decision</h3><p>Every applicant hears back, whether the answer is yes or not this round.</p></div></li>
+          <li><span class="process-index">06</span><div><h3>Onboarding</h3><p>Access, context and your first real task — handed over, not explained in theory.</p></div></li>
+          <li><span class="process-index">07</span><div><h3>Get to work</h3><p>No orientation month. The work you were hired to own starts immediately.</p></div></li>
+        </ol>
       </section>
 
-      <section class="abandsection final-cta-section" data-reveal>
+      <section class="abandsection final-cta-section fill-section" data-reveal>
         <p class="aband-eyebrow">Want to join?</p>
         <h2 class="aband-title">Pick a seat.</h2>
         <button class="hero-cta" id="finalCta" type="button">View open roles</button>

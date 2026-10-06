@@ -1510,11 +1510,11 @@ textarea{min-height:110px;resize:vertical}
 #viewAdmin .pdept > h3{background:#E7EEF7;border-color:#CCD7E3;color:#173554;padding:20px 24px;font-size:20px}
 #viewAdmin .pdept > h3 .slab{font-size:11px;color:#53677D}
 #viewAdmin .pos-section-title{padding:20px 24px 12px;color:#526478}
-#viewAdmin .pdept .pcard{
+#viewAdmin .pdept .pcard,#viewAdmin .admin-filled .pcard{
   padding:0;margin:0 20px 16px;background:#fff;border:1px solid #C7D2DF;
   border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(20,47,78,.055);
 }
-#viewAdmin .pdept .pcard:focus-within{border-color:#638BB7;box-shadow:0 0 0 2px rgba(0,94,217,.12)}
+#viewAdmin .pdept .pcard:focus-within,#viewAdmin .admin-filled .pcard:focus-within{border-color:#638BB7;box-shadow:0 0 0 2px rgba(0,94,217,.12)}
 #viewAdmin .pcard-head{
   display:flex;justify-content:space-between;align-items:flex-start;gap:18px;
   padding:17px 20px;background:#EAF2FC;border-bottom:1px solid #CBD9E9;
@@ -1544,9 +1544,32 @@ textarea{min-height:110px;resize:vertical}
 #viewAdmin .pcard .pstatus{padding:0}
 #viewAdmin .pcard .pactions{margin:0 -20px;padding:14px 20px;background:#F7F9FC;border-top:1px solid #E1E7ED}
 #viewAdmin .pcard .qpanel{margin:0 -20px;padding:20px;background:#FBFCFE;border-top:2px solid #C9D9EA}
-#viewAdmin .admin-filled{border-top-color:#CBD7E2}
-#viewAdmin .admin-filled summary{color:#475C70;padding:18px 24px}
-#viewAdmin .admin-filled .prow:first-of-type{border-top:1px solid #C7D2DF}
+#viewAdmin .pdept{margin-bottom:14px}
+#viewAdmin .admin-filled{
+  margin:0 0 22px;border:1px solid #CDD5DE;border-radius:12px;
+  background:#F5F7F9;overflow:hidden;
+}
+#viewAdmin .admin-filled summary{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  min-height:76px;padding:16px 22px;background:#EDEFF2;color:#263646;
+  transition:background .15s;
+}
+#viewAdmin .admin-filled summary:hover{background:#E4E9EF}
+#viewAdmin .admin-filled summary:focus-visible{outline:3px solid #005ED9;outline-offset:-3px}
+#viewAdmin .admin-filled summary::after{content:none}
+#viewAdmin .admin-filled-summary{display:block;min-width:0}
+#viewAdmin .admin-filled-summary strong{display:block;font:700 17px/1.25 var(--body);letter-spacing:-.02em}
+#viewAdmin .admin-filled-summary small{display:block;margin-top:3px;font:400 12px/1.4 var(--body);color:#526273}
+#viewAdmin .admin-filled-action{
+  display:inline-flex;align-items:center;gap:10px;flex:none;
+  min-height:40px;padding:8px 13px;border:1px solid #A7B3BF;border-radius:100px;
+  background:#fff;color:#223446;font:700 12px/1.2 var(--body);
+}
+#viewAdmin .admin-filled-action::after{content:"⌄";font-size:18px;line-height:.6;transform:translateY(-2px)}
+#viewAdmin .admin-filled[open] .admin-filled-action::after{transform:rotate(180deg) translateY(2px)}
+#viewAdmin .admin-filled:not([open]) .when-open,#viewAdmin .admin-filled[open] .when-closed{display:none}
+#viewAdmin .admin-filled[open] summary{border-bottom:1px solid #CDD5DE}
+#viewAdmin .admin-filled-list{padding:18px 0 2px}
 .mini.danger{border-color:var(--err);color:var(--err)}
 .btn.danger{background:var(--err);border-color:var(--err)}
 .btn.danger:hover{background:#B8262F;border-color:#B8262F;box-shadow:0 4px 14px rgba(214,48,58,.3)}
@@ -1557,13 +1580,17 @@ textarea{min-height:110px;resize:vertical}
   .pavailability{align-items:flex-start}
   #viewAdmin .pdept > h3{padding:16px 18px}
   #viewAdmin .pos-section-title{padding:16px 18px 10px}
-  #viewAdmin .pdept .pcard{margin:0 10px 12px}
+  #viewAdmin .pdept .pcard,#viewAdmin .admin-filled .pcard{margin:0 10px 12px}
   #viewAdmin .pcard-head{padding:14px 16px}
   #viewAdmin .pcard-head-actions{max-width:50%;gap:8px}
   #viewAdmin .pcard-body{padding:16px 16px 0}
   #viewAdmin .pcard .pactions{margin:0 -16px;padding:14px 16px}
   #viewAdmin .pcard .qpanel{margin:0 -16px;padding:16px}
   #viewAdmin .pcard .pactions .mini{min-height:44px}
+  #viewAdmin .admin-filled summary{padding:14px 16px;min-height:72px}
+  #viewAdmin .admin-filled-summary strong{font-size:15px}
+  #viewAdmin .admin-filled-summary small{font-size:11px}
+  #viewAdmin .admin-filled-action{padding-inline:10px;font-size:11px}
 }
 
 .applrow{display:flex;align-items:stretch;border-bottom:1px solid var(--board-line)}
@@ -3238,16 +3265,19 @@ function renderPositions() {
       ${depts.map(x => `<button type="button" data-admin-dept="${esc(x.name)}" aria-pressed="${x === d}">
         ${esc(x.name)} <span>${x.positions.filter(isOpen).length}</span></button>`).join('')}
     </nav>
-    ${d ? `<section class="pdept" aria-label="${esc(d.name)} positions">
-      <h3>${esc(d.name)}<span class="slab">${hiring.length} still hiring · ${filled.length} filled</span></h3>
+    ${d ? `<section class="pdept" aria-label="${esc(d.name)} hiring roles">
+      <h3>${esc(d.name)}<span class="slab">${hiring.length} still hiring</span></h3>
       <h4 class="pos-section-title">Still hiring · ${hiring.length}</h4>
       ${hiring.length ? hiring.map((p, i) => positionRow(p, d, i, hiring.length)).join('')
         : '<p class="pos-section-empty">No roles hiring in this department.</p>'}
-      ${filled.length ? `<details class="admin-filled" ${ADMIN_FILLED_OPEN ? 'open' : ''}>
-        <summary>Filled · ${filled.length}</summary>
-        ${filled.map((p, i) => positionRow(p, d, i, filled.length)).join('')}
-      </details>` : ''}
-    </section>` : '<p class="empty">No departments yet. Add the first role below.</p>'}
+    </section>
+    ${filled.length ? `<details class="admin-filled" ${ADMIN_FILLED_OPEN ? 'open' : ''}>
+      <summary>
+        <span class="admin-filled-summary"><strong>Filled roles</strong><small>${filled.length} in ${esc(d.name)}. Closed to new applications.</small></span>
+        <span class="admin-filled-action"><span class="when-closed">Show roles</span><span class="when-open">Hide roles</span></span>
+      </summary>
+      <div class="admin-filled-list">${filled.map((p, i) => positionRow(p, d, i, filled.length)).join('')}</div>
+    </details>` : ''}` : '<p class="empty">No departments yet. Add the first role below.</p>'}
     ${addPositionBlock(d)}
     <datalist id="deptList">${STATE.departments.map(x => `<option value="${esc(x.name)}">`).join('')}</datalist>
      <datalist id="levelList">${LEVELS.map(l => `<option value="${l}">`).join('')}</datalist>`;

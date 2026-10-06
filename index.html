@@ -212,28 +212,13 @@ body{
 #viewPublic .masthead .lede{font-size:19px}
 /* Compact role index in the same flat, typographic language as the main site. */
 #viewPublic .roles-chapter{padding-block:48px 24px;margin:0}
-#viewPublic .roles-chapter>.abandsection{margin-bottom:28px}
-#viewPublic .roles-chapter .cf-head{
-  display:block;position:relative;top:auto;z-index:auto;background:#F6F5F2;
-  border:0;padding:0 0 26px;margin:0 0 30px;
-}
-#viewPublic .roles-chapter .dept-filter-label{
-  display:block;margin:0 0 8px;font-family:var(--body);font-size:13px;
-  font-weight:600;color:#535B60;
-}
-#viewPublic .roles-chapter .dept-filter-select{
-  width:min(100%,360px);min-height:48px;padding:10px 40px 10px 14px;
-  border:1px solid #abb0ae;border-radius:4px;background:#fff;color:#181C20;
-  font-family:var(--body);font-size:15px;font-weight:600;cursor:pointer;
-}
-#viewPublic .roles-chapter .dept-filter-select:hover{border-color:#181C20}
-#viewPublic .roles-chapter .dept-filter-select:focus-visible{outline:2px solid #181C20;outline-offset:2px}
+#viewPublic .roles-chapter>.abandsection{margin-bottom:44px}
 #viewPublic .roles-chapter .empty{color:#535B60}
-#viewPublic .roles-chapter .department-group{margin:0 0 42px;min-width:0}
+#viewPublic .roles-chapter .department-group{margin:0 0 42px;min-width:0;scroll-margin-top:96px}
 #viewPublic .roles-chapter .department-heading{border:0;padding:0;margin:0 0 15px}
 #viewPublic .roles-chapter .department-heading h3{
-  font-family:var(--body);font-size:clamp(25px,2.5vw,34px);font-weight:600;
-  line-height:1.18;letter-spacing:-.045em;color:var(--deptc);margin:0;
+  font-family:var(--serif);font-size:clamp(30px,3vw,40px);font-weight:400;
+  line-height:1.1;letter-spacing:-.045em;color:var(--deptc);margin:0;
 }
 #viewPublic .roles-chapter .roles-group,
 #viewPublic .roles-chapter .roles-group:not(:last-child){
@@ -252,8 +237,8 @@ body{
 }
 #viewPublic .roles-chapter .dept-role .cf-card-main{min-width:0}
 #viewPublic .roles-chapter .dept-role .cf-card-title{
-  font-family:var(--body);font-size:clamp(18px,1.5vw,21px);font-weight:600;
-  line-height:1.2;letter-spacing:-.035em;margin:0 0 7px;color:#111214;
+  font-family:var(--serif);font-size:clamp(21px,1.85vw,26px);font-weight:400;
+  line-height:1.14;letter-spacing:-.04em;margin:0 0 7px;color:#111214;
 }
 #viewPublic .roles-chapter .dept-role .cf-card-meta{
   display:flex;align-items:baseline;flex-wrap:wrap;gap:3px 8px;
@@ -284,19 +269,17 @@ body{
 #viewPublic .roles-chapter .department-empty{margin:0 0 40px}
 @media (max-width:720px){
   #viewPublic .roles-chapter{padding-block:20px 24px}
-  #viewPublic .roles-chapter>.abandsection{margin-bottom:22px}
+  #viewPublic .roles-chapter>.abandsection{margin-bottom:28px}
   #viewPublic .roles-chapter .aband-head{margin-bottom:0}
   #viewPublic .roles-chapter .aband-title{font-size:40px}
   #viewPublic .roles-chapter .aband-lede{font-size:17px;line-height:1.45}
-  #viewPublic .roles-chapter .cf-head{padding-bottom:22px;margin-bottom:20px}
-  #viewPublic .roles-chapter .dept-filter-select{width:100%}
   #viewPublic .roles-chapter .department-group{margin-bottom:32px}
   #viewPublic .roles-chapter .department-heading{margin-bottom:11px}
-  #viewPublic .roles-chapter .department-heading h3{font-size:clamp(23px,6.5vw,28px)}
+  #viewPublic .roles-chapter .department-heading h3{font-size:clamp(28px,7vw,33px)}
   #viewPublic .roles-chapter .roles-group,
   #viewPublic .roles-chapter .roles-group:not(:last-child){grid-template-columns:minmax(0,1fr);gap:8px}
   #viewPublic .roles-chapter .dept-role{min-height:86px;padding:13px 14px;column-gap:10px}
-  #viewPublic .roles-chapter .dept-role .cf-card-title{font-size:clamp(17px,4.6vw,19px);margin-bottom:5px}
+  #viewPublic .roles-chapter .dept-role .cf-card-title{font-size:clamp(20px,5.5vw,23px);margin-bottom:5px}
   #viewPublic .roles-chapter .dept-role .cf-card-meta{font-size:11px;gap:2px 5px}
   #viewPublic .roles-chapter .dept-role .cf-status::before{margin-right:5px}
   #viewPublic .roles-chapter .dept-role .cf-apply{font-size:12px;padding-inline:13px}
@@ -2216,14 +2199,10 @@ function renderDeptGrid() {
     </div>`;
   }).join('');
   grid.querySelectorAll('.dept-card').forEach(card => {
-    // these cards live on Overview now, so switch to the Apply tab before
-    // filtering and scrolling to the board
+    // These cards live on Overview, so switch to Roles before jumping to a team.
     const jump = () => {
       showPub('apply');
-      requestAnimationFrame(() => {
-        selectBoardDepartment(card.dataset.deptJump);
-        $('#board')?.scrollIntoView({ behavior: REDUCE_MOTION ? 'auto' : 'smooth', block: 'start' });
-      });
+      requestAnimationFrame(() => jumpToBoardDepartment(card.dataset.deptJump));
     };
     card.addEventListener('click', jump);
     card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jump(); } });
@@ -2251,10 +2230,7 @@ function renderHeroRoles() {
   wrap.querySelectorAll('.hero-tag').forEach(tag => {
     tag.addEventListener('click', () => {
       showPub('apply');
-      requestAnimationFrame(() => {
-        selectBoardDepartment(tag.dataset.deptJump);
-        $('#board')?.scrollIntoView({ behavior: REDUCE_MOTION ? 'auto' : 'smooth', block: 'start' });
-      });
+      requestAnimationFrame(() => jumpToBoardDepartment(tag.dataset.deptJump));
     });
   });
 }
@@ -2565,7 +2541,7 @@ function buildJobList(positions) {
     const chapters = byDept.sort((a, b) => Number(b.items.some(isReady)) - Number(a.items.some(isReady))).map(group => {
       const items = group.items.map((p, index) => ({ p, index })).sort((a, b) =>
         Number(isReady(b.p)) - Number(isReady(a.p)) || roleRank(a.p.level) - roleRank(b.p.level) || a.index - b.index);
-      return `<section class="department-group" style="--deptc:${deptColor(group.name)}" aria-label="${esc(group.name)} roles">
+      return `<section class="department-group" data-dept="${esc(group.name)}" style="--deptc:${deptColor(group.name)}" aria-label="${esc(group.name)} roles">
         <div class="department-heading"><h3>${esc(group.name)}</h3></div>
         <div class="roles-group">${items.map(({ p }) => cfCardHTML(p)).join('')}</div>
       </section>`;
@@ -2576,11 +2552,12 @@ function buildJobList(positions) {
     b.addEventListener('click', e => { openApply(b.dataset.apply, e); }));
 }
 
-function selectBoardDepartment(dept) {
-  const select = $('#deptFilter');
-  if (!select || !Array.from(select.options).some(option => option.value === dept)) return;
-  select.value = dept;
-  select.dispatchEvent(new Event('change'));
+function jumpToBoardDepartment(dept) {
+  const section = Array.from(document.querySelectorAll('#jobList .department-group'))
+    .find(group => group.dataset.dept === dept);
+  (section || $('#board'))?.scrollIntoView({
+    behavior: REDUCE_MOTION ? 'auto' : 'smooth', block: 'start'
+  });
 }
 
 function renderBoard() {
@@ -2598,22 +2575,9 @@ function renderBoard() {
   const ordered = [];
   depts.forEach(d => (d.positions || []).filter(isOpen).forEach(p => ordered.push(p)));
 
-  el.innerHTML = `
-    <div class="cf-head">
-      <label class="dept-filter-label" for="deptFilter">Department</label>
-      <select class="dept-filter-select" id="deptFilter">
-        <option value="all">All departments</option>
-        ${depts.filter(d => (d.positions || []).some(isOpen)).map(d => `<option value="${esc(d.name)}">${esc(d.name)}</option>`).join('')}
-      </select>
-    </div>
-    <div class="job-list" id="jobList"></div>
-  `;
+  el.innerHTML = '<div class="job-list" id="jobList"></div>';
 
   buildJobList(ordered);
-  $('#deptFilter').addEventListener('change', e => {
-    const dept = e.target.value;
-    buildJobList(dept === 'all' ? ordered : ordered.filter(p => p.dept === dept));
-  });
 }
 
 /* ================= application flow ================= */

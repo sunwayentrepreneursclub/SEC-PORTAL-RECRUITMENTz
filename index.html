@@ -2176,10 +2176,18 @@ function renderBoard() {
   function updateChipGlide() {
     const glide = $('#chipGlide'), wrap = $('#deptFilters'), active = wrap?.querySelector('.cf-chip.is-active');
     if (!glide || !wrap || !active) return;
-    const wrapRect = wrap.getBoundingClientRect(), rect = active.getBoundingClientRect();
-    glide.style.width = rect.width + 'px';
-    glide.style.height = rect.height + 'px';
-    glide.style.transform = `translate(${rect.left - wrapRect.left}px, ${rect.top - wrapRect.top}px)`;
+    // Content-relative (offsetLeft/offsetTop), not getBoundingClientRect: the
+    // row scrolls horizontally on mobile, and viewport-relative coordinates
+    // go stale the instant the row scrolls after this runs (e.g. the
+    // scrollIntoView below, or the user swiping) — the glide would freeze at
+    // the pre-scroll position while the real chip moves on, and since the
+    // chip's own background is transparent (the glide IS its active fill),
+    // the active label's white text then renders over the page's own
+    // background instead of the glide, and goes invisible. offsetLeft is
+    // scroll-independent, so this stays correct regardless of when it runs.
+    glide.style.width = active.offsetWidth + 'px';
+    glide.style.height = active.offsetHeight + 'px';
+    glide.style.transform = `translate(${active.offsetLeft}px, ${active.offsetTop}px)`;
   }
   requestAnimationFrame(updateChipGlide);
   window.addEventListener('resize', updateChipGlide);
@@ -2190,6 +2198,10 @@ function renderBoard() {
     el.querySelectorAll('.cf-chip').forEach(c => c.classList.remove('is-active'));
     btn.classList.add('is-active');
     updateChipGlide();
+    // the row scrolls horizontally on mobile; without this the newly active
+    // chip can end up scrolled off-screen with no visible indication of
+    // which filter is now applied
+    btn.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest', inline: 'nearest' });
     const dept = btn.dataset.dept;
     buildJobList(dept === 'all' ? ordered : ordered.filter(p => p.dept === dept));
   });

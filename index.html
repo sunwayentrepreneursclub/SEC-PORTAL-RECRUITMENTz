@@ -276,14 +276,17 @@ body{
 }
 #viewPublic .roles-chapter .roles-group,
 #viewPublic .roles-chapter .roles-group:not(:last-child){
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 36px;margin:0;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:0;
 }
 #viewPublic .roles-chapter .dept-role{
-  min-width:0;background:transparent;border:0;border-top:1px solid rgba(24,28,32,.22);
-  border-radius:0;box-shadow:none;padding:18px 0 22px;animation:none;
-  opacity:1;transform:none;transition:none;
+  min-width:0;min-height:204px;background:#eeefec;border:1px solid #d2d5d2;
+  border-radius:6px;box-shadow:none;padding:20px 22px;animation:none;
+  opacity:1;transform:none;transition:background .18s,border-color .18s;
 }
-#viewPublic .roles-chapter .dept-role:hover{box-shadow:none;transform:none}
+#viewPublic .roles-chapter .dept-role:hover,
+#viewPublic .roles-chapter .dept-role:focus-within{
+  background:#e8ebe8;border-color:#89918d;box-shadow:none;transform:none;
+}
 #viewPublic .roles-chapter .dept-role .cf-card-top{align-items:center;gap:12px;margin-bottom:12px}
 #viewPublic .roles-chapter .dept-role .cf-level{
   font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.09em;
@@ -300,7 +303,7 @@ body{
 }
 #viewPublic .roles-chapter .dept-role .cf-card-desc{
   font-size:14px;line-height:1.55;min-height:0;margin:0 0 18px;
-  display:block;overflow:visible;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
 }
 #viewPublic .roles-chapter .dept-role .cf-card-foot{padding:0;gap:12px}
 #viewPublic .roles-chapter .dept-role .cf-card-sub{font-size:12px;color:#535B60;margin:0}
@@ -313,8 +316,8 @@ body{
   #viewPublic .roles-chapter .department-heading h3{font-size:clamp(27px,7.8vw,34px)}
   #viewPublic .roles-chapter .department-heading p{text-align:left;margin-top:7px;font-size:12px}
   #viewPublic .roles-chapter .roles-group,
-  #viewPublic .roles-chapter .roles-group:not(:last-child){grid-template-columns:minmax(0,1fr);gap:0}
-  #viewPublic .roles-chapter .dept-role{padding:17px 0 20px}
+  #viewPublic .roles-chapter .roles-group:not(:last-child){grid-template-columns:minmax(0,1fr);gap:10px}
+  #viewPublic .roles-chapter .dept-role{min-height:0;padding:18px}
   #viewPublic .roles-chapter .dept-role .cf-card-title{font-size:clamp(22px,6vw,26px)}
 }
 

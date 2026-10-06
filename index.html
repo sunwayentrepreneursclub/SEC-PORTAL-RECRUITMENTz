@@ -864,7 +864,12 @@ h1{
 /* Footer — same structure and tokens as the main site's shipped footer:
    identity (mark + name) / nav / social in a 3-column grid on a slightly
    lifted surface, then a bottom bar with copyright and the admin entry. */
-.site-footer{background:var(--board);padding:48px 0 24px;margin-top:32px}
+/* No margin-top here: it sat outside the footer's own background and the
+   page content's, so it was just a sliver of unstyled page background
+   between them - invisible while everything above was dark, visible as a
+   black seam now that light (chapter-light) sections lead right into it.
+   The footer's own 48px top padding already gives it breathing room. */
+.site-footer{background:var(--board);padding:48px 0 24px}
 .footer-main{display:grid;grid-template-columns:2fr 1fr 1fr;align-items:start;gap:28px}
 .footer-identity{display:flex;align-items:center;gap:14px;width:fit-content;font-family:var(--body);font-size:18px;color:var(--ink);text-decoration:none}
 .footer-identity img{width:40px;height:40px;object-fit:contain;flex-shrink:0}

@@ -3113,8 +3113,9 @@ function renderDetail() {
     button.disabled = true;
     feedback.textContent = 'Saving note…';
     try {
-      const result = await patch({ note: next, noteBaseAt: a.noteAt || null });
-      a.note = next; a.noteAt = result.noteAt;
+      const result = await patch({ note: next, noteBaseAt: a.noteAt || null,
+        noteBaseRevision: a.noteRevision || 0 });
+      a.note = next; a.noteAt = result.noteAt; a.noteRevision = result.noteRevision;
       feedback.textContent = noteField.value === next ? `Saved · ${USER}` : 'Unsaved note';
     } catch (err) { feedback.textContent = `Note not saved: ${err.message}`; }
     button.disabled = false;

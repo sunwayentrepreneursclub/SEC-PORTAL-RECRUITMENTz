@@ -134,14 +134,27 @@ test('duplicate submissions and stale reviewer notes are refused', async () => {
   });
   assert.equal(duplicate.status, 409);
   const first = await call(appsHandler, 'PATCH', '/api/applications', {
-    id: 123, note: 'First review', noteBaseAt: null,
+    id: 123, note: 'First review', noteBaseAt: null, noteBaseRevision: 0,
   }, true);
   assert.equal(first.status, 200);
+  assert.equal(first.data.noteRevision, 1);
   const stale = await call(appsHandler, 'PATCH', '/api/applications', {
-    id: 123, note: 'Overwriting review', noteBaseAt: null,
+    id: 123, note: 'Overwriting review', noteBaseAt: null, noteBaseRevision: 0,
   }, true);
   assert.equal(stale.status, 409);
   assert.equal(JSON.parse(data.get('sec:applications'))[0].note, 'First review');
+});
+
+test('restoring an archived application cannot create an active duplicate', async () => {
+  assert.equal((await call(appsHandler, 'DELETE', '/api/applications?id=123', null, true)).status, 200);
+  const submitted = await call(appsHandler, 'POST', '/api/applications', {
+    name: 'Existing applicant', imail: 'existing@imail.sunway.edu.my', positionId: 'web',
+    answers: ['1', '2', '3', '4', '5'],
+  });
+  assert.equal(submitted.status, 201);
+  const restored = await call(appsHandler, 'PATCH', '/api/applications', { id: 123, restore: true }, true);
+  assert.equal(restored.status, 409);
+  assert.ok(JSON.parse(data.get('sec:applications'))[0].archivedAt);
 });
 
 test('non-admin users cannot download backups', async () => {

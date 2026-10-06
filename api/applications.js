@@ -86,7 +86,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'PATCH') {
-    const { id, status, statusBase, note, noteBaseAt, form, formBase, restore } = await readBody(req);
+    const { id, status, statusBase, note, noteBaseAt, noteBaseRevision, form, formBase, restore } = await readBody(req);
     if (status !== undefined && !STATUSES.has(status)) return send(res, 400, { error: 'Invalid decision.' });
     if (note !== undefined && (typeof note !== 'string' || note.length > 5000))
       return send(res, 400, { error: 'Reviewer note must be under 5,000 characters.' });
@@ -98,11 +98,15 @@ export default async function handler(req, res) {
       const a = apps.find(x => String(x.id) === String(id));
       if (!a) return { code: 404, error: 'Application not found.' };
       if (a.archivedAt && !restore) return { code: 409, error: 'Restore this application before editing it.' };
+      if (restore && apps.some(x => x !== a && !x.archivedAt && x.pos === a.pos && x.imail === a.imail))
+        return { code: 409, error: 'An active application already exists for this person and position.' };
       if (status !== undefined && statusBase !== undefined && a.status !== statusBase)
         return { code: 409, error: 'The decision changed since you opened this application. Reload before editing.' };
       if (form !== undefined && formBase !== undefined && a.form !== formBase)
         return { code: 409, error: 'The form flag changed since you opened this application. Reload before editing.' };
       if (note !== undefined && noteBaseAt !== undefined && (a.noteAt || null) !== noteBaseAt)
+        return { code: 409, error: 'The reviewer note changed since you opened this application. Copy your text before reloading.' };
+      if (note !== undefined && noteBaseRevision !== undefined && (a.noteRevision || 0) !== noteBaseRevision)
         return { code: 409, error: 'The reviewer note changed since you opened this application. Copy your text before reloading.' };
       if (restore) { delete a.archivedAt; delete a.archivedBy; }
       if (status !== undefined) a.status = status;
@@ -111,8 +115,9 @@ export default async function handler(req, res) {
         a.note = note;
         a.noteBy = user;
         a.noteAt = new Date().toISOString();
+        a.noteRevision = (a.noteRevision || 0) + 1;
       }
-      return { noteAt: a.noteAt || null };
+      return { noteAt: a.noteAt || null, noteRevision: a.noteRevision || 0 };
     });
     return send(res, result.error ? result.code : 200, result);
   }

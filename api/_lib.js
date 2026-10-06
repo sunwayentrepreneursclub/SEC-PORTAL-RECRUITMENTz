@@ -126,6 +126,14 @@ export function seedState() {
       qrTarget: '',
       deadline: '',
       publicNote: '',
+      timeline: [
+        { label: 'Applications open', date: '16–30 November 2026' },
+        { label: 'Interested candidates select and apply for desired roles', date: '16–30 November 2026' },
+        { label: 'Applications close', date: '30 November 2026' },
+        { label: 'Screening & Shortlisting suitable candidates', date: '1–4 December 2026' },
+        { label: 'Interview', date: '7–12 December 2026' },
+        { label: 'Announcement of results', date: '15 December 2026' },
+      ],
     },
     departments: [
       { name: 'Executive Committee', note: null, positions: [

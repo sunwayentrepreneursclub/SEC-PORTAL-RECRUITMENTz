@@ -208,13 +208,36 @@ body{
 #viewPublic .plain-rows{max-width:none}
 #viewPublic .plain-rows li{font-size:clamp(28px,3.2vw,48px);font-weight:500;letter-spacing:-.04em;padding:12px 0}
 #viewPublic .how-we-work-split{gap:96px}
-#viewPublic .final-cta-section{text-align:center;padding-block:48px}
+/* final-cta-section is now also chapter-light and, like roles-chapter, is the
+   last thing before the footer - same margin-bottom:96px gap would apply. */
+#viewPublic .final-cta-section{text-align:center;padding-block:48px;margin-bottom:0}
 #viewPublic .final-cta-section .aband-title{font-size:clamp(60px,9vw,128px);margin-bottom:44px}
-#viewPublic .final-cta-section .hero-cta{padding:22px 56px;font-size:19px}
+#viewPublic .final-cta-section .hero-cta{padding:13px 30px;font-size:15px}
 #viewPublic .chapter-light{padding-block:120px 24px}
 #viewPublic .masthead .lede{font-size:19px}
 /* ---- roles: white page, green boxes, one colour per department ---- */
-#viewPublic .roles-chapter{padding-block:96px 24px;margin-top:0}
+/* .chapter-light's base margin-bottom:96px assumes a dark section follows it;
+   the Roles tab ends right after it (footer next), so that margin was just
+   96px of unstyled dark page background showing through before the footer. */
+#viewPublic .roles-chapter{padding-block:48px 24px;margin-top:0;margin-bottom:0}
+/* timelineSection sits between two other chapter-light sections (stats above,
+   final CTA below) - .chapter-light's base margin-bottom:96px would show as
+   a stray dark sliver between two cream blocks. */
+#viewPublic #timelineSection{margin-bottom:0}
+/* Show more roles per screen: a third column on wide desktop, and tighter
+   cards everywhere so more rows fit without scrolling. */
+@media (min-width:1200px){#viewPublic .roles-chapter .roles-group{grid-template-columns:repeat(3,1fr)}}
+#viewPublic .roles-chapter .roles-group{gap:12px;margin-bottom:20px}
+#viewPublic .roles-chapter .cf-card-top{margin-bottom:8px}
+#viewPublic .roles-chapter .cf-card-sub{margin-bottom:6px}
+#viewPublic .roles-chapter .cf-card-desc{margin-bottom:8px}
+#viewPublic .roles-chapter .cf-card-ladder{margin-bottom:8px}
+#viewPublic .roles-chapter .cf-card-foot{padding-top:10px}
+@media (max-width:720px){
+  #viewPublic .roles-chapter{padding-block:28px 24px}
+  #viewPublic .roles-chapter .cf-card{padding:16px}
+  #viewPublic .roles-chapter .cf-card-title{font-size:clamp(20px,5vw,24px)}
+}
 #viewPublic .roles-chapter .cf-head{background:#F6F5F2;top:64px}
 #viewPublic .roles-chapter .cf-chip{background:transparent;border:1.5px solid rgba(24,28,32,.28);color:#181C20}
 #viewPublic .roles-chapter .cf-chip span{color:#535B60}
@@ -230,11 +253,11 @@ body{
 #viewPublic .roles-chapter .filled-toggle:hover{color:#181C20}
 #viewPublic .roles-chapter .cf-card{
   --ink:#111214;--ink-weak:rgba(17,18,20,.76);--muted:rgba(17,18,20,.62);--board-line:rgba(17,18,20,.2);--line-strong:rgba(17,18,20,.5);
-  background:var(--deptc);color:#111214;border:0;border-radius:14px;box-shadow:none;padding:28px;
+  background:var(--deptc);color:#111214;border:0;border-radius:14px;box-shadow:none;padding:18px;
 }
 #viewPublic .roles-chapter .cf-card:hover{box-shadow:0 14px 34px rgba(17,18,20,.16)}
 #viewPublic .roles-chapter .cf-dept{background:#111214;color:#F6F5F2;padding:5px 12px;border-radius:99px;letter-spacing:.06em}
-#viewPublic .roles-chapter .cf-card-title{font-family:var(--serif);font-weight:400;font-size:clamp(26px,2.4vw,34px);letter-spacing:-.035em;line-height:1.1;margin-bottom:10px;color:#111214}
+#viewPublic .roles-chapter .cf-card-title{font-family:var(--serif);font-weight:400;font-size:clamp(19px,1.7vw,23px);letter-spacing:-.03em;line-height:1.15;margin-bottom:6px;color:#111214}
 #viewPublic .roles-chapter .cf-card-sub{font-size:15px}
 #viewPublic .roles-chapter .cf-apply{background:#111214;color:#F6F5F2;border-color:#111214}
 #viewPublic .roles-chapter .cf-apply:hover{background:#2a2c30}
@@ -733,14 +756,6 @@ h1{
 .final-cta-section .aband-title{font-size:clamp(40px,6vw,76px);margin:0 0 32px}
 .final-cta-section .hero-cta{margin-top:0;padding:16px 40px;font-size:16px}
 .final-cta-section .hero-cta{margin-top:20px}
-/* Process list — a plain numbered editorial list (index, title, one line of
-   real detail) instead of the old circle-badges-on-a-glowing-wire treatment.
-   Calmer and more substantive reads as more professional than a progress bar. */
-.process-list{list-style:none;margin:0;padding:0;max-width:720px;border-top:1px solid var(--board-line)}
-.process-list li{display:flex;align-items:baseline;gap:28px;padding:11px 0;border-bottom:1px solid var(--board-line)}
-.process-index{flex:none;font-family:var(--serif);font-size:20px;color:var(--muted);line-height:1}
-.process-list h3{display:inline;margin:0;font-family:var(--body);font-size:16px;font-weight:600;color:var(--ink)}
-.process-list p{display:inline;margin:0 0 0 10px;font-size:13.5px;line-height:1.4;color:var(--muted)}
 /* Full-window sections — each major chapter of the home tab occupies roughly
    one screen and vertically centres its content, matching the hero instead
    of reading as a short strip between long stretches of empty scroll. */
@@ -749,7 +764,7 @@ h1{
 }
 /* the old first-child spacing hack (extra top padding/border/margin) fights
    the centring above now that every section fills the window on its own */
-#pp-overview>.abandsection:first-child.fill-section{padding-top:0;border-top:0;margin-top:0}
+#pp-overview>.abandsection:first-child.fill-section{padding-top:0;border-top:0;margin-top:0;margin-bottom:0}
 
 .abandsection{opacity:0;transform:translateY(16px)}
 .abandsection.is-visible{
@@ -1361,23 +1376,15 @@ textarea{min-height:110px;resize:vertical}
         <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
       </section>
 
-      <section class="abandsection fill-section" data-reveal>
+      <section class="abandsection fill-section chapter-light" data-reveal id="timelineSection" hidden>
         <div class="aband-head">
-          <p class="aband-eyebrow">What happens next</p>
-          <h2 class="aband-title">How it works.</h2>
+          <p class="aband-eyebrow">Key dates</p>
+          <h2 class="aband-title">The recruitment timeline.</h2>
         </div>
-        <ol class="process-list">
-          <li><span class="process-index">01</span><div><h3>Pick a role</h3><p>Read the description — it states exactly what you'd own.</p></div></li>
-          <li><span class="process-index">02</span><div><h3>Apply</h3><p>Five questions, specific to the role. No cover letter.</p></div></li>
-          <li><span class="process-index">03</span><div><h3>Assessment</h3><p>We read for specifics: named examples, real numbers.</p></div></li>
-          <li><span class="process-index">04</span><div><h3>Interview</h3><p>A conversation. You're assessing us as much as we assess you.</p></div></li>
-          <li><span class="process-index">05</span><div><h3>Decision</h3><p>Every applicant hears back, yes or not this round.</p></div></li>
-          <li><span class="process-index">06</span><div><h3>Onboarding</h3><p>Access, context and your first real task — immediately.</p></div></li>
-          <li><span class="process-index">07</span><div><h3>Get to work</h3><p>No orientation month. The work you were hired for starts now.</p></div></li>
-        </ol>
+        <div class="roadmap" id="roadmap"></div>
       </section>
 
-      <section class="abandsection final-cta-section fill-section" data-reveal>
+      <section class="abandsection final-cta-section fill-section chapter-light" data-reveal>
         <p class="aband-eyebrow">Want to join?</p>
         <h2 class="aband-title">Pick a seat.</h2>
         <button class="hero-cta" id="finalCta" type="button">View open roles</button>
@@ -1393,14 +1400,6 @@ textarea{min-height:110px;resize:vertical}
         </div>
       </section>
       <main class="board" id="board"><div class="empty">Loading positions…</div></main>
-
-      <section class="abandsection" data-reveal id="timelineSection" hidden>
-        <div class="aband-head">
-          <p class="aband-eyebrow">Key dates</p>
-          <h2 class="aband-title">The recruitment timeline.</h2>
-        </div>
-        <div class="roadmap" id="roadmap"></div>
-      </section>
     </div>
   </div>
 

@@ -286,7 +286,6 @@ body{
 /* "committee in numbers" as a row list — icon square, big serif number,
    label — rather than a four-up card grid */
 #overviewStats{display:grid;grid-template-columns:repeat(4,1fr);border:0;background:none;box-shadow:none;gap:0}
-@media (max-width:720px){#overviewStats{grid-template-columns:1fr 1fr}}
 #overviewStats .stat{
   display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:0 28px 0 0;
   border-right:1px solid var(--board-line);border-bottom:0;
@@ -301,7 +300,16 @@ body{
   font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
   color:var(--muted);margin:0;
 }
-@media (max-width:720px){#overviewStats .stat{padding:0 16px 20px 0;margin-bottom:20px;border-bottom:1px solid var(--board-line)}}
+/* Stay one compact row of 4 on phones instead of wrapping to a 2x2 grid —
+   numbers and labels shrink and tighten up rather than stacking into rows. */
+@media (max-width:520px){
+  #overviewStats .stat{padding:0 4px 0 0;gap:6px}
+  #overviewStats .l{white-space:nowrap}
+}
+@media (max-width:520px){
+  #viewPublic #overviewStats .n,#viewPublic .stat .n{font-size:28px!important}
+  #viewPublic #overviewStats .l{font-size:9px!important;letter-spacing:.04em!important;padding-left:4px!important}
+}
 /* mixed emphasis inside a headline — de-emphasise the connective words in
    grey, keep the payoff word full white/weight, the reference's own
    "Seven days of / innovation, learning, / and meaningful / connections."
@@ -1339,7 +1347,7 @@ textarea{min-height:110px;resize:vertical}
         <div class="mast-copy">
           <p class="eyebrow">Committee recruitment</p>
           <h1>If you need to be chased, don't apply.</h1>
-          <p class="lede">Own it. Ship it. Speak early. Finish. Miss one, and the rest doesn't matter.</p>
+          <p class="lede">Own it. Ship it. Speak early. Finish. This is the standard.</p>
           <button class="hero-cta" id="heroApply" type="button">View open roles</button>
         </div>
       </div>

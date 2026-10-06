@@ -1485,68 +1485,6 @@ textarea{min-height:110px;resize:vertical}
         <div class="roadmap" id="roadmap"></div>
       </section>
     </div>
-
-
-    <div class="pubpanel" id="pp-policies" role="tabpanel" aria-label="Recruitment policies" hidden>
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">Before you apply</p>
-          <h2 class="aband-title">The rules, plainly.</h2>
-          <p class="aband-lede">Everything that governs how applications are collected, reviewed and kept.</p>
-        </div>
-        <div class="why-grid">
-          <div class="why-card">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/><path d="M9 15.5l2 2 4-4"/></svg>
-            <span class="why-num">01</span>
-            <h3>No account needed</h3>
-            <p>Apply as a guest. Read the job description first, then answer the same five questions everyone applying to that role gets.</p></div>
-          <div class="why-card">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="1.5"/><path d="M3 6.5l9 6.5 9-6.5"/></svg>
-            <span class="why-num">02</span>
-            <h3>Sunway iMail only</h3>
-            <p>We collect your name and @imail.sunway.edu.my address — nothing else identifies you.</p></div>
-          <div class="why-card">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4.5" width="18" height="16" rx="1.5"/><path d="M3 9.5h18"/><path d="M8 2.5v4M16 2.5v4"/><path d="M7.5 13.5h3v3h-3z" fill="var(--open)" stroke="none"/></svg>
-            <span class="why-num">03</span>
-            <h3>Deadline</h3>
-            <p>Applications close <b id="deadlineText2">—</b>. Submissions after that aren’t reviewed.</p></div>
-          <div class="why-card">
-            <svg class="wi" viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="10.5" width="15" height="10" rx="1.5"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-            <span class="why-num">04</span>
-            <h3>Data retention</h3>
-            <p>Your answers are read only by the committee members responsible for that department, and deleted within 60 days of recruitment closing.</p></div>
-        </div>
-      </section>
-
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">Questions</p>
-          <h2 class="aband-title">Frequently asked.</h2>
-        </div>
-        <div class="faq">
-          <details class="faq-item">
-            <summary>Do I need to create an account to apply?</summary>
-            <div class="faq-ans"><p>No. Every open position can be applied to as a guest — read the job description, answer the five questions for that role, then submit your résumé through the linked form. There’s no sign-up wall.</p></div>
-          </details>
-          <details class="faq-item">
-            <summary>What happens after I submit my answers?</summary>
-            <div class="faq-ans"><p>You’re taken straight to the résumé form via a link. Once both parts are in, your application moves to <b>Submitted → Under review → Interview → Hired / Not this round</b>, tracked by the committee reviewing that department.</p></div>
-          </details>
-          <details class="faq-item">
-            <summary>Can I apply to more than one position?</summary>
-            <div class="faq-ans"><p>Yes — submit a separate application for each role you’re interested in. Each one gets its own five questions and its own review.</p></div>
-          </details>
-          <details class="faq-item">
-            <summary>Why is there still a separate form for my résumé?</summary>
-            <div class="faq-ans"><p>The five questions show how you think about the role; the form collects your actual résumé and contact details. Both are required for an application to be considered complete.</p></div>
-          </details>
-          <details class="faq-item">
-            <summary>What happens to my data?</summary>
-            <div class="faq-ans"><p>Only the committee members responsible for the department you applied to can read your answers, and everything is deleted within 60 days of recruitment closing.</p></div>
-          </details>
-        </div>
-      </section>
-    </div>
   </div>
 
   <footer class="site-footer">
@@ -1558,7 +1496,6 @@ textarea{min-height:110px;resize:vertical}
         </a>
         <nav class="footer-nav" aria-label="Footer navigation">
           <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website</a>
-          <a href="#" id="footerPolicies">Recruitment Policies</a>
           <a href="#" id="footerTerms" aria-haspopup="dialog" aria-controls="policy-dialog-terms">Terms &amp; Conditions</a>
           <a href="#" id="footerPrivacy" aria-haspopup="dialog" aria-controls="policy-dialog-privacy">Privacy Policy</a>
         </nav>
@@ -2164,7 +2101,6 @@ $('#heroApply')?.addEventListener('click', () => showPub('apply'));
 $('#findSeatCta')?.addEventListener('click', () => showPub('apply'));
 $('#topbarHome')?.addEventListener('click', e => { e.preventDefault(); showPub('overview'); window.scrollTo(0, 0); });
 $('#finalCta')?.addEventListener('click', () => showPub('apply'));
-$('#footerPolicies')?.addEventListener('click', e => { e.preventDefault(); showPub('policies'); window.scrollTo(0, 0); });
 
 /* Terms & Privacy dialogs — same open/close/backdrop behaviour as the main site's. */
 function openPolicyDialog(dialog) {

@@ -1502,7 +1502,7 @@ textarea{min-height:110px;resize:vertical}
 #viewAdmin .pcard-section-label{margin:0 0 14px;color:#33475B;font:700 11px/1.3 var(--body);letter-spacing:.09em;text-transform:uppercase}
 #viewAdmin .pcard .pgrid{grid-template-columns:minmax(0,1.4fr) minmax(190px,.85fr) minmax(230px,1.15fr);gap:12px;margin-bottom:20px}
 #viewAdmin .pcard .pfield label{color:#526478}
-#viewAdmin .pcard .pfield input[type=text],#viewAdmin .pcard .pfield select{background:#FAFCFE;border-color:#BDC9D5}
+#viewAdmin .pcard .pfield input[type=text],#viewAdmin .pcard .pfield select{background-color:#FAFCFE;border-color:#BDC9D5}
 #viewAdmin .pcard .pfield select{min-height:44px;cursor:pointer}
 #viewAdmin .pcard .pf-title input{font-weight:600}
 #viewAdmin .pcard .pavailability{padding:16px 0;margin:0;border-top:1px solid #E1E7ED}
@@ -1539,8 +1539,13 @@ textarea{min-height:110px;resize:vertical}
 #viewAdmin .addrow h4{color:#173554;font:700 19px/1.25 var(--body);letter-spacing:-.025em;text-transform:none;margin-bottom:18px}
 #viewAdmin .addrow .addgrid{grid-template-columns:minmax(0,1.4fr) minmax(190px,.85fr) minmax(230px,1.15fr);gap:12px}
 #viewAdmin .addrow .addgrid label{font:700 11.5px/1.3 var(--body);letter-spacing:.07em;text-transform:uppercase;color:#526478}
-#viewAdmin .addrow .addgrid input,#viewAdmin .addrow .addgrid select{min-height:44px;background:#fff;border-color:#BDC9D5}
+#viewAdmin .addrow .addgrid input,#viewAdmin .addrow .addgrid select{min-height:44px;background-color:#fff;border-color:#BDC9D5}
 #viewAdmin .addrow .addgrid select{cursor:pointer}
+#viewAdmin select{
+  appearance:none;-webkit-appearance:none;padding-right:42px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='m3.5 6 4.5 4 4.5-4' stroke='%23526478' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;background-size:16px 16px;
+}
 @media (max-width:1100px) and (min-width:721px){
   #viewAdmin .pcard .pgrid,#viewAdmin .addrow .addgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   #viewAdmin .pcard .pf-title,#viewAdmin .addrow .addgrid>div:first-child{grid-column:1/-1}
@@ -3185,25 +3190,46 @@ $('#btnCsv').addEventListener('click', () => {
 });
 
 /* ================= positions ================= */
+const PRESIDENTIAL_DEPARTMENT = 'Office of the President';
 function deptOf(p) { return (STATE.departments || []).find(d => d.positions.includes(p)); }
 function existingDept(name) {
   return (STATE.departments || []).find(d => d.name === name) || null;
 }
+function adminDepartments() {
+  const depts = [...(STATE.departments || [])];
+  if (!depts.some(d => d.name === PRESIDENTIAL_DEPARTMENT)) {
+    const exco = depts.findIndex(d => isExcoDept(d.name));
+    depts.splice(exco < 0 ? 0 : exco + 1, 0,
+      { name: PRESIDENTIAL_DEPARTMENT, note: null, positions: [] });
+  }
+  return depts;
+}
+function ensureDept(name) {
+  const existing = existingDept(name);
+  if (existing || name !== PRESIDENTIAL_DEPARTMENT) return existing;
+  const dept = { name, note: null, positions: [] };
+  const depts = STATE.departments || (STATE.departments = []);
+  const exco = depts.findIndex(d => isExcoDept(d.name));
+  depts.splice(exco < 0 ? 0 : exco + 1, 0, dept);
+  return dept;
+}
 function isExcoDept(name) { return /executive committee|executive leadership/i.test(name || ''); }
+function isExecutiveOffice(name) { return name === PRESIDENTIAL_DEPARTMENT; }
 function isDepartmentLevel(level) { return level === 'Department Leadership' || level === 'Department Team'; }
 function requiresNonExcoDept(level, title) {
   return isDepartmentLevel(level) || /^vice president\b/i.test(title || '');
 }
 function defaultLevelForDept(name) {
-  if (isExcoDept(name)) return 'Executive Committee';
+  if (isExcoDept(name) || isExecutiveOffice(name)) return 'Executive Committee';
   if (/audit/i.test(name || '')) return 'Independent Oversight';
   if (/digital|innovation/i.test(name || '')) return 'Specialist';
   return 'Department Team';
 }
 function departmentOptions(selected, level, title = '') {
-  const names = (STATE.departments || []).map(d => d.name)
-    .filter(name => !requiresNonExcoDept(level, title) || !isExcoDept(name) || name === selected);
-  return names.map(name => `<option value="${esc(name)}" ${name === selected ? 'selected' : ''}>${esc(name)}${requiresNonExcoDept(level, title) && isExcoDept(name) ? ' (current)' : ''}</option>`).join('');
+  const names = adminDepartments().map(d => d.name)
+    .filter(name => !requiresNonExcoDept(level, title) ||
+      (!isExcoDept(name) && !isExecutiveOffice(name)) || name === selected);
+  return names.map(name => `<option value="${esc(name)}" ${name === selected ? 'selected' : ''}>${esc(name)}${requiresNonExcoDept(level, title) && (isExcoDept(name) || isExecutiveOffice(name)) ? ' (current)' : ''}</option>`).join('');
 }
 function depthFor(level, title) {
   if (level === 'Executive Committee' || level === 'Independent Oversight') return 0;
@@ -3229,7 +3255,7 @@ async function confirmPositionDraftChange(scope) {
 function renderPositions() {
   const el = $('#posEditor'); if (!el) return;
   const focusId = document.activeElement?.dataset?.focus || null;
-  const depts = STATE.departments || [];
+  const depts = adminDepartments();
   let d = depts.find(x => x.name === ADMIN_DEPT);
   if (!d) d = depts.find(x => x.positions.some(isOpen)) || depts[0];
   ADMIN_DEPT = d?.name || null;
@@ -3244,7 +3270,9 @@ function renderPositions() {
       <h3>${esc(d.name)}<span class="slab">${hiring.length} still hiring</span></h3>
       <h4 class="pos-section-title">Still hiring · ${hiring.length}</h4>
       ${hiring.length ? hiring.map((p, i) => positionRow(p, d, i, hiring.length)).join('')
-        : '<p class="pos-section-empty">No roles hiring in this department.</p>'}
+        : `<p class="pos-section-empty">${d.name === PRESIDENTIAL_DEPARTMENT && !filled.length
+          ? 'No roles here yet. Add one below, or move an existing role here using its Department menu.'
+          : 'No roles hiring in this department.'}</p>`}
     </section>
     ${filled.length ? `<details class="admin-filled" ${ADMIN_FILLED_OPEN ? 'open' : ''}>
       <summary>
@@ -3358,7 +3386,7 @@ function wirePositions() {
 
     row.querySelector('[data-f="dept"]').addEventListener('change', async e => {
       if (!await confirmPositionDraftChange()) { e.target.value = d.name; return; }
-      const target = existingDept(e.target.value);
+      const target = ensureDept(e.target.value);
       if (!target || target === d) { renderPositions(); return; }
       d.positions.splice(d.positions.indexOf(p), 1);
       target.positions.push(p); p.dept = target.name;
@@ -3430,7 +3458,7 @@ function wirePositions() {
   const syncNewDepartmentOptions = () => {
     const dept = $('#npDept'), level = $('#npLevel').value, title = $('#npTitle').value.trim();
     const current = dept.value;
-    const selected = requiresNonExcoDept(level, title) && isExcoDept(current) ? '' : current;
+    const selected = requiresNonExcoDept(level, title) && (isExcoDept(current) || isExecutiveOffice(current)) ? '' : current;
     dept.innerHTML = departmentOptions(selected, level, title);
   };
   $('#npLevel')?.addEventListener('change', syncNewDepartmentOptions);
@@ -3439,8 +3467,8 @@ function wirePositions() {
   $('#btnAddPos')?.addEventListener('click', () => {
     const titleEl = $('#npTitle'), title = titleEl.value.trim();
     if (!title) { titleEl.focus(); showAddErr('Give the position a name.'); return; }
-    const d = existingDept($('#npDept').value);
-    if (!d) { $('#npDept').focus(); showAddErr('Choose an existing department.'); return; }
+    const d = ensureDept($('#npDept').value);
+    if (!d) { $('#npDept').focus(); showAddErr('Choose a department.'); return; }
     const level = $('#npLevel').value;
     const id = 'p' + Date.now();
     d.positions.push({ id, title, level, depth: depthFor(level, title), total: 1, filled: 0, availability: 'hiring', dept: d.name,

@@ -300,3 +300,21 @@ test('moving a role between existing departments keeps its ID and applications',
   assert.equal(stored.departments[1].positions[0].id, 'web');
   assert.ok(JSON.parse(data.get('sec:applications')).some(app => app.pos === 'web'));
 });
+
+test('Office of the President can be created without deleting existing roles or applications', async () => {
+  const current = await call(stateHandler, 'GET', '/api/state', null, true);
+  const next = structuredClone(current.data.departments);
+  const source = next.find(dept => dept.positions.some(role => role.id === 'web'));
+  const role = source.positions.splice(source.positions.findIndex(p => p.id === 'web'), 1)[0];
+  role.dept = 'Office of the President';
+  next.push({ name: 'Office of the President', note: null, positions: [role] });
+  const saved = await call(stateHandler, 'PUT', '/api/state', {
+    departments: next, settings: current.data.settings, revision: current.data.revision,
+  }, true);
+  assert.equal(saved.status, 200);
+  const stored = JSON.parse(data.get('sec:state'));
+  assert.equal(stored.departments.find(d => d.name === 'Office of the President').positions[0].id, 'web');
+  assert.ok(stored.departments.some(d => d.name === 'Digital'));
+  assert.ok(stored.departments.some(d => d.name === 'External Relations'));
+  assert.ok(JSON.parse(data.get('sec:applications')).some(app => app.pos === 'web'));
+});

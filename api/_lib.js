@@ -304,6 +304,7 @@ export const WEBSITE_LEVELS = [
   'Executive Committee', 'Department Leadership', 'Department Team',
   'Independent Oversight', 'Specialist',
 ];
+export const PRESIDENTIAL_DEPARTMENT = 'Office of the President';
 
 /* Present legacy levels consistently without changing saved role records. */
 export function websiteLevelFor(p, department = '') {

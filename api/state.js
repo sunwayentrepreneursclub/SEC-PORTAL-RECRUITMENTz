@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { send, readBody, requireAdmin, loadStateRecord, kvReplaceSafely,
          K_STATE, K_STATE_HISTORY, publicState, currentUser, guardEnv,
-         kvGet, K_KEY, WEBSITE_LEVELS } from './_lib.js';
+         kvGet, K_KEY, WEBSITE_LEVELS, PRESIDENTIAL_DEPARTMENT } from './_lib.js';
 
 const revisionOf = raw => crypto.createHash('sha256').update(raw).digest('hex');
 
@@ -39,7 +39,8 @@ function validateDepartmentNames(departments, previousDepartments) {
   const known = new Set((previousDepartments || []).map(d => d.name));
   if (!known.size) return null;
   for (const dept of departments) {
-    if (!known.has(dept.name)) return 'Choose an existing department for each role.';
+    if (!known.has(dept.name) && dept.name !== PRESIDENTIAL_DEPARTMENT)
+      return 'Choose an existing department or Office of the President for each role.';
   }
   return null;
 }

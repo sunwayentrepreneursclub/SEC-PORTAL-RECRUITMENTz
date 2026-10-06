@@ -911,13 +911,25 @@ h1{
   transition:opacity .55s ease-out,transform .55s ease-out;
 }
 .footnote.is-visible{opacity:1;transform:none}
-.site-footer{padding:80px 0 48px;border-top:1px solid var(--board-line);margin-top:32px}
-.site-footer-name{font-family:var(--serif);font-size:18px;margin:0 0 14px;color:var(--ink)}
-.site-footer-links{font-family:var(--mono);font-size:12px;letter-spacing:.04em;color:var(--muted);margin:0 0 14px}
-.site-footer-links a{color:var(--muted);text-decoration:none}
-.site-footer-links a:hover{color:var(--ink)}
-.site-footer-links span{margin:0 8px;color:var(--board-line)}
-.site-footer-copy{font-size:12px;color:var(--muted);margin:0}
+/* Footer — same structure and tokens as the main site's shipped footer:
+   identity (mark + name) / nav / social in a 3-column grid on a slightly
+   lifted surface, then a bottom bar with copyright and the admin entry. */
+.site-footer{background:var(--board);padding:48px 0 24px;margin-top:32px}
+.footer-main{display:grid;grid-template-columns:2fr 1fr 1fr;align-items:start;gap:28px}
+.footer-identity{display:flex;align-items:center;gap:14px;width:fit-content;font-family:var(--body);font-size:18px;color:var(--ink);text-decoration:none}
+.footer-identity img{width:40px;height:40px;object-fit:contain;flex-shrink:0}
+.footer-nav,.footer-social{display:flex;flex-direction:column;align-items:flex-start;gap:8px;font-family:var(--body);font-size:13px;color:var(--muted)}
+.footer-nav a,.footer-social a{color:var(--muted);text-decoration:none;padding-block:4px;transition:color .2s}
+.footer-nav a:hover,.footer-social a:hover{color:var(--ink)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:32px;padding-top:18px;border-top:1px solid var(--board-line);font-family:var(--body);font-size:12px;color:var(--muted)}
+.footer-bottom a{color:var(--muted);text-decoration:none}
+.footer-bottom a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+@media (max-width:720px){
+  .footer-main{grid-template-columns:1fr 1fr;gap:22px 16px}
+  .footer-identity{grid-column:1 / -1;font-size:16px;gap:12px}
+  .footer-identity img{width:34px;height:34px}
+  .footer-bottom{flex-wrap:wrap;margin-top:22px;font-size:11px}
+}
 .footer-status-cta{
   display:inline-flex;align-items:center;gap:8px;margin:0 0 20px;
   font-family:var(--body);font-size:14px;font-weight:700;
@@ -1517,17 +1529,26 @@ textarea{min-height:110px;resize:vertical}
     </div>
 
     <footer class="site-footer">
-      <p class="site-footer-name">Sunway Entrepreneurs Club</p>
-      <p class="site-footer-links">
-        <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website</a>
-        <span aria-hidden="true">·</span>
-        <a href="#" id="footerPolicies">Recruitment Policies</a>
-        <span aria-hidden="true">·</span>
-        <a href="#" id="footerPrivacy">Privacy</a>
-        <span aria-hidden="true">·</span>
+      <div class="footer-main">
+        <a class="footer-identity" href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">
+          <img src="/sec_e.png" alt="" width="40" height="40">
+          <span>Sunway Entrepreneurs Club</span>
+        </a>
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website</a>
+          <a href="#" id="footerPolicies">Recruitment Policies</a>
+          <a href="#" id="footerPrivacy">Privacy</a>
+        </nav>
+        <nav class="footer-social" aria-label="Social channels">
+          <a href="https://www.instagram.com/sunwayentrepreneurs" target="_blank" rel="noopener">Instagram</a>
+          <a href="https://www.linkedin.com/company/sunway-entrepreneurs-club/" target="_blank" rel="noopener">LinkedIn</a>
+          <a href="https://whatsapp.com/channel/0029VbDoiWoEFeXcwUjDcg2g" target="_blank" rel="noopener">WhatsApp Channel</a>
+        </nav>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Sunway Entrepreneurs Club</span>
         <a href="#" id="adminEntry">Committee Sign In</a>
-      </p>
-      <p class="site-footer-copy">© 2026 Sunway Entrepreneurs Club</p>
+      </div>
     </footer>
   </div>
 </section>

@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>if ('scrollRestoration' in history) history.scrollRestoration = 'manual';</script>
 <title>Committee Recruitment | Sunway Entrepreneurs Club</title>
 <meta name="description" content="Explore committee roles at Sunway Entrepreneurs Club, see what each role owns, and apply to join the team.">
 <meta property="og:title" content="Committee Recruitment | Sunway Entrepreneurs Club">
@@ -225,8 +226,12 @@ body{
 #viewPublic .roles-chapter .cf-card-ladder{margin-bottom:8px}
 #viewPublic .roles-chapter .cf-card-foot{padding-top:10px}
 @media (max-width:720px){
-  #viewPublic .roles-chapter{padding-block:28px 24px}
-  #viewPublic .roles-chapter>.abandsection{margin-bottom:28px}
+  #viewPublic .roles-chapter{padding-block:20px 24px}
+  #viewPublic .roles-chapter>.abandsection{margin-bottom:12px}
+  #viewPublic .roles-chapter .aband-head{margin-bottom:0}
+  #viewPublic .roles-chapter .aband-title{font-size:40px}
+  #viewPublic .roles-chapter .aband-lede{font-size:17px;line-height:1.45}
+  #viewPublic .roles-chapter .cf-head{padding-block:10px;margin-bottom:16px}
   #viewPublic .roles-chapter .cf-card{padding:16px}
   #viewPublic .roles-chapter .cf-card-title{font-size:clamp(20px,5vw,24px)}
 }
@@ -311,14 +316,17 @@ body{
 #viewPublic .roles-chapter .filled-band{border-top:1px solid rgba(24,28,32,.22);padding-top:16px;margin-top:4px}
 #viewPublic .roles-chapter .department-empty{margin:0 0 40px}
 @media (max-width:720px){
-  #viewPublic .roles-chapter .department-group{margin-bottom:44px}
-  #viewPublic .roles-chapter .department-heading{display:block;margin-bottom:18px}
-  #viewPublic .roles-chapter .department-heading h3{font-size:clamp(27px,7.8vw,34px)}
-  #viewPublic .roles-chapter .department-heading p{text-align:left;margin-top:7px;font-size:12px}
+  #viewPublic .roles-chapter .department-group{margin-bottom:32px}
+  #viewPublic .roles-chapter .department-heading{display:block;margin-bottom:12px}
+  #viewPublic .roles-chapter .department-heading h3{font-size:clamp(26px,7.2vw,32px)}
+  #viewPublic .roles-chapter .department-heading p{text-align:left;margin-top:5px;font-size:12px}
   #viewPublic .roles-chapter .roles-group,
-  #viewPublic .roles-chapter .roles-group:not(:last-child){grid-template-columns:minmax(0,1fr);gap:10px}
-  #viewPublic .roles-chapter .dept-role{min-height:0;padding:18px}
-  #viewPublic .roles-chapter .dept-role .cf-card-title{font-size:clamp(22px,6vw,26px)}
+  #viewPublic .roles-chapter .roles-group:not(:last-child){grid-template-columns:minmax(0,1fr);gap:8px}
+  #viewPublic .roles-chapter .dept-role{min-height:0;padding:14px 16px}
+  #viewPublic .roles-chapter .dept-role .cf-card-top{margin-bottom:6px}
+  #viewPublic .roles-chapter .dept-role .cf-card-title{font-size:clamp(20px,5.5vw,24px);margin-bottom:6px}
+  #viewPublic .roles-chapter .dept-role .cf-card-desc{font-size:13px;line-height:1.45;-webkit-line-clamp:2;margin-bottom:10px}
+  #viewPublic .roles-chapter .dept-role .cf-apply{min-height:44px}
 }
 
 
@@ -390,9 +398,6 @@ button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlig
 a{color:var(--open);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}
 a:hover{color:var(--open-deep)}
 summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-radius:var(--r-sm)}
-
-/* ---------- scroll progress ---------- */
-.scrollbar{position:fixed;top:0;left:0;height:3px;background:var(--open);width:0%;z-index:90}
 
 @media (prefers-reduced-motion:reduce){
   body{animation:none}
@@ -503,6 +508,13 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 }
 /* ---------- masthead ---------- */
 .masthead{padding:64px 0;min-height:calc(100svh - 64px);display:flex;align-items:center}
+#viewPublic .masthead{
+  --ink:#181C20;--muted:#535B60;
+  position:relative;background:#F6F5F2;color:var(--ink);
+  box-shadow:0 0 0 100vmax #F6F5F2;clip-path:inset(0 -100vmax);
+}
+#viewPublic .masthead .hero-cta{background:#181C20;border-color:#181C20;color:#F6F5F2}
+#viewPublic .masthead .hero-cta:hover{background:#34383c;border-color:#34383c}
 .masthead[hidden]{display:none}
 .masthead .hero-grid{width:100%}
 .hero-cta{
@@ -687,41 +699,33 @@ h1{
 @media (max-width:900px){.roadmap{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.roadmap{grid-template-columns:1fr;gap:24px}}
 
-/* ---------- stage tracker (status pipeline) ---------- */
-.stage-track{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border:1px solid var(--board-line);
-  background:var(--paper);padding:24px;border-radius:var(--r-lg);box-shadow:var(--sh-1);
-  position:relative;overflow:hidden}
-.stage-track::after{
-  content:"";position:absolute;top:0;left:0;width:60%;height:100%;pointer-events:none;
-  background:linear-gradient(100deg, transparent 0%, rgba(246,245,242,.22) 45%, rgba(246,245,242,.45) 50%, rgba(246,245,242,.22) 55%, transparent 100%);
-  transform:translateX(-160%);
-}
-.stage-track.is-visible::after{animation:stageGlow 1.4s ease-out .5s forwards}
-@keyframes stageGlow{to{transform:translateX(220%)}}
-.stage-step{font-family:var(--body);font-size:13px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;
-  padding:9px 16px;border:1px solid var(--line-strong);border-radius:var(--r-pill);background:var(--paper);
-  opacity:0;transform:translateX(-14px) scale(.92)}
-.stage-track.is-visible .stage-step{animation:stageStepIn .45s cubic-bezier(.34,1.56,.64,1) forwards}
-.stage-track.is-visible .stage-step:nth-child(3){animation-delay:.12s}
-.stage-track.is-visible .stage-step:nth-child(5){animation-delay:.24s}
-.stage-track.is-visible .stage-step:nth-child(7){animation-delay:.36s}
-@keyframes stageStepIn{to{opacity:1;transform:none}}
-.stage-step.is-reached{background:var(--open);border-color:var(--open);color:var(--navy);font-weight:700}
-.stage-arrow{font-family:var(--display);color:var(--open);display:inline-block;
-  animation:arrowFlow 1.6s ease-in-out infinite}
-.stage-track.is-visible .stage-arrow:nth-of-type(2){animation-delay:.15s}
-.stage-track.is-visible .stage-arrow:nth-of-type(4){animation-delay:.3s}
-.stage-track.is-visible .stage-arrow:nth-of-type(6){animation-delay:.45s}
-@keyframes arrowFlow{0%,100%{opacity:.4;transform:translateX(0)}50%{opacity:1;transform:translateX(4px)}}
-@media (max-width:560px){
-  .stage-track{flex-direction:column;align-items:stretch;text-align:center}
-  .stage-arrow{transform:rotate(90deg)}
-  @keyframes arrowFlow{0%,100%{opacity:.4;transform:rotate(90deg) translateX(0)}50%{opacity:1;transform:rotate(90deg) translateX(4px)}}
-}
-@media (prefers-reduced-motion:reduce){
-  .stage-step{animation:none;opacity:1;transform:none}
-  .stage-arrow{animation:none;opacity:1}
-  .stage-track.is-visible::after{animation:none;display:none}
+/* ---------- candidate status: one readable sequence at every width ---------- */
+.stage-track{list-style:none;margin:22px 0 0;padding:0;display:grid}
+.stage-step{display:grid;grid-template-columns:24px minmax(0,1fr);gap:14px;position:relative;
+  min-height:49px;padding:0 0 18px;color:var(--muted)}
+.stage-step:last-child{min-height:24px;padding-bottom:0}
+.stage-step:not(:last-child)::before{content:"";position:absolute;left:11px;top:24px;bottom:0;
+  width:1px;background:var(--line-strong)}
+.stage-step.is-done::before{background:var(--ink-weak)}
+.stage-marker{width:24px;height:24px;border:1px solid var(--line-strong);border-radius:50%;
+  display:grid;place-items:center;font:700 13px var(--body);color:var(--ink);background:var(--paper)}
+.stage-step.is-done .stage-marker{background:var(--ink);border-color:var(--ink);color:var(--navy)}
+.stage-step.is-current .stage-marker{border:7px solid var(--ink)}
+.stage-label{font:500 15px/24px var(--body);color:var(--muted)}
+.stage-step.is-done .stage-label{color:var(--ink-weak)}
+.stage-step.is-current .stage-label{font-weight:700;color:var(--ink)}
+.stage-current{font:600 11px/24px var(--body);color:var(--muted);margin-left:9px}
+.status-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:stretch}
+.status-search input{min-width:0}
+.status-search .btn{border-radius:var(--r-sm);white-space:nowrap;padding-inline:17px}
+.status-result{border-top:1px solid var(--board-line);margin-top:28px;padding-top:24px}
+.status-result h4{font:400 23px/1.2 var(--serif);letter-spacing:-.025em;margin:0 0 5px}
+.status-result-dept{font:400 13px/1.5 var(--body);color:var(--muted);margin:0}
+.status-note{font:400 13px/1.5 var(--body);color:var(--muted);margin:16px 0 0}
+@media (max-width:520px){
+  .status-search{grid-template-columns:1fr}
+  .status-search .btn{width:100%;min-height:44px}
+  #statusScrim .sheet-body{padding:22px}
 }
 
 /* ---------- authority sections (why / standard / process) ---------- */
@@ -821,9 +825,12 @@ h1{
 .proof-closing{margin:0;font-size:16px;color:var(--muted)}
 /* Home keeps the deadline sequence; live seat totals belong beside the roles. */
 #viewPublic .home-content.chapter-light{padding:0;margin:0}
-#viewPublic .home-content :focus-visible,#viewPublic .roles-chapter :focus-visible{outline-color:#181c20}
+#viewPublic .home-content :focus-visible,#viewPublic .roles-chapter :focus-visible{outline-color:currentColor}
 #viewPublic .home-overview{
+  --ink:#F6F5F2;--ink-weak:#B7B9BF;--muted:#B7B9BF;
   display:block;padding-block:clamp(80px,7vw,112px);margin:0;
+  position:relative;background:#111214;color:var(--ink);
+  box-shadow:0 0 0 100vmax #111214;clip-path:inset(0 -100vmax);
 }
 #viewPublic .home-overview[hidden]{display:none}
 #viewPublic .roles-overview{margin:0 0 clamp(48px,5vw,72px)}
@@ -864,6 +871,7 @@ h1{
   margin:0 0 clamp(32px,4vw,58px);color:var(--ink);
 }
 #viewPublic .home-timeline .roadmap{gap:clamp(30px,3.6vw,52px) clamp(24px,3.4vw,48px)}
+#viewPublic .home-timeline .rm-date{color:#B7B9BF}
 #viewPublic .home-roles{padding:64px 0 88px;margin:0;border-top:0}
 #viewPublic .home-content .home-roles:last-child{margin-bottom:0}
 #viewPublic .home-roles .aband-title{font-size:clamp(36px,4vw,58px)}
@@ -1540,7 +1548,6 @@ textarea{min-height:110px;resize:vertical}
 </style>
 </head>
 <body>
-<div class="scrollbar" id="scrollProgress"></div>
 
 <div class="envelope-gate" id="introSplash" role="img" aria-label="Sunway Entrepreneurs Club. Welcome.">
   <div class="envelope-stage" id="envelopeShape">
@@ -1554,7 +1561,7 @@ textarea{min-height:110px;resize:vertical}
 
 <nav class="topbar">
   <div class="topbar-inner">
-    <a href="#" class="topbar-word" id="topbarHome">Sunway Entrepreneurs Club</a>
+    <a href="/" class="topbar-word" id="topbarHome">Sunway Entrepreneurs Club</a>
     <div class="pubnav" role="tablist" aria-label="Recruitment sections">
       <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Roles</button>
       <button class="pubtab navstatus-btn" id="navStatus" type="button">Application Status</button>
@@ -1566,7 +1573,7 @@ textarea{min-height:110px;resize:vertical}
 <dialog id="main-menu" class="site-menu" aria-label="Main menu">
   <div class="menu-panel">
     <div class="menu-toolbar">
-      <span class="topbar-word">Sunway Entrepreneurs Club</span>
+      <a href="/" class="topbar-word" data-menu-go="overview">Sunway Entrepreneurs Club</a>
       <button class="menu-toggle menu-close" id="menuClose" type="button">Close &#10005;</button>
     </div>
     <nav class="menu-primary" aria-label="Pages">
@@ -1870,14 +1877,15 @@ textarea{min-height:110px;resize:vertical}
       <button class="x" id="statusClose" aria-label="Close">&#10005;</button>
     </div>
     <div class="sheet-body">
-      <div class="field"><label for="statusMail">Sunway iMail</label>
-        <input type="email" id="statusMail" placeholder="25000000@imail.sunway.edu.my" autocomplete="email">
-        <div class="err" id="statusErr" hidden></div></div>
-      <div id="statusResults"></div>
-    </div>
-    <div class="sheet-foot">
-      <button class="btn ghost" id="statusCancel">Close</button>
-      <button class="btn" id="statusCheck">Check status</button>
+      <form id="statusForm" novalidate>
+        <label for="statusMail">Sunway iMail</label>
+        <div class="status-search">
+          <input type="email" id="statusMail" placeholder="25000000@imail.sunway.edu.my" autocomplete="email" aria-describedby="statusErr">
+          <button class="btn" id="statusCheck" type="submit">Check status</button>
+        </div>
+        <div class="err" id="statusErr" role="alert" hidden></div>
+      </form>
+      <div id="statusResults" aria-live="polite"></div>
     </div>
   </div>
 </div>
@@ -2082,12 +2090,9 @@ async function loadState() {
 function renderHomeRoles() {
   const el = $('#homeRoles');
   if (!el) return;
-  const all = Object.values(POSITIONS);
-  const ready = all.filter(p => isOpen(p) && isReady(p));
-  const soon = all.filter(p => isOpen(p) && !isReady(p));
-  const roles = (ready.length ? ready : soon).slice(0, 3);
+  const roles = Object.values(POSITIONS).filter(p => isOpen(p) && isReady(p)).slice(0, 3);
   if (!roles.length) {
-    el.innerHTML = '<p class="empty">No roles are open right now. Check the full list for future opportunities.</p>';
+    el.innerHTML = '<p class="empty">No roles are accepting applications right now. Check the full list for upcoming roles.</p>';
     return;
   }
   el.innerHTML = roles.map(p => `<article class="home-role" style="--deptc:${deptColor(p.dept)}">
@@ -2293,7 +2298,6 @@ function moveGlide(btn) {
 }
 
 function showPub(which) {
-  window.scrollTo({ top: 0, behavior: 'instant' }); // new tab = new page, start at its top
   const mast = document.querySelector('.masthead');
   if (mast) mast.hidden = which !== 'overview';
   document.querySelectorAll('.pubpanel').forEach(p => {
@@ -2307,6 +2311,7 @@ function showPub(which) {
   const active = document.querySelector(`.pubtab[data-pub="${which}"]`);
   document.querySelectorAll('.pubtab').forEach(b => b.setAttribute('aria-selected', String(b === active)));
   moveGlide(active);
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 document.querySelectorAll('.pubtab').forEach(b => { if (b.dataset.pub) b.addEventListener('click', () => showPub(b.dataset.pub)); });
 window.addEventListener('resize', () => moveGlide(document.querySelector('.pubtab[aria-selected="true"]')));
@@ -2315,7 +2320,7 @@ requestAnimationFrame(() => moveGlide($('#pt-apply')));
 // top-bar and hero CTAs both just jump to the same Apply tab the nav already offers
 $('#topbarApply')?.addEventListener('click', () => showPub('apply'));
 $('#heroApply')?.addEventListener('click', () => showPub('apply'));
-$('#topbarHome')?.addEventListener('click', e => { e.preventDefault(); showPub('overview'); window.scrollTo(0, 0); });
+$('#topbarHome')?.addEventListener('click', e => { e.preventDefault(); showPub('overview'); });
 $('#homeRolesAll')?.addEventListener('click', () => showPub('apply'));
 
 /* Mobile menu — same shape as the main site's Nav: a native <dialog> opened
@@ -2355,7 +2360,6 @@ $('#homeRolesAll')?.addEventListener('click', () => showPub('apply'));
       if (where === 'admin') { showView('admin'); applyLock(); return; }
       if (where === 'status') { openStatusCheck(); return; }
       showPub(where);
-      window.scrollTo({ top: 0, behavior: 'instant' });
     });
   });
 })();
@@ -2392,7 +2396,7 @@ document.querySelectorAll('.faq-item').forEach(item => {
   });
 });
 
-/* ================= scroll reveal: FAQ stagger + stage tracker ================= */
+/* ================= scroll reveal: FAQ stagger ================= */
 if ('IntersectionObserver' in window) {
   const faqObserver = new IntersectionObserver(entries => {
     entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('is-visible'); faqObserver.unobserve(en.target); } });
@@ -2402,10 +2406,6 @@ if ('IntersectionObserver' in window) {
     faqObserver.observe(el);
   });
 
-  const stageObserver = new IntersectionObserver(entries => {
-    entries.forEach(en => { if (en.isIntersecting) { en.target.classList.add('is-visible'); stageObserver.unobserve(en.target); } });
-  }, { threshold: 0.3 });
-  document.querySelectorAll('.stage-track').forEach(el => stageObserver.observe(el));
 }
 
 /* ================= job list (single-column, page-scrolls — jobstreet-style) ================= */
@@ -2427,7 +2427,7 @@ const deptColor = name => {
 
 function cfCardHTML(p) {
   const open = isOpen(p), ready = isReady(p);
-  const statusText = ready ? 'Still hiring' : 'Opening soon';
+  const statusText = ready ? 'Accepting applications' : 'Opening soon';
   return `<article class="cf-card dept-role ${ready ? 'is-open' : 'is-soon'}" data-pid="${p.id}"
       aria-label="${esc(p.title)}">
     <div class="cf-card-top"><span class="cf-level">${esc(p.level)}</span><span class="cf-status">${statusText}</span></div>
@@ -2464,8 +2464,10 @@ function buildJobList(positions) {
       if (!group) byDept.push(group = { name: p.dept, items: [] });
       group.items.push(p);
     });
-    const chapters = byDept.map(group => {
-      const items = group.items.map((p, index) => ({ p, index })).sort((a, b) => roleRank(a.p.level) - roleRank(b.p.level) || a.index - b.index);
+    // Keep department hierarchy, but bring teams with actionable roles first.
+    const chapters = byDept.sort((a, b) => Number(b.items.some(isReady)) - Number(a.items.some(isReady))).map(group => {
+      const items = group.items.map((p, index) => ({ p, index })).sort((a, b) =>
+        Number(isReady(b.p)) - Number(isReady(a.p)) || roleRank(a.p.level) - roleRank(b.p.level) || a.index - b.index);
       return `<section class="department-group" style="--deptc:${deptColor(group.name)}" aria-label="${esc(group.name)} roles">
         <div class="department-heading"><h3>${esc(group.name)}</h3></div>
         <div class="roles-group">${items.map(({ p }) => cfCardHTML(p)).join('')}</div>
@@ -2717,25 +2719,31 @@ function stepReview() {
   };
 }
 
-/* internal status -> candidate-facing label + stage index (0-3), per the
-   locked status-language table: new=Submitted, shortlisted=Interview,
-   offered=Offer/Selected, rejected=Not this round. There's no distinct
-   "Screening/Under review" state in the data model yet, so a fresh
-   application sits at stage 1 (Under review) rather than stage 0, since
-   "Submitted" is already true the instant it exists. */
+/* Candidate-facing stages reflect only decisions the database actually stores.
+   A rejection can happen before interview, so that path omits interview. */
 function statusStage(status) {
   switch (status) {
-    case 'shortlisted': return { label: 'Interview', stage: 2 };
-    case 'offered': return { label: 'Offer / Selected', stage: 3 };
-    case 'rejected': return { label: 'Not this round', stage: 3 };
-    default: return { label: 'Under review', stage: 1 };
+    case 'shortlisted': return { stage: 2,
+      note: 'You have been shortlisted. Watch your iMail for interview details.' };
+    case 'offered': return { stage: 3,
+      note: 'An offer has been recorded. Watch your iMail for details.' };
+    case 'rejected': return { stage: 2,
+      note: 'You were not selected this round. Thank you for applying.' };
+    default: return { stage: 1,
+      note: 'Your application is in the review queue. Check back for updates.' };
   }
 }
-const STAGE_LABELS = ['Submitted', 'Under review', 'Interview', 'Decision'];
-function stageStripHTML(currentStage) {
-  return `<div class="stage-track is-visible" aria-label="Application progress">
-    ${STAGE_LABELS.map((label, i) => `<span class="stage-step ${i <= currentStage ? 'is-reached' : ''}">${esc(label)}</span>${i < STAGE_LABELS.length - 1 ? '<span class="stage-arrow" aria-hidden="true">→</span>' : ''}`).join('')}
-  </div>`;
+function stageTimelineHTML(currentStage, status) {
+  const labels = status === 'rejected'
+    ? ['Submitted', 'Under review', 'Not this round']
+    : ['Submitted', 'Under review', 'Interview', status === 'offered' ? 'Offer / Selected' : 'Decision'];
+  return `<ol class="stage-track" aria-label="Application progress">
+    ${labels.map((label, i) => `<li class="stage-step ${i < currentStage ? 'is-done' : i === currentStage ? 'is-current' : ''}"
+      ${i === currentStage ? 'aria-current="step"' : ''}>
+      <span class="stage-marker" aria-hidden="true">${i < currentStage ? '&#10003;' : ''}</span>
+      <span><span class="stage-label">${esc(label)}</span>${i === currentStage ? '<span class="stage-current">Current</span>' : ''}</span>
+    </li>`).join('')}
+  </ol>`;
 }
 
 function stepDone() {
@@ -2749,9 +2757,7 @@ function stepDone() {
     <p style="max-width:42ch;margin:0 auto 22px;color:var(--muted)">The form collects your details and your resume. Your application isn't complete until you've submitted it.</p>
     <a class="btn cta" href="${esc(link)}" target="_blank" rel="noopener" style="display:inline-flex;margin:0 auto">Open the résumé form
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></a>
-    <p style="margin:24px 0 10px;color:var(--muted);font-size:13px">Application received</p>
-    ${stageStripHTML(0)}
-    <p style="margin:16px 0 0;color:var(--muted);font-size:13px">Check back anytime from <b>Application Status</b> in the footer.</p>
+    <p style="margin:24px 0 0;color:var(--muted);font-size:13px">After sending the résumé form, check your progress from <b>Application Status</b>.</p>
   </div>`;
   sheetFoot.innerHTML = `<button class="btn ghost" id="fCancel">Done</button>`;
   $('#fCancel').onclick = () => { closeApply(); loadState(); };
@@ -2759,7 +2765,9 @@ function stepDone() {
 
 /* ================= public application-status lookup ================= */
 const statusScrim = $('#statusScrim');
+let statusReturnFocus = null;
 function openStatusCheck() {
+  statusReturnFocus = document.activeElement;
   $('#statusMail').value = '';
   $('#statusErr').hidden = true;
   $('#statusResults').innerHTML = '';
@@ -2767,36 +2775,66 @@ function openStatusCheck() {
   document.body.style.overflow = 'hidden';
   setTimeout(() => $('#statusMail')?.focus(), 30);
 }
-function closeStatusCheck() { statusScrim.hidden = true; document.body.style.overflow = ''; }
+function closeStatusCheck() {
+  statusScrim.hidden = true;
+  document.body.style.overflow = '';
+  if (statusReturnFocus?.getClientRects?.().length) statusReturnFocus.focus();
+  else $('#menuOpen')?.focus();
+}
 $('#statusClose')?.addEventListener('click', closeStatusCheck);
-$('#statusCancel')?.addEventListener('click', closeStatusCheck);
 statusScrim?.addEventListener('click', e => { if (e.target === statusScrim) closeStatusCheck(); });
+statusScrim?.addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const focusable = [...statusScrim.querySelectorAll('button:not([disabled]),input:not([disabled])')];
+  const first = focusable[0], last = focusable.at(-1);
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !statusScrim.hidden) closeStatusCheck(); });
 async function runStatusCheck() {
-  const mail = $('#statusMail').value.trim().toLowerCase();
-  const err = $('#statusErr'); err.hidden = true;
+  const input = $('#statusMail');
+  const mail = input.value.trim().toLowerCase();
+  const err = $('#statusErr');
+  err.hidden = true;
+  input.removeAttribute('aria-invalid');
   const results = $('#statusResults');
-  const btn = $('#statusCheck'); btn.disabled = true; btn.textContent = 'Checking…';
+  results.innerHTML = '';
+  if (!/^[^@\s]+@imail\.sunway\.edu\.my$/.test(mail)) {
+    err.textContent = 'Enter a valid Sunway iMail address.';
+    err.hidden = false;
+    input.setAttribute('aria-invalid', 'true');
+    input.focus();
+    return;
+  }
+  const btn = $('#statusCheck');
+  btn.disabled = true;
+  btn.textContent = 'Checking…';
+  results.setAttribute('aria-busy', 'true');
   try {
     const { applications } = await api(`/api/applications?imail=${encodeURIComponent(mail)}`);
     if (!applications.length) {
-      results.innerHTML = `<p class="hint" style="margin-top:16px">No applications found for that address.</p>`;
+      results.innerHTML = '<p class="status-note">No applications found for that address.</p>';
     } else {
       results.innerHTML = applications.map(a => {
-        const { label, stage } = statusStage(a.status);
-        return `<div style="margin-top:20px">
-          <p style="font-weight:600;margin:0 0 2px">${esc(a.posTitle)}</p>
-          <p style="color:var(--muted);font-size:13px;margin:0 0 10px">${esc(a.dept)} · currently: ${esc(label)}</p>
-          ${stageStripHTML(stage)}
-        </div>`;
+        const { stage, note } = statusStage(a.status);
+        return `<article class="status-result">
+          <h4>${esc(a.posTitle)}</h4>
+          <p class="status-result-dept">${esc(a.dept)}</p>
+          ${stageTimelineHTML(stage, a.status)}
+          <p class="status-note">${esc(note)}</p>
+        </article>`;
       }).join('');
     }
   } catch (e) {
     err.textContent = e.message; err.hidden = false;
+  } finally {
+    results.removeAttribute('aria-busy');
+    btn.disabled = false;
+    btn.textContent = 'Check status';
   }
-  btn.disabled = false; btn.textContent = 'Check status';
 }
-$('#statusCheck')?.addEventListener('click', runStatusCheck);
-$('#statusMail')?.addEventListener('keydown', e => { if (e.key === 'Enter') runStatusCheck(); });
+$('#statusForm')?.addEventListener('submit', e => { e.preventDefault(); runStatusCheck(); });
+$('#statusMail')?.addEventListener('input', e => { e.currentTarget.removeAttribute('aria-invalid'); $('#statusErr').hidden = true; });
 $('#navStatus')?.addEventListener('click', () => openStatusCheck());
 
 /* ================= auth ================= */
@@ -3469,17 +3507,7 @@ function renderSettings() {
   });
 }
 
-/* ================= scroll progress + reveal ================= */
-function updateScrollBar() {
-  const b = $('#scrollProgress');
-  if (!b) return;
-  const h = document.documentElement;
-  const max = h.scrollHeight - h.clientHeight;
-  b.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + '%';
-}
-window.addEventListener('scroll', updateScrollBar, { passive: true });
-window.addEventListener('resize', updateScrollBar);
-
+/* ================= scroll reveal ================= */
 document.querySelectorAll('.footnote, [data-reveal]').forEach(observeReveal);
 
 /* ================= "Our Standard" — scroll-linked word reveal ================= */
@@ -3629,13 +3657,16 @@ if ('IntersectionObserver' in window) {
       showView('admin'); applyLock();
       const gate = $('#introSplash');
       if (gate) { gate.hidden = true; INTRO_DISMISSED = true; document.body.style.overflow = ''; }
-    }
+    } else showPub('overview');
   } catch (e) {
     $('#board').innerHTML = `<div class="dept"><div class="row" style="display:block;padding:30px 18px;color:var(--err)">
       <b>Could not load positions.</b><br>${esc(e.message)}</div></div>`;
   }
-  updateScrollBar();
 })();
+window.addEventListener('pageshow', () => {
+  if ($('#viewPublic')?.hidden) return;
+  showPub('overview');
+});
 
 </script>
 

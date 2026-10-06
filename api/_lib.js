@@ -300,6 +300,27 @@ export function positionIsHiring(p) {
   return p.filled < p.total;
 }
 
+export const WEBSITE_LEVELS = [
+  'Executive Committee', 'Department Leadership', 'Core Team',
+  'Independent Oversight', 'Digital Operations',
+];
+
+/* Present legacy levels consistently without changing saved role records. */
+export function websiteLevelFor(p, department = '') {
+  const level = String(p.level || '').trim();
+  const key = level.toLowerCase();
+  const title = String(p.title || '').toLowerCase();
+  const dept = String(department || p.dept || '').toLowerCase();
+  const standard = WEBSITE_LEVELS.find(name => name.toLowerCase() === key);
+  if (standard) return standard;
+  if (/audit/.test(title) || /audit/.test(dept)) return 'Independent Oversight';
+  if (/digital|innovation/.test(dept) || /digital officer|automation engineer|web developer|data analyst/.test(title)) return 'Digital Operations';
+  if (/^exco$|^executive committee$/.test(key) || /president|treasurer|secretar/.test(title)) return 'Executive Committee';
+  if (/^head$|vice head|director/.test(key) || /director|head of department/.test(title)) return 'Department Leadership';
+  if (/^executive$|officer/.test(key) || /executive|officer/.test(title)) return 'Core Team';
+  return level;
+}
+
 /* Strip anything the public must not see: draft questions, and questions for closed roles. */
 export function publicState(state) {
   return {
@@ -313,7 +334,7 @@ export function publicState(state) {
       positions: (d.positions || []).filter(positionIsHiring).map(p => {
         const ready = p.qState === 'published' && Array.isArray(p.questions) && p.questions.length === 5;
         return {
-          id: p.id, title: p.title, level: p.level, depth: p.depth,
+          id: p.id, title: p.title, level: websiteLevelFor(p, d.name), depth: p.depth,
           availability: 'hiring', ready,
           purpose: p.purpose || '', duties: p.duties || [], not: p.not || [],
           goodLooksLike: p.goodLooksLike || [], hours: p.hours || '', reportsTo: p.reportsTo || '',

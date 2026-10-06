@@ -36,7 +36,7 @@ globalThis.fetch = async (_url, opts) => {
   return { ok: true, json: async () => ({ result }) };
 };
 
-const { issueSession, positionIsHiring } = await import('../api/_lib.js');
+const { issueSession, positionIsHiring, websiteLevelFor, WEBSITE_LEVELS } = await import('../api/_lib.js');
 const { default: stateHandler } = await import('../api/state.js');
 const { default: appsHandler } = await import('../api/applications.js');
 const { default: backupHandler } = await import('../api/backup.js');
@@ -65,6 +65,39 @@ async function call(handler, method, url, body, admin = false) {
   await handler(req, res);
   return { status: res.statusCode, data: JSON.parse(res.raw), headers: res.headers };
 }
+
+test('website levels follow the five role categories without rewriting legacy values', async () => {
+  const examples = [
+    [{ title: 'President', level: 'Exco' }, 'Executive Committee'],
+    [{ title: 'Vice President', level: 'Exco' }, 'Executive Committee'],
+    [{ title: 'Treasurer', level: 'Exco' }, 'Executive Committee'],
+    [{ title: 'Deputy Secretary', level: 'Exco' }, 'Executive Committee'],
+    [{ title: 'Director', level: 'Head' }, 'Department Leadership'],
+    [{ title: 'Deputy Director', level: 'Deputy Director' }, 'Department Leadership'],
+    [{ title: 'Events Executive', level: 'Executive' }, 'Core Team'],
+    [{ title: 'Club Auditor', level: 'Exco', dept: 'Internal Audit' }, 'Independent Oversight'],
+    [{ title: 'Web Developer', level: 'AWI Officer', dept: 'Digital & Innovation' }, 'Digital Operations'],
+  ];
+  for (const [role, expected] of examples) assert.equal(websiteLevelFor(role), expected);
+  assert.equal(WEBSITE_LEVELS.length, 5);
+  const admin = await call(stateHandler, 'GET', '/api/state', null, true);
+  const publicView = await call(stateHandler, 'GET', '/api/state');
+  assert.equal(admin.data.departments[0].positions[0].level, 'Officer');
+  assert.equal(publicView.data.departments[0].positions[0].level, 'Digital Operations');
+  assert.equal(JSON.parse(data.get('sec:state')).departments[0].positions[0].level, 'Officer');
+});
+
+test('new and changed levels require an option, while existing records remain editable', async () => {
+  const current = await call(stateHandler, 'GET', '/api/state', null, true);
+  const next = structuredClone(current.data.departments);
+  next[0].positions.push({ id: 'new-role', title: 'New role', level: 'Made up', total: 1, filled: 0 });
+  const rejected = await call(stateHandler, 'PUT', '/api/state', {
+    departments: next, settings: current.data.settings, revision: current.data.revision,
+  }, true);
+  assert.equal(rejected.status, 400);
+  assert.match(rejected.data.error, /standard levels/);
+  assert.equal(JSON.parse(data.get('sec:state')).departments[0].positions.length, 1);
+});
 
 test('existing state loads intact; stale editor cannot overwrite it', async () => {
   const current = await call(stateHandler, 'GET', '/api/state', null, true);
@@ -215,4 +248,16 @@ test('public state hides filled roles and seat counts; application endpoint bloc
     answers: ['1', '2', '3', '4', '5'],
   });
   assert.equal(accepted.status, 201);
+});
+
+test('a selected standard level saves without changing existing applications', async () => {
+  const current = await call(stateHandler, 'GET', '/api/state', null, true);
+  const next = structuredClone(current.data.departments);
+  next[0].positions[0].level = 'Digital Operations';
+  const saved = await call(stateHandler, 'PUT', '/api/state', {
+    departments: next, settings: current.data.settings, revision: current.data.revision,
+  }, true);
+  assert.equal(saved.status, 200);
+  assert.equal(JSON.parse(data.get('sec:state')).departments[0].positions[0].level, 'Digital Operations');
+  assert.ok(JSON.parse(data.get('sec:applications')).some(app => app.pos === 'web'));
 });

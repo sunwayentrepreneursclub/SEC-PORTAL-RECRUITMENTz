@@ -1488,7 +1488,7 @@ textarea{min-height:110px;resize:vertical}
 #viewAdmin .pcard-section-label{margin:0 0 14px;color:#33475B;font:700 11px/1.3 var(--body);letter-spacing:.09em;text-transform:uppercase}
 #viewAdmin .pcard .pgrid{gap:12px;margin-bottom:20px}
 #viewAdmin .pcard .pfield label{color:#526478}
-#viewAdmin .pcard .pfield input[type=text]{background:#FAFCFE;border-color:#BDC9D5}
+#viewAdmin .pcard .pfield input[type=text],#viewAdmin .pcard .pfield select{background:#FAFCFE;border-color:#BDC9D5}
 #viewAdmin .pcard .pf-title input{font-weight:600}
 #viewAdmin .pcard .pavailability{padding:16px 0;margin:0;border-top:1px solid #E1E7ED}
 #viewAdmin .pcard .pstatus{padding:0}
@@ -2116,8 +2116,24 @@ function observeReveal(el) {
   configureSafely();
 })();
 
-const LEVELS = ['Exco', 'Head', 'Vice head', 'Executive'];
-const DEPTH_FOR = { 'Exco': 0, 'Head': 0, 'Vice head': 1, 'Executive': 2 };
+const LEVELS = ['Executive Committee', 'Department Leadership', 'Core Team', 'Independent Oversight', 'Digital Operations'];
+function websiteLevel(p) {
+  const level = String(p.level || '').trim();
+  const key = level.toLowerCase();
+  const title = String(p.title || '').toLowerCase();
+  const dept = String(p.dept || '').toLowerCase();
+  const standard = LEVELS.find(name => name.toLowerCase() === key);
+  if (standard) return standard;
+  if (/audit/.test(title) || /audit/.test(dept)) return 'Independent Oversight';
+  if (/digital|innovation/.test(dept) || /digital officer|automation engineer|web developer|data analyst/.test(title)) return 'Digital Operations';
+  if (/^exco$|^executive committee$/.test(key) || /president|treasurer|secretar/.test(title)) return 'Executive Committee';
+  if (/^head$|vice head|director/.test(key) || /director|head of department/.test(title)) return 'Department Leadership';
+  if (/^executive$|officer/.test(key) || /executive|officer/.test(title)) return 'Core Team';
+  return level;
+}
+function levelOptions(selected) {
+  return LEVELS.map(level => `<option value="${esc(level)}" ${level === selected ? 'selected' : ''}>${esc(level)}</option>`).join('');
+}
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c =>
   ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 
@@ -2507,7 +2523,7 @@ function cfCardHTML(p) {
       aria-label="${esc(p.title)}">
     <div class="cf-card-main">
       <h4 class="cf-card-title">${esc(p.title)}</h4>
-      <div class="cf-card-meta"><span class="cf-level">${esc(p.level)}</span><span class="cf-status">${statusText}</span></div>
+      <div class="cf-card-meta"><span class="cf-level">${esc(websiteLevel(p))}</span><span class="cf-status">${statusText}</span></div>
     </div>
     <div class="cf-card-action">${open ? `<button class="apply cf-apply" type="button" data-apply="${p.id}" aria-label="View ${esc(p.title)} role">View role</button>` : ''}</div>
   </article>`;
@@ -2515,12 +2531,11 @@ function cfCardHTML(p) {
 
 // The API's stored depth predates several current levels. Rank by the visible
 // level name, and keep admin order when two roles share the same level.
-function roleRank(level) {
-  const name = String(level || '').toLowerCase();
-  if (/president|secretary general|treasurer|^exco$/.test(name)) return 0;
-  if (/^director$|^head$/.test(name)) return 1;
-  if (/deputy|vice head/.test(name)) return 2;
-  if (/executive|officer|auditor|engineer|developer|analyst/.test(name)) return 3;
+function roleRank(p) {
+  const level = websiteLevel(p);
+  if (level === 'Executive Committee') return 0;
+  if (level === 'Department Leadership') return /deputy|vice head/i.test(p.title) ? 2 : 1;
+  if (['Core Team', 'Independent Oversight', 'Digital Operations'].includes(level)) return 3;
   return 4;
 }
 
@@ -2540,7 +2555,7 @@ function buildJobList(positions) {
     // Keep department hierarchy, but bring teams with actionable roles first.
     const chapters = byDept.sort((a, b) => Number(b.items.some(isReady)) - Number(a.items.some(isReady))).map(group => {
       const items = group.items.map((p, index) => ({ p, index })).sort((a, b) =>
-        Number(isReady(b.p)) - Number(isReady(a.p)) || roleRank(a.p.level) - roleRank(b.p.level) || a.index - b.index);
+        Number(isReady(b.p)) - Number(isReady(a.p)) || roleRank(a.p) - roleRank(b.p) || a.index - b.index);
       return `<section class="department-group" data-dept="${esc(group.name)}" style="--deptc:${deptColor(group.name)}" aria-label="${esc(group.name)} roles">
         <div class="department-heading"><h3>${esc(group.name)}</h3></div>
         <div class="roles-group">${items.map(({ p }) => cfCardHTML(p)).join('')}</div>
@@ -2645,7 +2660,7 @@ function stepJD() {
     <p class="jd-sub">${esc(p.dept)}</p>
     <div class="jd-meta">
       <div class="jd-meta-row">${jdIcon('pin')} ${esc(p.dept)} committee</div>
-      <div class="jd-meta-row">${jdIcon('level')} ${esc(p.level)} level</div>
+      <div class="jd-meta-row">${jdIcon('level')} ${esc(websiteLevel(p))}</div>
       ${p.hours ? `<div class="jd-meta-row">${jdIcon('clock')} ${esc(p.hours)}</div>` : ''}
       <div class="jd-meta-row">${jdIcon('seats')} ${open ? (ready ? 'Still hiring' : 'Opening soon') : 'Filled'}</div>
       ${p.reportsTo ? `<div class="jd-meta-row">${jdIcon('pin')} Reports to ${esc(p.reportsTo)}</div>` : ''}
@@ -3152,9 +3167,10 @@ function pruneDepts() {
   for (let i = STATE.departments.length - 1; i >= 0; i--)
     if (!STATE.departments[i].positions.length) STATE.departments.splice(i, 1);
 }
-function depthFor(level) {
-  const k = Object.keys(DEPTH_FOR).find(x => x.toLowerCase() === (level || '').trim().toLowerCase());
-  return k ? DEPTH_FOR[k] : 2;
+function depthFor(level, title) {
+  if (level === 'Executive Committee' || level === 'Independent Oversight') return 0;
+  if (level === 'Department Leadership') return /deputy|vice/i.test(title) ? 1 : 0;
+  return 2;
 }
 
 function markPanelDraft(panel) {
@@ -3200,8 +3216,7 @@ function renderPositions() {
       <div class="admin-filled-list">${filled.map((p, i) => positionRow(p, d, i, filled.length)).join('')}</div>
     </details>` : ''}` : '<p class="empty">No departments yet. Add the first role below.</p>'}
     ${addPositionBlock(d)}
-    <datalist id="deptList">${STATE.departments.map(x => `<option value="${esc(x.name)}">`).join('')}</datalist>
-     <datalist id="levelList">${LEVELS.map(l => `<option value="${l}">`).join('')}</datalist>`;
+    <datalist id="deptList">${STATE.departments.map(x => `<option value="${esc(x.name)}">`).join('')}</datalist>`;
   el.querySelectorAll('[data-admin-dept]').forEach(tab => tab.addEventListener('click', async () => {
     if (tab.dataset.adminDept === ADMIN_DEPT) return;
     if (!await confirmPositionDraftChange()) return;
@@ -3222,6 +3237,9 @@ function renderPositions() {
 
 function positionRow(p, d, idx, groupLength) {
   const st = qState(p), open = isOpen(p);
+  const selectedLevel = websiteLevel({ ...p, dept: d.name });
+  const legacyLevel = selectedLevel && !LEVELS.includes(selectedLevel)
+    ? `<option value="${esc(p.level)}" selected>Legacy: ${esc(p.level)} — choose a level</option>` : '';
   const statusText = !open ? 'Filled' : st === 'published' ? 'Accepting applications' : 'Opening soon';
   const statusClass = !open ? 'filled' : st === 'published' ? 'open' : 'soon';
   return `<article class="prow pcard ${open ? 'is-hiring' : 'is-filled'}" data-pid="${esc(p.id)}" aria-labelledby="pos-title-${esc(p.id)}">
@@ -3237,7 +3255,7 @@ function positionRow(p, d, idx, groupLength) {
       <div class="pfield pf-title"><label for="p-title-${esc(p.id)}">Position name</label>
         <input type="text" id="p-title-${esc(p.id)}" value="${esc(p.title)}" data-f="title" data-focus="t-${p.id}" aria-label="Position name for ${esc(p.title)}"></div>
       <div class="pfield"><label for="p-level-${esc(p.id)}">Level</label>
-        <input type="text" id="p-level-${esc(p.id)}" list="levelList" value="${esc(p.level)}" data-f="level" data-focus="lv-${p.id}" aria-label="Level for ${esc(p.title)}"></div>
+        <select id="p-level-${esc(p.id)}" data-f="level" data-focus="lv-${p.id}" aria-label="Level for ${esc(p.title)}">${legacyLevel}${levelOptions(selectedLevel)}</select></div>
       <div class="pfield"><label for="p-dept-${esc(p.id)}">Department</label>
         <input type="text" id="p-dept-${esc(p.id)}" list="deptList" value="${esc(d.name)}" data-f="dept" data-focus="dp-${p.id}" aria-label="Department for ${esc(p.title)}"></div>
     </div>
@@ -3270,7 +3288,7 @@ function addPositionBlock(dept) {
       <div><label for="npDept">Department</label>
         <input type="text" id="npDept" list="deptList" value="${esc(dept?.name || '')}" placeholder="type or pick"></div>
       <div><label for="npTitle">Position name</label><input type="text" id="npTitle" placeholder="e.g. Media Executive"></div>
-      <div><label for="npLevel">Level</label><input type="text" id="npLevel" list="levelList" value="Executive" placeholder="type or pick"></div>
+      <div><label for="npLevel">Level</label><select id="npLevel">${levelOptions('Core Team')}</select></div>
     </div>
     <div class="okbox">A new position appears on the public board as <b>Opening soon</b> until questions are generated and published — never as an Apply button that leads nowhere.</div>
     <div class="err" id="addErr" hidden></div>
@@ -3297,7 +3315,7 @@ function wirePositions() {
     });
 
     row.querySelector('[data-f="level"]').addEventListener('change', e => {
-      p.level = e.target.value.trim() || 'Executive'; p.depth = depthFor(p.level);
+      p.level = e.target.value; p.depth = depthFor(p.level, p.title);
       renderBoard(); if (!hasUnsavedPositionDraft()) renderPositions(); queueSave();
     });
 
@@ -3377,9 +3395,9 @@ function wirePositions() {
     if (!title) { titleEl.focus(); showAddErr('Give the position a name.'); return; }
     const d = ensureDept($('#npDept').value);
     if (!d) { $('#npDept').focus(); showAddErr('Give the position a department.'); return; }
-    const level = $('#npLevel').value.trim() || 'Executive';
+    const level = $('#npLevel').value;
     const id = 'p' + Date.now();
-    d.positions.push({ id, title, level, depth: depthFor(level), total: 1, filled: 0, availability: 'hiring', dept: d.name,
+    d.positions.push({ id, title, level, depth: depthFor(level, title), total: 1, filled: 0, availability: 'hiring', dept: d.name,
       purpose: '', duties: [], not: [], goodLooksLike: [], hours: '', reportsTo: '', questions: null, qState: 'none' });
     ADMIN_DEPT = d.name;
     reindex();

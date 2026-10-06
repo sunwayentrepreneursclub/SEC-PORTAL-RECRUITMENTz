@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { send, readBody, requireAdmin, loadStateRecord, kvReplaceSafely,
          K_STATE, K_STATE_HISTORY, publicState, currentUser, guardEnv,
-         kvGet, K_KEY } from './_lib.js';
+         kvGet, K_KEY, WEBSITE_LEVELS } from './_lib.js';
 
 const revisionOf = raw => crypto.createHash('sha256').update(raw).digest('hex');
 
@@ -20,6 +20,17 @@ function validateDepartments(departments) {
         return 'A position has a missing or duplicate ID, invalid name, or invalid seat count.';
       ids.add(p.id);
     }
+  }
+  return null;
+}
+
+function validateLevelChanges(departments, previousDepartments) {
+  const previous = new Map((previousDepartments || []).flatMap(d =>
+    (d.positions || []).map(p => [p.id, p.level])));
+  for (const p of departments.flatMap(d => d.positions)) {
+    // Existing free-text levels stay valid until that role is re-levelled.
+    if ((!previous.has(p.id) || p.level !== previous.get(p.id)) && !WEBSITE_LEVELS.includes(p.level))
+      return 'Choose one of the standard levels for new or changed roles.';
   }
   return null;
 }
@@ -48,6 +59,8 @@ export default async function handler(req, res) {
     const { state, raw } = await loadStateRecord();
     if (revisionOf(raw) !== body.revision)
       return send(res, 409, { error: 'Another editor saved changes. Download your draft before reloading.' });
+    const invalidLevel = validateLevelChanges(body.departments, state.departments);
+    if (invalidLevel) return send(res, 400, { error: invalidLevel });
     const previousIds = (state.departments || []).flatMap(d => (d.positions || []).map(p => p.id));
     const nextIds = new Set(body.departments.flatMap(d => d.positions.map(p => p.id)));
     const removedIds = previousIds.filter(id => !nextIds.has(id));

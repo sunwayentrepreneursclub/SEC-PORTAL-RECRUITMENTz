@@ -268,8 +268,8 @@ body{
   opacity:1;transform:none;animation:none;transition:none;
 }
 @keyframes heroEnter{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-#viewPublic .masthead .mast-copy,#viewPublic .masthead .hero-mark{animation:heroEnter .8s cubic-bezier(.22,1,.36,1) both}
-@media (prefers-reduced-motion:reduce){#viewPublic .masthead .mast-copy,#viewPublic .masthead .hero-mark{animation:none}}
+#viewPublic .masthead .mast-copy,#viewPublic .masthead #overviewStats{animation:heroEnter .8s cubic-bezier(.22,1,.36,1) both}
+@media (prefers-reduced-motion:reduce){#viewPublic .masthead .mast-copy,#viewPublic .masthead #overviewStats{animation:none}}
 
 
 #pp-overview>.abandsection:first-child{padding-top:15vh;border-top:1px solid var(--board-line);margin-top:24px}
@@ -418,18 +418,15 @@ h1{
   .deadline::before{animation:none;transform:scaleX(1)}
 }
 
-/* ---------- hero (editorial serif, matched to sec-website-3-0.vercel.app) ---------- */
-/* a single oversized initial ("S") standing in for their giant cropped
-   glyph — same idea (one huge letterform anchoring the hero), built from a
-   type character instead of an image so it needs no asset */
-.hero-mark{
-  display:flex;align-items:center;justify-content:center;height:100%;
-  font-family:var(--serif);font-weight:900;font-size:clamp(260px,38vw,560px);
-  line-height:.75;color:var(--ink);opacity:.98;user-select:none;
-}
-.hero-grid{display:grid;grid-template-columns:.85fr 1.5fr;gap:48px;align-items:stretch}
-.mast-copy{display:flex;flex-direction:column;justify-content:center;align-items:flex-start}
-@media (max-width:860px){.hero-grid{grid-template-columns:1fr}}
+/* ---------- hero (editorial serif, matched to sec-website-3-0.vercel.app) ----------
+   No decorative mark — the filter line is the hero, the stats are the proof it's
+   real, and nothing should compete with either for attention. */
+.hero-grid{display:flex;flex-direction:column;align-items:flex-start;gap:44px;width:100%}
+.mast-copy{display:flex;flex-direction:column;align-items:flex-start}
+/* the stats were sized for a full dedicated section (clamp up to 128px); scaled
+   down here so they read as supporting proof under the hero, not a second hero */
+#viewPublic .masthead #overviewStats .n{font-size:clamp(28px,3.2vw,40px)!important}
+#viewPublic .masthead #overviewStats{align-self:stretch;max-width:640px}
 /* ---------- envelope gate — same envelope as the main site's "Join SEC"
    invitation (seal → flap → letter), but it plays itself on load instead
    of waiting for a click, then reveals the site underneath. ---------- */
@@ -1382,68 +1379,17 @@ textarea{min-height:110px;resize:vertical}
   <div class="wrap">
     <header class="masthead">
       <div class="hero-grid">
-        <div class="hero-mark" aria-hidden="true">E</div>
         <div class="mast-copy">
           <p class="eyebrow">Committee recruitment</p>
-          <h1>Join the team.</h1>
-          <p class="lede">Pick a seat. Own the work.</p>
+          <h1>If you need to be chased, don't apply.</h1>
+          <p class="lede">Own it. Ship it. Speak early. Finish. That's the bar — the numbers below are the proof we hold it.</p>
           <button class="hero-cta" id="heroApply" type="button">View open roles</button>
         </div>
+        <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
       </div>
     </header>
 
     <div class="pubpanel" id="pp-overview" role="region" aria-label="Committee recruitment">
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">The standard</p>
-          <h2 class="aband-title">If you need to be chased, don't apply.</h2>
-        </div>
-        <div class="standard-grid">
-          <div class="standard-card"><span class="standard-num">01</span><h3>Own it.</h3><p>If it's yours, carry it to the end.</p></div>
-          <div class="standard-card"><span class="standard-num">02</span><h3>Ship it.</h3><p>Ideas mean little until something gets delivered.</p></div>
-          <div class="standard-card"><span class="standard-num">03</span><h3>Speak early.</h3><p>Problems raised early can be solved. Silence can't.</p></div>
-          <div class="standard-card"><span class="standard-num">04</span><h3>Finish.</h3><p>Starting is easy. Closing the loop is the job.</p></div>
-        </div>
-      </section>
-
-      <div class="chapter-light">
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <h2 class="aband-title">SEC, right now.</h2>
-        </div>
-        <div class="stats" id="overviewStats"><div class="empty">Loading…</div></div>
-        <button class="hero-cta" id="findSeatCta" type="button" style="margin-top:28px">Find your seat</button>
-      </section>
-
-      <section class="abandsection" data-reveal>
-        <div class="aband-head">
-          <p class="aband-eyebrow">What you leave with</p>
-          <h2 class="aband-title">Proof, not participation.</h2>
-        </div>
-        <ul class="proof-list">
-          <li>Work shipped.</li><li>Events delivered.</li><li>Partners closed.</li>
-          <li>Budgets owned.</li><li>Systems built.</li><li>Problems solved.</li>
-        </ul>
-        <p class="proof-closing">Work you can point to. Not a title you have to explain.</p>
-      </section>
-      </div>
-
-      <section class="abandsection how-we-work-split" data-reveal>
-        <div class="hww-left">
-          <p class="aband-eyebrow">How we work</p>
-          <h2 class="aband-title">The standard is simple.</h2>
-          <p class="proof-closing">Your title means very little. Your work won't.</p>
-        </div>
-        <ul class="plain-rows">
-          <li><span class="pr-num">01</span><span class="pr-label">Ownership</span></li>
-          <li><span class="pr-num">02</span><span class="pr-label">Reliability</span></li>
-          <li><span class="pr-num">03</span><span class="pr-label">Quality</span></li>
-          <li><span class="pr-num">04</span><span class="pr-label">Speed</span></li>
-          <li><span class="pr-num">05</span><span class="pr-label">Communication</span></li>
-          <li><span class="pr-num">06</span><span class="pr-label">Accountability</span></li>
-        </ul>
-      </section>
-
       <section class="abandsection" data-reveal>
         <div class="aband-head">
           <p class="aband-eyebrow">What happens next</p>
@@ -2098,7 +2044,6 @@ requestAnimationFrame(() => moveGlide($('#pt-apply')));
 // top-bar and hero CTAs both just jump to the same Apply tab the nav already offers
 $('#topbarApply')?.addEventListener('click', () => showPub('apply'));
 $('#heroApply')?.addEventListener('click', () => showPub('apply'));
-$('#findSeatCta')?.addEventListener('click', () => showPub('apply'));
 $('#topbarHome')?.addEventListener('click', e => { e.preventDefault(); showPub('overview'); window.scrollTo(0, 0); });
 $('#finalCta')?.addEventListener('click', () => showPub('apply'));
 

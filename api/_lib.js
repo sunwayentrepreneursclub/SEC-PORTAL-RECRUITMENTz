@@ -301,8 +301,8 @@ export function positionIsHiring(p) {
 }
 
 export const WEBSITE_LEVELS = [
-  'Executive Committee', 'Department Leadership', 'Core Team',
-  'Independent Oversight', 'Digital Operations',
+  'Executive Committee', 'Department Leadership', 'Department Team',
+  'Independent Oversight', 'Specialist',
 ];
 
 /* Present legacy levels consistently without changing saved role records. */
@@ -314,10 +314,10 @@ export function websiteLevelFor(p, department = '') {
   const standard = WEBSITE_LEVELS.find(name => name.toLowerCase() === key);
   if (standard) return standard;
   if (/audit/.test(title) || /audit/.test(dept)) return 'Independent Oversight';
-  if (/digital|innovation/.test(dept) || /digital officer|automation engineer|web developer|data analyst/.test(title)) return 'Digital Operations';
+  if (key === 'digital operations' || /digital|innovation/.test(dept) || /digital officer|automation engineer|web developer|data analyst/.test(title)) return 'Specialist';
   if (/^exco$|^executive committee$/.test(key) || /president|treasurer|secretar/.test(title)) return 'Executive Committee';
   if (/^head$|vice head|director/.test(key) || /director|head of department/.test(title)) return 'Department Leadership';
-  if (/^executive$|officer/.test(key) || /executive|officer/.test(title)) return 'Core Team';
+  if (/^executive$|^core team$|officer/.test(key) || /executive|officer/.test(title)) return 'Department Team';
   return level;
 }
 

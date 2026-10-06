@@ -71,19 +71,26 @@ test('website levels follow the five role categories without rewriting legacy va
     [{ title: 'President', level: 'Exco' }, 'Executive Committee'],
     [{ title: 'Vice President', level: 'Exco' }, 'Executive Committee'],
     [{ title: 'Treasurer', level: 'Exco' }, 'Executive Committee'],
+    [{ title: 'Secretariat', level: 'Exco' }, 'Executive Committee'],
     [{ title: 'Deputy Secretary', level: 'Exco' }, 'Executive Committee'],
     [{ title: 'Director', level: 'Head' }, 'Department Leadership'],
     [{ title: 'Deputy Director', level: 'Deputy Director' }, 'Department Leadership'],
-    [{ title: 'Events Executive', level: 'Executive' }, 'Core Team'],
+    [{ title: 'Events Executive', level: 'Executive' }, 'Department Team'],
+    [{ title: 'Events Executive', level: 'Core Team' }, 'Department Team'],
     [{ title: 'Club Auditor', level: 'Exco', dept: 'Internal Audit' }, 'Independent Oversight'],
-    [{ title: 'Web Developer', level: 'AWI Officer', dept: 'Digital & Innovation' }, 'Digital Operations'],
+    [{ title: 'Web Developer', level: 'AWI Officer', dept: 'Digital & Innovation' }, 'Specialist'],
+    [{ title: 'Web Developer', level: 'Digital Operations', dept: 'Digital & Innovation' }, 'Specialist'],
+    [{ title: 'Digital Officer', level: 'Officer', dept: 'Digital & Innovation' }, 'Specialist'],
   ];
   for (const [role, expected] of examples) assert.equal(websiteLevelFor(role), expected);
-  assert.equal(WEBSITE_LEVELS.length, 5);
+  assert.deepEqual(WEBSITE_LEVELS, [
+    'Executive Committee', 'Department Leadership', 'Department Team',
+    'Independent Oversight', 'Specialist',
+  ]);
   const admin = await call(stateHandler, 'GET', '/api/state', null, true);
   const publicView = await call(stateHandler, 'GET', '/api/state');
   assert.equal(admin.data.departments[0].positions[0].level, 'Officer');
-  assert.equal(publicView.data.departments[0].positions[0].level, 'Digital Operations');
+  assert.equal(publicView.data.departments[0].positions[0].level, 'Specialist');
   assert.equal(JSON.parse(data.get('sec:state')).departments[0].positions[0].level, 'Officer');
 });
 
@@ -97,6 +104,18 @@ test('new and changed levels require an option, while existing records remain ed
   assert.equal(rejected.status, 400);
   assert.match(rejected.data.error, /standard levels/);
   assert.equal(JSON.parse(data.get('sec:state')).departments[0].positions.length, 1);
+});
+
+test('new department names are rejected without touching saved roles', async () => {
+  const current = await call(stateHandler, 'GET', '/api/state', null, true);
+  const next = structuredClone(current.data.departments);
+  next.push({ name: 'Relevant department', positions: [] });
+  const rejected = await call(stateHandler, 'PUT', '/api/state', {
+    departments: next, settings: current.data.settings, revision: current.data.revision,
+  }, true);
+  assert.equal(rejected.status, 400);
+  assert.match(rejected.data.error, /existing department/);
+  assert.equal(JSON.parse(data.get('sec:state')).departments.length, 1);
 });
 
 test('existing state loads intact; stale editor cannot overwrite it', async () => {
@@ -253,11 +272,31 @@ test('public state hides filled roles and seat counts; application endpoint bloc
 test('a selected standard level saves without changing existing applications', async () => {
   const current = await call(stateHandler, 'GET', '/api/state', null, true);
   const next = structuredClone(current.data.departments);
-  next[0].positions[0].level = 'Digital Operations';
+  next[0].positions[0].level = 'Specialist';
   const saved = await call(stateHandler, 'PUT', '/api/state', {
     departments: next, settings: current.data.settings, revision: current.data.revision,
   }, true);
   assert.equal(saved.status, 200);
-  assert.equal(JSON.parse(data.get('sec:state')).departments[0].positions[0].level, 'Digital Operations');
+  assert.equal(JSON.parse(data.get('sec:state')).departments[0].positions[0].level, 'Specialist');
+  assert.ok(JSON.parse(data.get('sec:applications')).some(app => app.pos === 'web'));
+});
+
+test('moving a role between existing departments keeps its ID and applications', async () => {
+  const before = JSON.parse(data.get('sec:state'));
+  before.departments.push({ name: 'External Relations', positions: [] });
+  data.set('sec:state', JSON.stringify(before));
+  const current = await call(stateHandler, 'GET', '/api/state', null, true);
+  const next = structuredClone(current.data.departments);
+  const role = next[0].positions.shift();
+  role.dept = 'External Relations';
+  next[1].positions.push(role);
+  const saved = await call(stateHandler, 'PUT', '/api/state', {
+    departments: next, settings: current.data.settings, revision: current.data.revision,
+  }, true);
+  assert.equal(saved.status, 200);
+  const stored = JSON.parse(data.get('sec:state'));
+  assert.deepEqual(stored.departments.map(d => d.name), ['Digital', 'External Relations']);
+  assert.equal(stored.departments[0].positions.length, 0);
+  assert.equal(stored.departments[1].positions[0].id, 'web');
   assert.ok(JSON.parse(data.get('sec:applications')).some(app => app.pos === 'web'));
 });

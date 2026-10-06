@@ -35,6 +35,15 @@ function validateLevelChanges(departments, previousDepartments) {
   return null;
 }
 
+function validateDepartmentNames(departments, previousDepartments) {
+  const known = new Set((previousDepartments || []).map(d => d.name));
+  if (!known.size) return null;
+  for (const dept of departments) {
+    if (!known.has(dept.name)) return 'Choose an existing department for each role.';
+  }
+  return null;
+}
+
 export default async function handler(req, res) {
   if (!guardEnv(res)) return;
   const user = currentUser(req);
@@ -61,6 +70,8 @@ export default async function handler(req, res) {
       return send(res, 409, { error: 'Another editor saved changes. Download your draft before reloading.' });
     const invalidLevel = validateLevelChanges(body.departments, state.departments);
     if (invalidLevel) return send(res, 400, { error: invalidLevel });
+    const invalidDepartment = validateDepartmentNames(body.departments, state.departments);
+    if (invalidDepartment) return send(res, 400, { error: invalidDepartment });
     const previousIds = (state.departments || []).flatMap(d => (d.positions || []).map(p => p.id));
     const nextIds = new Set(body.departments.flatMap(d => d.positions.map(p => p.id)));
     const removedIds = previousIds.filter(id => !nextIds.has(id));

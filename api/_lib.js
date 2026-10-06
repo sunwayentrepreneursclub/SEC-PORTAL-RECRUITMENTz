@@ -15,11 +15,15 @@ async function cmd(args) {
   });
   if (!r.ok) throw new Error(`storage ${r.status}: ${await r.text()}`);
   const j = await r.json();
+  if (j.error) throw new Error(`storage: ${j.error}`);
   return j.result;
 }
 
+export async function kvGetRaw(key) {
+  return cmd(['GET', key]);
+}
 export async function kvGet(key) {
-  const v = await cmd(['GET', key]);
+  const v = await kvGetRaw(key);
   if (v === null || v === undefined) return null;
   try { return JSON.parse(v); } catch { return v; }
 }
@@ -30,6 +34,37 @@ export async function kvSet(key, value) {
 export const K_STATE = 'sec:state';
 export const K_APPS  = 'sec:applications';
 export const K_KEY   = 'sec:gemini_key';
+export const K_STATE_HISTORY = 'sec:state:history';
+export const K_APPS_HISTORY = 'sec:applications:history';
+
+/* Compare-and-swap keeps concurrent requests from replacing one another.
+   Each successful write also stores the previous JSON for 30 days, capped at
+   50 revisions. The original keys and document shapes remain unchanged. */
+const SAFE_WRITE = `
+local old = redis.call('GET', KEYS[1])
+if (old or '') ~= ARGV[1] then return 0 end
+if old then
+  redis.call('LPUSH', KEYS[2], ARGV[2])
+  redis.call('LTRIM', KEYS[2], 0, 49)
+  redis.call('EXPIRE', KEYS[2], 2592000)
+end
+redis.call('SET', KEYS[1], ARGV[3])
+return 1`;
+
+export async function kvReplaceSafely(key, historyKey, expectedRaw, next, actor) {
+  const previous = expectedRaw === null ? null : {
+    savedAt: new Date().toISOString(), actor,
+    data: JSON.parse(expectedRaw),
+  };
+  const result = await cmd(['EVAL', SAFE_WRITE, 2, key, historyKey,
+    expectedRaw ?? '', previous ? JSON.stringify(previous) : '', JSON.stringify(next)]);
+  return Number(result) === 1;
+}
+
+export async function kvHistory(key, start = 0, end = 9) {
+  const rows = await cmd(['LRANGE', key, start, end]);
+  return (rows || []).map(row => JSON.parse(row));
+}
 
 /* ---------------- sessions ---------------- */
 const SECRET = process.env.SESSION_SECRET || '';
@@ -65,7 +100,10 @@ export function currentUser(req) {
       !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null;
   const [u, exp] = payload.split('.');
   if (Number(exp) < Date.now()) return null;
-  return Buffer.from(u, 'base64url').toString();
+  const username = Buffer.from(u, 'base64url').toString();
+  // Removing a reviewer from ADMIN_USERS revokes even an unexpired cookie.
+  return (process.env.ADMIN_USERS || '').split(',').some(entry =>
+    entry.trim().split(':', 1)[0] === username) ? username : null;
 }
 
 /* ADMIN_USERS = "amadeus:password1,angelene:password2" — one login per reviewer. */
@@ -280,10 +318,22 @@ export function publicState(state) {
 }
 
 export async function loadState() {
-  let s = await kvGet(K_STATE);
-  if (!s) { s = seedState(); await kvSet(K_STATE, s); }
-  return s;
+  return (await loadStateRecord()).state;
 }
 export async function loadApps() {
-  return (await kvGet(K_APPS)) || [];
+  return (await loadAppsRecord()).apps;
+}
+
+export async function loadStateRecord() {
+  let raw = await kvGetRaw(K_STATE);
+  if (raw === null) {
+    await cmd(['SET', K_STATE, JSON.stringify(seedState()), 'NX']);
+    raw = await kvGetRaw(K_STATE);
+  }
+  return { raw, state: JSON.parse(raw) };
+}
+
+export async function loadAppsRecord() {
+  const raw = await kvGetRaw(K_APPS);
+  return { raw, apps: raw === null ? [] : JSON.parse(raw) };
 }

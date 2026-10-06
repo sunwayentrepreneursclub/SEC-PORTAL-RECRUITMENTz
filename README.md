@@ -79,7 +79,7 @@ From the admin panel you can then:
 - [ ] Set the **application deadline** in Settings. The board says "to be announced" until you do.
 - [ ] Set the **QR destination** in Settings.
 - [ ] Check every open position shows a real seat count and published questions.
-- [ ] Submit one test application yourself, end to end, then delete it.
+- [ ] Submit one test application in a staging environment, end to end, then clear that test database.
 - [ ] Confirm a filled position shows **Filled** and has no Apply button.
 
 ---
@@ -95,8 +95,12 @@ From the admin panel you can then:
 | `/api/applications` | GET / PATCH / DELETE | admin | Review, decide, remove |
 | `/api/generate` | POST | admin | Ask Gemini for four draft questions |
 | `/api/export` | GET | admin | CSV of applications and answers |
+| `/api/backup` | GET | admin | Full JSON backup of roles, settings and applications, including archived records |
 
-Storage keys: `sec:state`, `sec:applications`, `sec:gemini_key`.
+Storage keys: `sec:state`, `sec:applications`, `sec:gemini_key`. The first two
+remain the source of truth. Before every successful write, the previous value is
+saved atomically in `sec:state:history` or `sec:applications:history` (last 50
+versions, expiring 30 days after the last write). No data migration is required.
 
 ### Design decisions worth knowing
 
@@ -126,20 +130,35 @@ and applying to a closed position are all enforced in the API, not just the brow
 
 ## Operating notes
 
-**Data retention.** Applicant data must be deleted or archived within **60 days** of the cycle
-closing, with a named owner. Export the CSV, then remove the applications. Don't let a database of
-student emails accumulate across committees.
+**Data retention.** Archiving in the dashboard is **not** deletion. Appoint a
+retention owner, agree the deletion date for each recruitment cycle, and remove
+expired records and their backup copies from the database in line with the
+club's approved policy. Do not let student emails accumulate across committees.
 
-**No undo.** Deleting an application is permanent. Export first.
+**Archiving is recoverable.** The dashboard's Archive action keeps the application
+and its answers in the same record. Open **Archived** in Applicants to restore it.
+Archived records still contain personal data and must be included in retention reviews.
+
+**Backups.** Settings → Data & recovery downloads a full JSON backup. The CSV is
+for review, not full recovery: it omits role settings and metadata. Download a
+full backup before major changes and keep it only in club-controlled encrypted
+storage. The backup contains private applicant answers. The admin-only endpoint
+`/api/backup?history=state&index=0` (or `history=applications`) downloads the
+most recent previous revision; indices 0–49 are available while retained.
+Neither backup endpoint exports the Gemini key or login credentials.
 
 **Matching is manual.** A QR can't carry the applicant's name and iMail to the Google Form, so
 portal answers and Form responses have to be matched by hand on whatever email each person typed
 twice. Mark each one with **Mark form received** in the dashboard. Putting the position as a
 required dropdown on the Form makes reconciliation much easier.
 
-**Concurrency.** State is stored as a single document with last-write-wins. Fine for a committee of
-this size; two people editing positions at the same moment can overwrite each other. Don't edit
-positions simultaneously.
+**Concurrency.** State is still a single document, but saves now require the
+revision received when the editor loaded it. A stale tab is rejected instead of
+overwriting someone else's roles or settings. Download its unsaved draft before
+reloading. Applicant changes use an atomic compare-and-swap with retries, so
+simultaneous submissions or changes to different applications are not dropped.
+The UI checks that a reviewer note, decision or form flag has not changed since
+it was opened. Do not use multiple tabs to edit the same field at once.
 
 **If the portal goes down two days before the deadline**, recruitment must still be able to run on
 the Google Form alone. That fallback is the reason the QR exists independently of this app.

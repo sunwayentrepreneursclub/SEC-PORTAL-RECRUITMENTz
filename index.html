@@ -1409,6 +1409,7 @@ textarea{min-height:110px;resize:vertical}
 .mini{background:transparent;border:1px solid var(--line-strong);border-radius:var(--r-pill);padding:7px 16px;
   font-family:var(--body);font-size:13px;font-weight:600;color:var(--ink);transition:background .15s,color .15s,border-color .15s}
 .mini:hover{background:var(--open);border-color:var(--open);color:#fff}
+.mini[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
 .mini[disabled]{opacity:.35;cursor:not-allowed}
 .mini.lock{border-style:dashed}
 .qpanel{margin-top:18px;border-top:1px solid var(--board-line);padding-top:18px}
@@ -1430,6 +1431,10 @@ textarea{min-height:110px;resize:vertical}
 .keynote pre{background:var(--navy);color:#fff;padding:18px;overflow-x:auto;border-radius:var(--r-md);
   font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.7;margin:0}
 .thinking{font-family:var(--body);font-size:13.5px;font-weight:600;color:var(--open)}
+.save-feedback{display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:100%}
+.save-feedback .thinking{max-width:42ch;overflow-wrap:anywhere}
+.save-feedback .mini{padding:5px 11px;font-size:12px}
+.data-warning{border-left:3px solid var(--err);padding:10px 14px;background:rgba(214,48,58,.08);font-size:14px;max-width:68ch}
 
 
 /* ---------- position editor cards ---------- */
@@ -1466,7 +1471,7 @@ textarea{min-height:110px;resize:vertical}
 
 .applrow{display:flex;align-items:stretch;border-bottom:1px solid var(--board-line)}
 .applrow .appl{flex:1;border-bottom:0}
-.applx{background:none;border:0;border-left:1px solid var(--board-line);width:38px;flex:none;
+.applx{background:none;border:0;border-left:1px solid var(--board-line);min-width:82px;flex:none;
   color:var(--muted);font-size:13px;transition:background .15s,color .15s}
 .applx:hover{background:var(--err);color:#fff;border-left-color:var(--err)}
 
@@ -1794,7 +1799,12 @@ textarea{min-height:110px;resize:vertical}
       <button id="tabPos" aria-pressed="false">Positions &amp; questions</button>
       <button id="tabSet" aria-pressed="false">Settings</button>
       <span class="subnav-spacer"></span>
-      <span class="thinking" id="saveState"></span>
+      <div class="save-feedback" role="status" aria-live="polite">
+        <span class="thinking" id="saveState"></span>
+        <button class="mini" id="btnRetrySave" type="button" hidden>Retry save</button>
+        <button class="mini" id="btnDraftSave" type="button" hidden>Download draft</button>
+        <button class="mini" id="btnReloadState" type="button" hidden>Reload latest</button>
+      </div>
     </div>
 
     <div id="panelApps">
@@ -1802,6 +1812,7 @@ textarea{min-height:110px;resize:vertical}
       <div class="tools">
         <label for="filterPos" style="align-self:center;margin:0">Position</label>
         <select id="filterPos" style="width:auto;min-width:200px"></select>
+        <button class="mini" id="btnArchived" type="button" aria-pressed="false">Archived</button>
         <button class="btn ghost" id="btnCsv">Export CSV</button>
       </div>
       <div class="split">
@@ -1889,6 +1900,9 @@ const FORM_LINK_DEFAULT = 'https://docs.google.com/forms/d/e/1FAIpQLSdm3uFGzZs8c
 let STATE = { departments: [], settings: {} };
 let APPLICATIONS = [];
 let ADMIN = false, USER = null, KEY_SET = false, selected = null;
+let STATE_REVISION = null;
+let APP_SHOW_ARCHIVED = false;
+const REMOVED_IDS = new Set();
 const POSITIONS = {};
 
 const $ = s => document.querySelector(s);
@@ -2006,7 +2020,11 @@ async function api(path, opts = {}) {
   });
   let data = null;
   try { data = await r.json(); } catch {}
-  if (!r.ok) throw new Error(data?.error || `Request failed (${r.status})`);
+  if (!r.ok) {
+    const error = new Error(data?.error || `Request failed (${r.status})`);
+    error.status = r.status;
+    throw error;
+  }
   return data;
 }
 
@@ -2024,6 +2042,8 @@ const appsFor = id => APPLICATIONS.filter(a => a.pos === id).length;
 async function loadState() {
   STATE = await api('/api/state');
   ADMIN = !!STATE.admin; USER = STATE.user || null; KEY_SET = !!STATE.keySet;
+  STATE_REVISION = STATE.revision || null;
+  REMOVED_IDS.clear();
   reindex();
   renderBoard();
   renderDeadline();
@@ -2186,33 +2206,76 @@ function renderTimeline() {
     </li>`).join('');
 }
 
-/* ================= save (debounced) ================= */
-let saveTimer = null;
+/* ================= serial, revision-checked autosave ================= */
+let saveTimer = null, savePending = false, saveInFlight = false;
+let saveBlocked = false, saveConflict = false;
+function saveControls() {
+  $('#btnRetrySave').hidden = !saveBlocked || saveConflict;
+  $('#btnDraftSave').hidden = !saveBlocked;
+  $('#btnReloadState').hidden = !saveConflict;
+}
 function queueSave() {
   if (!ADMIN) return;
-  $('#saveState').textContent = 'Saving…';
+  savePending = true;
+  $('#saveState').textContent = saveBlocked ? 'Not saved — resolve the issue below.' : 'Unsaved changes…';
+  saveControls();
+  if (saveBlocked) return;
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    try {
-      await api('/api/state', { method: 'PUT',
-        body: JSON.stringify({ departments: STATE.departments, settings: STATE.settings }) });
-      $('#saveState').textContent = 'Saved';
-      setTimeout(() => { if ($('#saveState').textContent === 'Saved') $('#saveState').textContent = ''; }, 1800);
-    } catch (e) {
-      $('#saveState').textContent = 'Not saved: ' + e.message;
-      if (/not signed in/i.test(e.message)) {
-        // the session cookie expired or was rejected server-side even though this
-        // tab still thinks it's logged in — drop back to the lock screen so the
-        // user notices and re-authenticates, instead of silently losing edits.
-        // STATE still holds the unsaved changes in memory, so logging back in
-        // and editing again (or just waiting for the next autosave) will retry.
-        ADMIN = false;
-        applyLock();
-        $('#saveState').textContent = 'Not saved: your session expired — please sign in again.';
-      }
-    }
-  }, 600);
+  saveTimer = setTimeout(flushStateSave, 600);
 }
+async function flushStateSave() {
+  if (!ADMIN || saveInFlight || saveBlocked || !savePending) return;
+  savePending = false;
+  saveInFlight = true;
+  $('#saveState').textContent = 'Saving…';
+  const confirmedIds = [...REMOVED_IDS];
+  const payload = JSON.stringify({ departments: STATE.departments, settings: STATE.settings,
+    revision: STATE_REVISION, confirmRemovedIds: confirmedIds });
+  try {
+    const result = await api('/api/state', { method: 'PUT', body: payload });
+    STATE_REVISION = result.revision;
+    confirmedIds.forEach(id => REMOVED_IDS.delete(id));
+    $('#saveState').textContent = savePending ? 'Unsaved changes…' : 'Saved';
+  } catch (e) {
+    savePending = true;
+    saveBlocked = true;
+    saveConflict = e.status === 409 || e.status === 428;
+    $('#saveState').textContent = saveConflict
+      ? 'Not saved — another editor changed this. Download your draft, then reload.'
+      : `Not saved — ${e.message}`;
+    saveControls();
+  } finally {
+    saveInFlight = false;
+    if (savePending && !saveBlocked) { clearTimeout(saveTimer); saveTimer = setTimeout(flushStateSave, 0); }
+  }
+}
+$('#btnRetrySave').addEventListener('click', () => {
+  saveBlocked = false; saveConflict = false; saveControls(); queueSave();
+});
+$('#btnDraftSave').addEventListener('click', () => {
+  const data = JSON.stringify({ exportedAt: new Date().toISOString(),
+    departments: STATE.departments, settings: STATE.settings }, null, 2);
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob([data], { type: 'application/json' }));
+  link.download = `sec-unsaved-draft-${new Date().toISOString().slice(0, 10)}.json`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+});
+$('#btnReloadState').addEventListener('click', async () => {
+  if (!await uiConfirm('Reload the latest version?',
+    'Your unsaved edits will be discarded. Download your draft first if you need it.', 'Reload')) return;
+  clearTimeout(saveTimer);
+  try {
+    await loadState();
+    saveBlocked = false; saveConflict = false; savePending = false;
+    renderPositions(); renderSettings(); renderFilter(true); renderStats();
+    saveControls(); $('#saveState').textContent = 'Latest version loaded.';
+  } catch (e) { $('#saveState').textContent = `Reload failed: ${e.message}. Your draft is still on this page.`; }
+});
+window.addEventListener('beforeunload', e => {
+  if (!ADMIN || (!savePending && !saveInFlight && !saveBlocked && !hasUnsavedNote())) return;
+  e.preventDefault(); e.returnValue = '';
+});
 
 /* ================= in-page confirm ================= */
 function uiConfirm(title, body, yesLabel) {
@@ -2858,6 +2921,10 @@ $('#btnLogin').addEventListener('click', doLogin);
 $('#lgPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 $('#btnLock').addEventListener('click', async () => {
+  if ((savePending || saveInFlight || saveBlocked || hasUnsavedNote()) &&
+      !await uiConfirm('Sign out with unsaved changes?',
+        'Unsaved roles, settings, or reviewer notes may be lost. Save or download your draft first.', 'Sign out')) return;
+  clearTimeout(saveTimer);
   await api('/api/session', { method: 'DELETE' });
   ADMIN = false; USER = null; APPLICATIONS = [];
   await loadState();
@@ -2877,23 +2944,33 @@ function showPanel(which) {
   if (which === 'pos') renderPositions();
   if (which === 'set') renderSettings();
 }
-$('#tabApps').addEventListener('click', () => showPanel('apps'));
-$('#tabPos').addEventListener('click', () => showPanel('pos'));
-$('#tabSet').addEventListener('click', () => showPanel('set'));
+async function switchPanel(which) {
+  if (!$('#panelApps').hidden && which !== 'apps' && hasUnsavedNote() &&
+      !await uiConfirm('Leave this unsaved note?', 'Save the reviewer note before switching sections.', 'Leave')) return;
+  showPanel(which);
+}
+$('#tabApps').addEventListener('click', () => switchPanel('apps'));
+$('#tabPos').addEventListener('click', () => switchPanel('pos'));
+$('#tabSet').addEventListener('click', () => switchPanel('set'));
 
 async function refreshAdmin() {
-  try { APPLICATIONS = (await api('/api/applications')).applications || []; } catch { APPLICATIONS = []; }
+  try { APPLICATIONS = (await api('/api/applications?includeArchived=1')).applications || []; }
+  catch (e) {
+    $('#applicantList').innerHTML = `<div class="empty">Could not load applications: ${esc(e.message)}. Refresh and try again.</div>`;
+    return;
+  }
   renderFilter(true); renderStats(); renderList(); renderDetail(); renderPositions(); renderSettings();
 }
 
 /* ================= applicants ================= */
 function renderStats() {
+  const activeApps = APPLICATIONS.filter(a => !a.archivedAt);
   const openSeats = Object.values(POSITIONS).reduce((n, p) => n + Math.max(0, p.total - p.filled), 0);
   $('#stats').innerHTML = [
     [openSeats, 'Seats open'],
-    [APPLICATIONS.length, 'Applications'],
-    [APPLICATIONS.filter(a => a.status === 'new').length, 'Not yet reviewed'],
-    [APPLICATIONS.filter(a => !a.form).length, 'Form not matched'],
+    [activeApps.length, 'Applications'],
+    [activeApps.filter(a => a.status === 'new').length, 'Not yet reviewed'],
+    [activeApps.filter(a => !a.form).length, 'Form not matched'],
   ].map(([n, l]) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
 }
 
@@ -2905,53 +2982,77 @@ function renderFilter(rebuild) {
     Object.values(POSITIONS).map(p => `<option value="${p.id}">${esc(p.dept)} — ${esc(p.title)}</option>`).join('');
   sel.dataset.built = '1';
   if (cur) sel.value = cur;
+  sel.dataset.previous = sel.value;
   if (!sel.dataset.wired) {
     sel.dataset.wired = '1';
-    sel.addEventListener('change', () => { selected = null; renderList(); renderDetail(); });
+    sel.addEventListener('change', async () => {
+      if (hasUnsavedNote() && !await uiConfirm('Leave this unsaved note?',
+        'Save the reviewer note before changing the position filter.', 'Leave')) {
+        sel.value = sel.dataset.previous || 'all'; return;
+      }
+      sel.dataset.previous = sel.value;
+      selected = null; renderList(); renderDetail();
+    });
   }
 }
 
 const visibleApps = () => {
   const f = $('#filterPos').value || 'all';
-  return APPLICATIONS.filter(a => f === 'all' || a.pos === f);
+  return APPLICATIONS.filter(a => Boolean(a.archivedAt) === APP_SHOW_ARCHIVED &&
+    (f === 'all' || a.pos === f));
 };
 
 function renderList() {
   const apps = visibleApps(), el = $('#applicantList');
-  if (!apps.length) { el.innerHTML = `<div class="empty">No applications yet.</div>`; return; }
+  if (!apps.length) { el.innerHTML = `<div class="empty">${APP_SHOW_ARCHIVED ? 'No archived applications.' : 'No applications yet.'}</div>`; return; }
   const byPos = {};
   apps.forEach(a => (byPos[a.pos] = byPos[a.pos] || []).push(a));
   el.innerHTML = Object.entries(byPos).map(([pid, list]) => `
     <div class="list-group">${esc(list[0].posTitle || POSITIONS[pid]?.title || 'Removed position')} · ${list.length}</div>
     ${list.map(a => `<div class="applrow">
-      <button class="appl" data-id="${a.id}" aria-current="${selected === a.id}">
+      <button class="appl" data-id="${a.id}" aria-current="${String(selected) === String(a.id)}">
         <div class="n">${esc(a.name)}</div>
         <div class="m">${esc(a.imail)} · ${esc((a.when || '').slice(0, 10))}</div>
         ${a.status === 'new' ? '<span class="badge new">Not reviewed</span>' : `<span class="badge">${esc(a.status)}</span>`}
         ${!a.form ? '<span class="badge warn">Form not matched</span>' : ''}
       </button>
-      <button class="applx" data-del="${a.id}" aria-label="Remove ${esc(a.name)}">&#10005;</button>
+      <button class="applx" data-del="${a.id}" aria-label="${APP_SHOW_ARCHIVED ? 'Restore' : 'Archive'} ${esc(a.name)}">${APP_SHOW_ARCHIVED ? 'Restore' : 'Archive'}</button>
     </div>`).join('')}`).join('');
 
   el.querySelectorAll('.appl').forEach(b =>
-    b.addEventListener('click', () => { selected = b.dataset.id; renderList(); renderDetail(); }));
+    b.addEventListener('click', async () => {
+      if (String(selected) !== b.dataset.id && hasUnsavedNote() &&
+          !await uiConfirm('Leave this unsaved note?', 'Save the reviewer note before opening another applicant.', 'Leave')) return;
+      selected = b.dataset.id; renderList(); renderDetail();
+    }));
   el.querySelectorAll('[data-del]').forEach(b =>
     b.addEventListener('click', async e => {
       e.stopPropagation();
+      if (hasUnsavedNote()) { $('#noteState').textContent = 'Save the note before archiving or restoring.'; return; }
       const a = APPLICATIONS.find(x => String(x.id) === b.dataset.del);
-      if (!await uiConfirm(`Remove ${a.name}'s application?`,
-        "Their five answers are deleted and can't be recovered. Export the CSV first if you need the record.",
-        'Remove application')) return;
-      await api(`/api/applications?id=${encodeURIComponent(a.id)}`, { method: 'DELETE' });
+      if (!a) return;
+      if (APP_SHOW_ARCHIVED) {
+        await api('/api/applications', { method: 'PATCH', body: JSON.stringify({ id: a.id, restore: true }) });
+      } else {
+        if (!await uiConfirm(`Archive ${a.name}'s application?`,
+          'It will leave the review queue but remain recoverable in Archived applications.', 'Archive application')) return;
+        await api(`/api/applications?id=${encodeURIComponent(a.id)}`, { method: 'DELETE' });
+      }
       if (String(selected) === String(a.id)) selected = null;
       await refreshAdmin();
     }));
 }
 
+function hasUnsavedNote() {
+  const field = $('#note');
+  const a = APPLICATIONS.find(x => String(x.id) === String(selected));
+  return !!(field && !$('#panelApps').hidden && a && field.value !== (a.note || ''));
+}
+
 function renderDetail() {
   const el = $('#applicantDetail');
   const a = APPLICATIONS.find(x => String(x.id) === String(selected));
-  if (!a) { el.innerHTML = `<div class="empty">Select an applicant to read their answers.</div>`; return; }
+  if (!a || Boolean(a.archivedAt) !== APP_SHOW_ARCHIVED) { el.innerHTML = `<div class="empty">Select an applicant to read their answers.</div>`; return; }
   el.innerHTML = `
     <h3 class="dname">${esc(a.name)}</h3>
     <div class="dmeta">${esc(a.imail)} · ${esc(a.posTitle)} · submitted ${esc((a.when || '').replace('T', ' ').slice(0, 16))}
@@ -2959,7 +3060,8 @@ function renderDetail() {
     ${(a.questions || []).map((q, i) => `<div class="qa">
       <div class="qq">Q${i + 1} · ${esc(q)}</div>
       <div class="aa">${esc(a.answers?.[i] || '—')}</div></div>`).join('')}
-    <div class="controls">
+    ${a.archivedAt ? `<div class="controls"><span class="hint">Archived ${esc(a.archivedAt)} by ${esc(a.archivedBy || '—')}.</span>
+      <button class="mini" id="btnRestoreApp">Restore application</button></div>` : `<div class="controls">
       <button class="mini" id="btnForm">${a.form ? '\u2713 Form received' : 'Mark form received'}</button>
       <span class="hint" style="margin:0">Scans can't be tracked — check the Form responses sheet and tick it here.</span>
     </div>
@@ -2973,27 +3075,60 @@ function renderDetail() {
     <div class="field" style="margin-top:14px">
       <label for="note">Reviewer note</label>
       <textarea id="note" placeholder="Why — in a sentence. This is what you'll rely on at the shortlist meeting.">${esc(a.note || '')}</textarea>
-      <div class="hint" id="noteState"></div>
-    </div>`;
+      <div class="controls" style="margin-top:10px;padding-top:10px">
+        <button class="mini" id="btnSaveNote" type="button">Save note</button>
+        <span class="hint" id="noteState" role="status" aria-live="polite"></span>
+      </div>
+    </div>`}`;
 
-  const patch = async body => {
-    await api('/api/applications', { method: 'PATCH', body: JSON.stringify({ id: a.id, ...body }) });
-  };
-  $('#stat').addEventListener('change', async e => { a.status = e.target.value; await patch({ status: a.status }); renderStats(); renderList(); });
-  $('#btnForm').addEventListener('click', async () => { a.form = !a.form; await patch({ form: a.form }); renderStats(); renderList(); renderDetail(); });
-  let nt = null;
-  $('#note').addEventListener('input', e => {
-    clearTimeout(nt); $('#noteState').textContent = 'Saving…';
-    nt = setTimeout(async () => {
-      a.note = e.target.value;
-      await patch({ note: a.note });
-      $('#noteState').textContent = `Saved · ${USER}`;
-    }, 700);
+  if (a.archivedAt) {
+    $('#btnRestoreApp').addEventListener('click', async () => {
+      await api('/api/applications', { method: 'PATCH', body: JSON.stringify({ id: a.id, restore: true }) });
+      selected = null; await refreshAdmin();
+    });
+    return;
+  }
+
+  const feedback = $('#noteState');
+  const patch = body => api('/api/applications', { method: 'PATCH', body: JSON.stringify({ id: a.id, ...body }) });
+  $('#stat').addEventListener('change', async e => {
+    const next = e.target.value;
+    try { await patch({ status: next, statusBase: a.status }); a.status = next; renderStats(); renderList(); }
+    catch (err) { e.target.value = a.status; feedback.textContent = `Decision not saved: ${err.message}`; }
+  });
+  $('#btnForm').addEventListener('click', async () => {
+    try {
+      const draft = $('#note').value;
+      await patch({ form: !a.form, formBase: a.form }); a.form = !a.form;
+      renderStats(); renderList(); renderDetail();
+      if (draft !== a.note) { $('#note').value = draft; $('#noteState').textContent = 'Unsaved note'; }
+    }
+    catch (err) { feedback.textContent = `Form flag not saved: ${err.message}`; }
+  });
+  $('#note').addEventListener('input', () => { feedback.textContent = 'Unsaved note'; });
+  $('#btnSaveNote').addEventListener('click', async e => {
+    const button = e.currentTarget;
+    const noteField = $('#note');
+    const next = noteField.value;
+    button.disabled = true;
+    feedback.textContent = 'Saving note…';
+    try {
+      const result = await patch({ note: next, noteBaseAt: a.noteAt || null });
+      a.note = next; a.noteAt = result.noteAt;
+      feedback.textContent = noteField.value === next ? `Saved · ${USER}` : 'Unsaved note';
+    } catch (err) { feedback.textContent = `Note not saved: ${err.message}`; }
+    button.disabled = false;
   });
 }
 
+$('#btnArchived').addEventListener('click', e => {
+  if (hasUnsavedNote()) { $('#noteState').textContent = 'Save the note before changing views.'; return; }
+  APP_SHOW_ARCHIVED = !APP_SHOW_ARCHIVED;
+  e.currentTarget.setAttribute('aria-pressed', String(APP_SHOW_ARCHIVED));
+  selected = null; renderList(); renderDetail();
+});
 $('#btnCsv').addEventListener('click', () => {
-  window.location = `/api/export?pos=${encodeURIComponent($('#filterPos').value || 'all')}`;
+  window.location = `/api/export?pos=${encodeURIComponent($('#filterPos').value || 'all')}${APP_SHOW_ARCHIVED ? '&onlyArchived=1' : ''}`;
 });
 
 /* ================= positions ================= */
@@ -3037,20 +3172,20 @@ function positionRow(p, d, idx) {
     <button class="pcross" data-act="del" aria-label="Remove ${esc(p.title)}">&#10005;</button>
     <div class="pgrid">
       <div class="pfield pf-title"><label>Position name</label>
-        <input type="text" value="${esc(p.title)}" data-f="title" data-focus="t-${p.id}"></div>
+        <input type="text" value="${esc(p.title)}" data-f="title" data-focus="t-${p.id}" aria-label="Position name for ${esc(p.title)}"></div>
       <div class="pfield"><label>Level</label>
-        <input type="text" list="levelList" value="${esc(p.level)}" data-f="level" data-focus="lv-${p.id}"></div>
+        <input type="text" list="levelList" value="${esc(p.level)}" data-f="level" data-focus="lv-${p.id}" aria-label="Level for ${esc(p.title)}"></div>
       <div class="pfield"><label>Department</label>
-        <input type="text" list="deptList" value="${esc(d.name)}" data-f="dept" data-focus="dp-${p.id}"></div>
+        <input type="text" list="deptList" value="${esc(d.name)}" data-f="dept" data-focus="dp-${p.id}" aria-label="Department for ${esc(p.title)}"></div>
     </div>
     <div class="pgrid2">
       <div class="pfield"><label>Total seats</label><div class="stepper">
         <button class="sbtn" data-step="total-" aria-label="Fewer seats">&minus;</button>
-        <input type="text" inputmode="numeric" value="${p.total}" data-f="total" data-focus="tot-${p.id}">
+        <input type="text" inputmode="numeric" value="${p.total}" data-f="total" data-focus="tot-${p.id}" aria-label="Total seats for ${esc(p.title)}">
         <button class="sbtn" data-step="total+" aria-label="More seats">+</button></div></div>
       <div class="pfield"><label>Seats filled</label><div class="stepper">
         <button class="sbtn" data-step="filled-" aria-label="Fewer filled">&minus;</button>
-        <input type="text" inputmode="numeric" value="${p.filled}" data-f="filled" data-focus="fil-${p.id}">
+        <input type="text" inputmode="numeric" value="${p.filled}" data-f="filled" data-focus="fil-${p.id}" aria-label="Filled seats for ${esc(p.title)}">
         <button class="sbtn" data-step="filled+" aria-label="More filled">+</button></div></div>
       <div class="pfield pf-status"><label>On the public board</label>
         <div class="pstatus"><span class="ladder">${seats}</span>
@@ -3150,9 +3285,10 @@ function wirePositions() {
     row.querySelector('[data-act="del"]').addEventListener('click', async () => {
       const n = appsFor(p.id);
       const msg = n
-        ? `${n} submitted application${n === 1 ? '' : 's'} will stay in the database but lose their position link. There is no undo — export the CSV first.`
-        : 'This removes it from the public board. There is no undo.';
+        ? `${n} submitted application${n === 1 ? '' : 's'} will remain in the database with their original role title and answers. The position will be removed from the public board and a server backup will be kept.`
+        : 'This removes the position from the public board. A server backup will be kept.';
       if (!await uiConfirm(`Remove "${p.title}"?`, msg, 'Remove position')) return;
+      REMOVED_IDS.add(p.id);
       d.positions.splice(d.positions.indexOf(p), 1);
       pruneDepts(); reindex();
       renderBoard(); renderPositions(); renderStats(); renderFilter(true); queueSave();
@@ -3205,7 +3341,7 @@ function drawDescPanel(panel, p) {
     queueSave();
     const trigger = panel.closest('.prow')?.querySelector('[data-act="desc"]');
     if (trigger) trigger.textContent = 'Edit description';
-    statusEl.textContent = 'Saved.';
+    statusEl.textContent = 'Queued for saving. Check the status above.';
   });
 }
 
@@ -3216,7 +3352,7 @@ function drawQuestionPanel(panel, p) {
     ${st === 'published' && n > 0 ? `<div class="warnbox"><b>${n} ${n === 1 ? 'person has' : 'people have'} already answered these questions.</b> Changing them now means applicants are no longer answering the same thing, and you can't compare them fairly. If you must change them, close the position, publish the new set, and reopen.</div>` : ''}
     ${st === 'draft' ? `<div class="okbox"><b>Draft — not public.</b> Nobody can see or answer these until you publish. Read every one; AI drafts are a starting point, not a decision.</div>` : ''}
     ${st === 'none' ? `<div class="okbox">No questions yet. This position shows as <b>Opening soon</b> on the public board. Type your own five below, or generate a draft with AI — typing them yourself needs no API key.</div>` : ''}
-    ${qs.map((q, i) => `<div class="qrow"><span class="qn">Q${i + 1}</span><textarea data-qi="${i}">${esc(q)}</textarea></div>`).join('')}
+    ${qs.map((q, i) => `<div class="qrow"><span class="qn">Q${i + 1}</span><textarea data-qi="${i}" aria-label="Question ${i + 1} for ${esc(p.title)}">${esc(q)}</textarea></div>`).join('')}
     <div class="controls" style="border-top:0;padding-top:4px;margin-top:4px">
       <button class="mini" data-a="gen">${st === 'none' ? 'Generate with AI (optional)' : 'Regenerate with AI'}</button>
       <button class="mini" data-a="save">Save draft</button>
@@ -3244,7 +3380,7 @@ function drawQuestionPanel(panel, p) {
 
   panel.querySelector('[data-a="save"]').addEventListener('click', () => {
     p.draftQuestions = read(); p.qState = 'draft'; queueSave();
-    statusEl.textContent = 'Draft saved. Not public.';
+    statusEl.textContent = 'Draft queued for saving. Not public.';
   });
 
   panel.querySelector('[data-a="pub"]').addEventListener('click', async () => {
@@ -3318,12 +3454,18 @@ function renderSettings() {
     <div id="tlRows">
       ${(STATE.settings?.timeline || []).map((t, i) => `
         <div class="qrow" data-tl="${i}">
-          <input type="text" data-tlf="label" value="${esc(t.label || '')}" placeholder="Stage, e.g. Applications open" style="flex:1.3">
-          <input type="text" data-tlf="date" value="${esc(t.date || '')}" placeholder="Date, e.g. 1–20 Sept 2026" style="flex:1">
+          <input type="text" data-tlf="label" value="${esc(t.label || '')}" aria-label="Stage ${i + 1} name" placeholder="Stage, e.g. Applications open" style="flex:1.3">
+          <input type="text" data-tlf="date" value="${esc(t.date || '')}" aria-label="Stage ${i + 1} date" placeholder="Date, e.g. 1–20 Sept 2026" style="flex:1">
           <button class="mini danger" data-tldel="${i}" type="button" aria-label="Remove stage">&#10005;</button>
         </div>`).join('') || `<p class="hint" style="margin:0 0 12px">No stages yet.</p>`}
     </div>
     <button class="mini" id="tlAdd" type="button">Add stage</button>
+  </div>
+  <div class="setblock">
+    <h3>Data &amp; recovery</h3>
+    <p class="lead">Download an exact copy of the current roles, settings, and every application before major edits. This is separate from the CSV used for review.</p>
+    <p class="data-warning"><b>Private applicant data.</b> Keep this file only in a club-controlled encrypted location. Do not share it in chat or put it in a public repository.</p>
+    <a class="btn ghost" href="/api/backup" download>Download full backup</a>
   </div>`;
   $('#cfgQrT').addEventListener('change', e => { STATE.settings.qrTarget = e.target.value.trim(); renderSettings(); queueSave(); });
   $('#cfgDl').addEventListener('change', e => { STATE.settings.deadline = e.target.value.trim(); renderDeadline(); queueSave(); });

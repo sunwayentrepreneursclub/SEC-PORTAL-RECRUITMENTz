@@ -26,6 +26,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
 <style>
+/* The main website's next/font Inter Latin file, scoped to its shared chrome. */
+@font-face{font-family:'SEC Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('/fonts/inter-main-latin.woff2') format('woff2')}
 /* =========================================================================
    Editorial-serif theme — matched to sec-website-3-0.vercel.app: a near-
    black charcoal ground, cream/off-white type, Georgia for display
@@ -37,6 +39,7 @@
    working theme for the committee dashboard, which nobody's asked to change.
    ========================================================================= */
 :root{
+  --recruitment-nav-height:80px;
   --ink:#F6F5F2;
   --ink-weak:#B7B9BF;
   --paper:#111214;
@@ -214,7 +217,7 @@ body{
 #viewPublic .roles-chapter{padding-block:48px 24px;margin:0}
 #viewPublic .roles-chapter>.abandsection{margin-bottom:44px}
 #viewPublic .roles-chapter .empty{color:#535B60}
-#viewPublic .roles-chapter .department-group{margin:0 0 42px;min-width:0;scroll-margin-top:96px}
+#viewPublic .roles-chapter .department-group{margin:0 0 42px;min-width:0;scroll-margin-top:calc(var(--recruitment-nav-height) + 16px)}
 #viewPublic .roles-chapter .department-heading{border:0;padding:0;margin:0 0 15px}
 #viewPublic .roles-chapter .department-heading h3{
   font-family:var(--serif);font-size:clamp(30px,3vw,40px);font-weight:400;
@@ -381,25 +384,28 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 /* ---------- top bar (persistent, matched to the reference's nav) ---------- */
 .topbar{
   position:fixed;top:0;left:0;right:0;z-index:40;background:var(--navy);
-  border-bottom:1px solid var(--board-line);height:64px;
+  border-bottom:1px solid var(--board-line);height:var(--recruitment-nav-height);
 }
+.topbar-spacer{height:var(--recruitment-nav-height)}
 .topbar-inner{
-  max-width:1600px;margin:0 auto;padding:0 24px;height:100%;
-  display:flex;align-items:center;gap:32px;
+  width:calc(100% - 112px);max-width:1328px;margin:0 auto;padding:0;height:100%;
+  display:flex;align-items:center;gap:28px;
 }
-@media (min-width:768px){.topbar-inner{padding:0 48px}}
 .topbar-word{
-  font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--ink-weak);white-space:nowrap;text-decoration:none;cursor:pointer;
+  font-family:'SEC Inter',var(--body);font-size:12px;font-weight:400;letter-spacing:.14em;
+  line-height:1;text-transform:uppercase;color:var(--ink);white-space:nowrap;text-decoration:none;cursor:pointer;
 }
-.topbar-word:hover{color:var(--ink)}
+.topbar-word:hover{color:var(--muted)}
 /* Nav links sit right, like the main site's .nav-links{margin-left:auto}. */
-.topbar-inner .pubnav{margin:0 0 0 auto;border-bottom:0;flex:none;flex-wrap:nowrap;overflow:visible;scrollbar-width:none}
+.topbar-inner .pubnav{margin:0 0 0 auto;border-bottom:0;gap:34px;flex:none;flex-wrap:nowrap;overflow:visible;scrollbar-width:none}
 .topbar-inner .pubnav::-webkit-scrollbar{display:none}
-.topbar-inner .pubtab{padding:20px 16px;min-height:auto;color:rgba(246,245,242,.82);flex:none}
+.topbar-inner .pubtab{
+  padding:0;min-height:44px;margin:0;border-radius:0;flex:none;
+  font-family:'SEC Inter',var(--body);font-size:13px;font-weight:400;letter-spacing:0;line-height:1.5;color:var(--muted);
+}
 .topbar-inner .pubtab:hover{color:var(--ink);background:none}
-.topbar-inner .pubtab[aria-selected="true"]{color:var(--ink);font-weight:600}
-.topbar-inner .pubtab-apply,.topbar-inner .pubtab-apply[aria-selected="true"]{color:rgba(246,245,242,.82)}
+.topbar-inner .pubtab[aria-selected="true"]{color:var(--ink);font-weight:400}
+.topbar-inner .pubtab-apply,.topbar-inner .pubtab-apply[aria-selected="true"]{color:var(--muted)}
 .topbar-inner .pubtab-glide{display:none}
 .topbar-cta{
   font-family:var(--body);font-size:14px;font-weight:600;white-space:nowrap;
@@ -415,7 +421,7 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
   display:none;align-items:center;justify-content:flex-end;gap:8px;
   margin-left:auto;min-width:44px;min-height:44px;flex-shrink:0;
   background:none;border:0;cursor:pointer;color:var(--ink);
-  font-family:var(--body);font-size:14px;
+  font-family:'SEC Inter',var(--body);font-size:13px;
 }
 .site-menu{
   margin:0;padding:0;border:0;width:100vw;max-width:none;height:100dvh;max-height:none;
@@ -424,20 +430,20 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 .site-menu::backdrop{background:var(--navy)}
 .menu-panel{
   min-height:100%;display:flex;flex-direction:column;
-  max-width:1600px;margin:0 auto;padding:0 20px 36px;
+  width:calc(100% - 112px);max-width:1328px;margin:0 auto;padding:0 0 36px;
 }
-.menu-toolbar{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:64px;flex-shrink:0}
+.menu-toolbar{display:flex;align-items:center;justify-content:space-between;gap:28px;min-height:var(--recruitment-nav-height);flex-shrink:0}
 .menu-toolbar .menu-toggle{display:flex}
 .menu-primary{display:grid;margin-block:auto;padding-block:24px 40px}
 .menu-primary a{
-  font-family:var(--serif);font-size:clamp(34px,9vw,56px);font-weight:400;
-  letter-spacing:-.04em;line-height:1.2;padding-block:10px;color:var(--ink);text-decoration:none;
+  font-family:'SEC Inter',var(--body);font-size:clamp(30px,6vw,62px);font-weight:500;
+  letter-spacing:-.045em;line-height:1.2;padding-block:12px;color:var(--ink);text-decoration:none;
 }
-.menu-primary a + a{margin-top:6px}
+.menu-primary a + a{margin-top:12px}
 .menu-bottom{
-  display:flex;align-items:center;gap:24px;flex-wrap:wrap;margin-top:auto;
+  display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;margin-top:auto;
   padding-top:24px;border-top:1px solid var(--board-line);
-  font-family:var(--body);font-size:13px;
+  font-family:'SEC Inter',var(--body);font-size:12px;
 }
 .menu-bottom a{color:var(--muted);text-decoration:none}
 .menu-bottom a:hover{color:var(--ink)}
@@ -456,17 +462,22 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
   @keyframes menuOut{from{opacity:1}to{opacity:0}}
   @keyframes menuLink{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
 }
-@media (max-width:860px){
+@media (max-width:1050px){
+  .topbar-inner,.menu-panel{width:calc(100% - 64px)}
   .topbar-inner .pubnav{display:none}
   .menu-toggle{display:flex}
-}
-@media (max-width:720px){
-  .topbar-inner{padding:0 20px;gap:16px}
   .topbar-word{font-size:11px}
-  .topbar-cta{padding:9px 16px;font-size:13px}
 }
+@media (max-width:760px){
+  :root{--recruitment-nav-height:76px}
+  .topbar-word{font-size:10px}
+  .topbar-cta{padding:9px 16px;font-size:13px}
+  .menu-primary a{font-size:clamp(28px,8vw,40px);line-height:1.2}
+}
+@media (max-width:520px){.topbar-inner,.menu-panel{width:calc(100% - 40px)}}
+@media (max-width:360px){.topbar-inner{gap:12px}.topbar-word{font-size:9px;letter-spacing:.1em}}
 /* ---------- masthead ---------- */
-.masthead{padding:64px 0;min-height:calc(100svh - 64px);display:flex;align-items:center}
+.masthead{padding:64px 0;min-height:calc(100svh - var(--recruitment-nav-height));display:flex;align-items:center}
 #viewPublic .masthead{
   --ink:#181C20;--muted:#535B60;
   position:relative;background:#F6F5F2;color:var(--ink);
@@ -823,7 +834,7 @@ h1{
   font-size:clamp(13px,1.25vw,17px);line-height:1.35;margin:0;letter-spacing:0;text-transform:none;
 }
 #viewPublic .home-timeline{
-  min-width:0;margin:0;padding:0;scroll-margin-top:80px;
+  min-width:0;margin:0;padding:0;scroll-margin-top:var(--recruitment-nav-height);
 }
 #viewPublic .home-timeline h2{
   font:400 clamp(38px,4.5vw,64px)/1.08 var(--serif);letter-spacing:-.045em;
@@ -831,7 +842,7 @@ h1{
 }
 #viewPublic .home-timeline .roadmap{gap:clamp(30px,3.6vw,52px) clamp(24px,3.4vw,48px)}
 #viewPublic .home-timeline .rm-date{color:#B7B9BF}
-#viewPublic .home-roles{padding:64px 0 88px;margin:0;border-top:0;scroll-margin-top:80px}
+#viewPublic .home-roles{padding:64px 0 88px;margin:0;border-top:0;scroll-margin-top:var(--recruitment-nav-height)}
 #viewPublic .home-content .home-roles:last-child{margin-bottom:0}
 #viewPublic .home-roles .aband-title{font-size:clamp(36px,4vw,58px)}
 .home-role-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:28px}
@@ -979,44 +990,50 @@ h1{
 /* Footer — same structure and tokens as the main site's shipped footer:
    identity (mark + name) / nav / social in a 3-column grid on a slightly
    lifted surface, then a bottom bar with copyright and the admin entry. */
-/* No margin-top here: it sat outside the footer's own background and the
-   page content's, so it was just a sliver of unstyled page background
-   between them - invisible while everything above was dark, visible as a
-   black seam now that light (chapter-light) sections lead right into it.
-   The footer's own 48px top padding already gives it breathing room. */
-.site-footer{background:var(--board);padding:48px 0 24px}
+/* The main site's footer padding supplies the separation from the page. */
+.site-footer{background:var(--board);padding:32px 0 18px;font-family:'SEC Inter',var(--body);line-height:1.5}
+#viewPublic .site-footer > .wrap{width:calc(100% - 112px);max-width:1328px;padding:0}
 .footer-main{display:grid;grid-template-columns:2fr 1fr 1fr;align-items:start;gap:28px}
-.footer-identity{display:flex;align-items:center;gap:14px;width:fit-content;font-family:var(--body);font-size:18px;color:var(--ink);text-decoration:none}
-.footer-identity img{width:40px;height:40px;object-fit:contain;flex-shrink:0}
-.footer-nav,.footer-social{display:flex;flex-direction:column;align-items:flex-start;gap:8px;font-family:var(--body);font-size:13px;color:var(--muted)}
-.footer-nav a,.footer-social a{color:var(--muted);text-decoration:none;padding-block:4px;transition:color .2s}
+.footer-identity{display:flex;align-items:flex-end;gap:16px;width:fit-content;font-size:clamp(18px,1.7vw,24px);line-height:1.1;color:var(--ink);text-decoration:none}
+.footer-identity img{width:64px;height:64px;object-fit:contain;flex-shrink:0}
+.footer-identity > span{padding-bottom:3px}
+.footer-nav,.footer-social{display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:14px;color:var(--muted)}
+.footer-nav a,.footer-social a{color:var(--muted);text-decoration:none;padding-block:6px;transition:color .2s}
 .footer-nav a:hover,.footer-social a:hover{color:var(--ink)}
-.footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:32px;padding-top:18px;border-top:1px solid var(--board-line);font-family:var(--body);font-size:12px;color:var(--muted)}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-top:26px;font-size:10px;color:var(--muted)}
 .footer-bottom a{color:var(--muted);text-decoration:none}
 .footer-bottom a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+#adminEntry{font-size:12px}
 /* "Part of the Sunway community" — the block the main site's footer carries
    and this one was missing. Same grid/placement: full identity row up top,
    nav + social beside it, the community logos under the identity. */
 .footer-identity{grid-column:1;grid-row:1}
 .footer-nav{grid-column:2;grid-row:1}
 .footer-social{grid-column:3;grid-row:1}
-.footer-community{grid-column:1;grid-row:2;min-width:0;margin-top:4px}
-.footer-community > p{font-family:var(--body);font-size:13px;color:var(--muted);margin:0}
+.footer-community{grid-column:1;grid-row:2;min-width:0}
+.footer-community > p{font-size:13px;color:var(--muted);margin:0}
 .footer-community ul{display:grid;grid-template-columns:1fr 1fr 1.25fr;gap:12px;max-width:456px;padding:0;margin:14px 0 0;list-style:none}
 .footer-community li{background:#fff;border-radius:6px;min-width:0;height:72px;padding:10px;display:flex;align-items:center;justify-content:center}
 .footer-community img{width:100%;height:100%;object-fit:contain}
-@media (max-width:720px){
+@media (max-width:1050px){#viewPublic .site-footer > .wrap{width:calc(100% - 64px)}}
+@media (max-width:760px){
+  .site-footer{padding:26px 0 16px}
   .footer-main{grid-template-columns:1fr 1fr;gap:22px 16px}
   .footer-identity{grid-column:1 / -1;grid-row:1;font-size:16px;gap:12px}
   .footer-nav{grid-column:1;grid-row:2}
   .footer-social{grid-column:2;grid-row:2}
   .footer-community{grid-column:1 / -1;grid-row:3}
-  .footer-identity img{width:34px;height:34px}
+  .footer-identity img{width:40px;height:40px}
   .footer-community > p{font-size:12px}
   .footer-community ul{gap:8px;margin-top:10px}
   .footer-community li{height:48px;padding:6px}
-  .footer-bottom{flex-wrap:wrap;margin-top:22px;font-size:11px}
+  .footer-nav,.footer-social{gap:2px;font-size:13px}
+  .footer-nav a,.footer-social a{display:flex;align-items:center;min-height:40px;padding-block:6px}
+  .footer-bottom{flex-wrap:nowrap;align-items:flex-end;gap:12px;margin-top:18px;font-size:10px}
+  .footer-bottom > span{flex:1 1 auto;min-width:0}
+  #adminEntry{flex:0 0 auto;font-size:10px;min-height:34px}
 }
+@media (max-width:520px){#viewPublic .site-footer > .wrap{width:calc(100% - 40px)}}
 /* Terms & Privacy — duplicated verbatim from the main site's lib/policies.ts,
    rendered in the same light "paper" dialog it uses (policy content is
    always light-on-cream, regardless of the dark public theme around it). */
@@ -1082,7 +1099,7 @@ h1 .tcursor{
 
 /* ---------- job list (jobstreet-style single-column scroll, no swiping) ---------- */
 .cf-head{display:flex;align-items:center;justify-content:space-between;gap:16px;
-  flex-wrap:wrap;margin-bottom:22px;position:sticky;top:64px;z-index:20;
+  flex-wrap:wrap;margin-bottom:22px;position:sticky;top:var(--recruitment-nav-height);z-index:20;
   background:var(--navy);padding:16px 0;border-bottom:1px solid var(--board-line)}
 .cf-filters{position:relative;display:flex;gap:9px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;min-width:0;width:100%;max-width:100%}
 .cf-filters::-webkit-scrollbar{display:none}
@@ -1660,7 +1677,7 @@ textarea{min-height:110px;resize:vertical}
     </div>
   </div>
 </dialog>
-<div class="topbar-spacer" id="topbarSpacer" style="height:64px"></div>
+<div class="topbar-spacer" id="topbarSpacer"></div>
 
 <section class="view" id="viewPublic">
   <div class="wrap">
@@ -1708,7 +1725,7 @@ textarea{min-height:110px;resize:vertical}
     <div class="wrap">
       <div class="footer-main">
         <a class="footer-identity" href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">
-          <img src="/sec_e.png" alt="" width="40" height="40">
+          <img src="/sec_e.png" alt="" width="64" height="64">
           <span>Sunway Entrepreneurs Club</span>
         </a>
         <nav class="footer-nav" aria-label="Footer navigation">

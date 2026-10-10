@@ -1,7 +1,7 @@
 // Local preview: serves the static site and runs the real /api handlers against an
 // in-memory store, so roles, sign-in and the Learning Portal all work with no database.
 // Data resets whenever this restarts. Local test logins only:
-//   admin / admin   (full access)      member / member   (Learning Portal only)
+//   admin / admin (full access). Committee sign-up join code: dev-join-code
 import http from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
@@ -11,9 +11,8 @@ process.env.KV_REST_API_URL = 'http://kv.local';
 process.env.KV_REST_API_TOKEN = 'dev';
 process.env.SESSION_SECRET = 'local-dev-secret';
 process.env.ADMIN_USERS = 'admin:admin';
-process.env.COMMITTEE_USERS = 'member:member';
 
-const store = new Map();
+const store = new Map([['sec:learning_join', JSON.stringify({ code: 'dev-join-code' })]]);
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opts) => {
   if (String(url).startsWith('http://kv.local')) {
@@ -60,4 +59,4 @@ http.createServer(async (req, res) => {
     res.setHeader('Content-Type', TYPES[extname(rel)] || 'application/octet-stream');
     res.end(body);
   } catch { res.statusCode = 404; res.end('Not found'); }
-}).listen(PORT, () => console.log(`Preview on http://localhost:${PORT}  (admin/admin, member/member)`));
+}).listen(PORT, () => console.log(`Preview on http://localhost:${PORT}  (admin/admin; join code dev-join-code)`));

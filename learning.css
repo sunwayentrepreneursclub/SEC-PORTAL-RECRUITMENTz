@@ -154,3 +154,8 @@
 
 /* footer: keep the two small links together */
 .footer-bottom .footer-bottom-links{display:flex;gap:18px;flex:0 0 auto}
+
+/* sign in / create account switch */
+#viewLearn .lp-switch{display:flex;gap:8px;margin-top:28px}
+#viewLearn .lp-switch button{background:none;border:1.5px solid rgba(246,245,242,.3);color:var(--ink);border-radius:99px;padding:9px 20px;font-size:15px}
+#viewLearn .lp-switch button.is-on{background:#F6F5F2;color:#111214;border-color:#F6F5F2}

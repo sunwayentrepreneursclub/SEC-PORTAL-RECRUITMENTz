@@ -96,13 +96,9 @@ The Learning Portal lives on the same site. Open it from the footer link, or go 
 | Learning Portal | Committee members | Footer → Learning Portal |
 | SEC Admin → **Learning portal** tab | Admins | Edit that section, every level and module, assessments, and see completion |
 
-Add one more environment variable for committee logins (these see the Learning Portal only, never applicants):
+No extra environment variable is needed. Committee members create their own account on the Learning Portal sign-in screen (**Create account**), using a **join code** that an admin sets in Admin → Learning portal → Committee sign-up. Share the code in the committee chat; change or clear it when people leave. Members can only use the Learning Portal. They never see applicants or the admin area, and an admin can remove a member at any time (their login stops working immediately). Passwords are stored as salted hashes. Anyone in `ADMIN_USERS` is an admin and can also use the Learning Portal.
 
-| Name | Value |
-|---|---|
-| `COMMITTEE_USERS` | `name:password,name:password`, one login per person |
-
-Anyone in `ADMIN_USERS` is an admin and can also use the Learning Portal. Modules stay as drafts ("Coming soon" to members) until you publish them. Run `npm run dev` to try everything locally; it uses in-memory data and the test logins `admin/admin` and `member/member`.
+Modules stay as drafts ("Coming soon" to members) until you publish them. Run `npm run dev` to try everything locally; it uses in-memory data, the test login `admin/admin` and the join code `dev-join-code`.
 
 ## How it works
 

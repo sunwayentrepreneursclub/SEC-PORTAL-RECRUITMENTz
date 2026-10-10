@@ -36,6 +36,8 @@ export const K_APPS  = 'sec:applications';
 export const K_KEY   = 'sec:gemini_key';
 export const K_LEARN = 'sec:learning';
 export const K_PROGRESS = 'sec:learning_progress';
+export const K_MEMBERS = 'sec:learning_members';
+export const K_JOIN = 'sec:learning_join';
 export const K_STATE_HISTORY = 'sec:state:history';
 export const K_APPS_HISTORY = 'sec:applications:history';
 
@@ -88,7 +90,8 @@ export function clearSession(res) {
   res.setHeader('Set-Cookie', `${COOKIE}=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0`);
 }
 
-export function currentUser(req) {
+/* Signature + expiry only. Who the name belongs to is decided by currentUser / identify. */
+function signedSessionName(req) {
   if (!SECRET) return null;
   const raw = (req.headers.cookie || '')
     .split(';').map(s => s.trim()).find(s => s.startsWith(`${COOKIE}=`));
@@ -102,10 +105,15 @@ export function currentUser(req) {
       !crypto.timingSafeEqual(Buffer.from(mac), Buffer.from(expected))) return null;
   const [u, exp] = payload.split('.');
   if (Number(exp) < Date.now()) return null;
-  const username = Buffer.from(u, 'base64url').toString();
-  // Removing someone from ADMIN_USERS or COMMITTEE_USERS revokes even an unexpired cookie.
-  return [...parseUsers(process.env.ADMIN_USERS), ...parseUsers(process.env.COMMITTEE_USERS)]
-    .some(e => e.u === username) ? username : null;
+  return Buffer.from(u, 'base64url').toString();
+}
+
+/* Admin sessions only. Removing a reviewer from ADMIN_USERS revokes even an unexpired cookie.
+   Learning Portal members are not admins, so this returns null for them. */
+export function currentUser(req) {
+  const username = signedSessionName(req);
+  return username && (process.env.ADMIN_USERS || '').split(',').some(entry =>
+    entry.trim().split(':', 1)[0] === username) ? username : null;
 }
 
 /* ADMIN_USERS = "amadeus:password1,angelene:password2" — one login per reviewer. */
@@ -122,8 +130,8 @@ export function checkLogin(username, password) {
   return null;
 }
 
-/* COMMITTEE_USERS = "member1:pw,member2:pw" — Learning Portal only, no applicant data.
-   Anyone in ADMIN_USERS is an admin and can also open the Learning Portal. */
+/* Learning Portal members create their own account with the join code an admin sets.
+   Passwords are stored as salted scrypt hashes; the session name is "m:<email>". */
 function parseUsers(raw) {
   return (raw || '').split(',').map(s => s.trim()).filter(Boolean).map(entry => {
     const i = entry.indexOf(':');
@@ -137,12 +145,41 @@ function samePassword(a, b) {
 export function isAdminUser(username) {
   return !!username && parseUsers(process.env.ADMIN_USERS).some(e => e.u === username);
 }
-export function roleOf(username) { return username ? (isAdminUser(username) ? 'admin' : 'member') : null; }
-export function checkAnyLogin(username, password) {
+export const memberKey = email => String(email || '').trim().toLowerCase();
+
+function scrypt(password, salt) {
+  return new Promise((resolve, reject) =>
+    crypto.scrypt(password, salt, 32, (err, key) => err ? reject(err) : resolve(key)));
+}
+export async function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString('hex');
+  return `${salt}:${(await scrypt(password, salt)).toString('hex')}`;
+}
+async function passwordMatches(password, stored) {
+  const [salt, hash] = String(stored || '').split(':');
+  if (!salt || !hash) return false;
+  const a = await scrypt(password, salt), b = Buffer.from(hash, 'hex');
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+/* { id, role, name } for whoever the session cookie belongs to, or null. */
+export async function identify(req) {
+  const name = signedSessionName(req);
+  if (!name) return null;
+  if (isAdminUser(name)) return { id: name, role: 'admin', name };
+  if (name.startsWith('m:')) {
+    const m = ((await kvGet(K_MEMBERS)) || {})[name.slice(2)];
+    if (m) return { id: name, role: 'member', name: m.name };
+  }
+  return null;
+}
+
+export async function checkAnyLogin(username, password) {
   const admin = parseUsers(process.env.ADMIN_USERS).find(e => e.u === username);
-  if (admin) return samePassword(admin.p, password) ? { user: admin.u, role: 'admin' } : null;
-  const member = parseUsers(process.env.COMMITTEE_USERS).find(e => e.u === username);
-  if (member && samePassword(member.p, password)) return { user: member.u, role: 'member' };
+  if (admin) return samePassword(admin.p, password) ? { id: admin.u, role: 'admin', name: admin.u } : null;
+  const key = memberKey(username);
+  const m = ((await kvGet(K_MEMBERS)) || {})[key];
+  if (m && await passwordMatches(password, m.hash)) return { id: 'm:' + key, role: 'member', name: m.name };
   return null;
 }
 

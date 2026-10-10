@@ -117,28 +117,45 @@ function lpRender() {
   lpRenderHome();
 }
 
-function lpRenderLocked(err) {
+function lpRenderLocked(err, mode = 'in') {
+  const create = mode === 'up';
   lpRoot().innerHTML = `
     <div class="wrap"><div class="lp-lock"><div class="lp-lock-box">
-      <h1>Learning Portal.</h1>
-      <p class="lede">For SEC committee members. Sign in with the login the committee gave you.</p>
-      <div class="lp-field"><label for="lpUser">Username</label><input id="lpUser" type="text" autocomplete="username"></div>
-      <div class="lp-field"><label for="lpPass">Password</label><input id="lpPass" type="password" autocomplete="current-password"></div>
+      <h1>${create ? 'Join the portal.' : 'Learning Portal.'}</h1>
+      <p class="lede">${create ? 'Create your account with the join code from the committee chat.' : 'For SEC committee members.'}</p>
+      <div class="lp-switch" role="tablist">
+        <button type="button" class="${create ? '' : 'is-on'}" data-mode="in">Sign in</button>
+        <button type="button" class="${create ? 'is-on' : ''}" data-mode="up">Create account</button>
+      </div>
+      ${create ? `
+        <div class="lp-field"><label for="lpName">Your name</label><input id="lpName" type="text" autocomplete="name"></div>
+        <div class="lp-field"><label for="lpUser">Email</label><input id="lpUser" type="email" autocomplete="email" placeholder="Your Sunway iMail"></div>
+        <div class="lp-field"><label for="lpPass">Password (8 or more characters)</label><input id="lpPass" type="password" autocomplete="new-password"></div>
+        <div class="lp-field"><label for="lpCode">Join code</label><input id="lpCode" type="text" autocomplete="off"></div>`
+      : `
+        <div class="lp-field"><label for="lpUser">Email</label><input id="lpUser" type="text" autocomplete="username"></div>
+        <div class="lp-field"><label for="lpPass">Password</label><input id="lpPass" type="password" autocomplete="current-password"></div>`}
       <div class="lp-lock-err" id="lpErr" ${err ? '' : 'hidden'}>${esc(err || '')}</div>
-      <button class="hero-cta" id="lpLogin" type="button">Sign in</button>
+      <button class="hero-cta" id="lpLogin" type="button">${create ? 'Create account' : 'Sign in'}</button>
     </div></div></div>`;
+  lpRoot().querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => lpRenderLocked('', b.dataset.mode)));
   const go = async () => {
-    const btn = $('#lpLogin'); btn.disabled = true; btn.textContent = 'Signing in…';
+    const btn = $('#lpLogin'); btn.disabled = true; btn.textContent = create ? 'Creating…' : 'Signing in…';
     try {
-      await api('/api/session', { method: 'POST', body: JSON.stringify({ username: $('#lpUser').value.trim(), password: $('#lpPass').value }) });
+      if (create) {
+        await api('/api/signup', { method: 'POST', body: JSON.stringify({
+          name: $('#lpName').value, imail: $('#lpUser').value, password: $('#lpPass').value, code: $('#lpCode').value }) });
+      } else {
+        await api('/api/session', { method: 'POST', body: JSON.stringify({ username: $('#lpUser').value.trim(), password: $('#lpPass').value }) });
+      }
       await lpLoad();
       if (LP.role === 'admin') await loadState(); // so the Admin button opens straight in
       lpRender();
-    } catch (e) { lpRenderLocked(e.message); }
+    } catch (e) { lpRenderLocked(e.message, mode); }
   };
   $('#lpLogin').onclick = go;
-  $('#lpPass').addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
-  setTimeout(() => $('#lpUser')?.focus(), 30);
+  lpRoot().querySelectorAll('.lp-field input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
+  setTimeout(() => $(create ? '#lpName' : '#lpUser')?.focus(), 30);
 }
 
 function lpRenderHome() {
@@ -271,7 +288,7 @@ function lpRenderModule() {
 /* =====================================================================
    Layer 3 — SEC Admin: Learning portal settings
    ===================================================================== */
-const LC = { data: null, progressAll: {}, open: new Set(), timer: null };
+const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null };
 
 async function loadAdminLearn() {
   const el = $('#panelLearn'); if (!el) return;
@@ -280,6 +297,8 @@ async function loadAdminLearn() {
     const d = await api('/api/learning?admin=1');
     LC.data = { public: d.content.public, levels: d.content.levels };
     LC.progressAll = d.progressAll || {};
+    LC.members = d.members || [];
+    LC.joinCode = d.joinCode || '';
     renderAdminLearn();
   } catch (e) { el.innerHTML = `<div class="empty">Could not load the Learning Portal settings: ${esc(e.message)}</div>`; }
 }
@@ -287,6 +306,7 @@ async function loadAdminLearn() {
 function lcPayload() {
   return {
     public: LC.data.public,
+    joinCode: LC.joinCode,
     levels: LC.data.levels.map(l => ({ ...l, modules: l.modules.map(m => ({ ...m,
       questions: m.questions.map(q => {
         const keep = q.options.map((o, i) => [o, i]).filter(([o]) => String(o).trim());
@@ -316,6 +336,7 @@ function renderAdminLearn() {
   const el = $('#panelLearn'); if (!el || !LC.data) return;
   const { public: pub, levels } = LC.data;
   const published = levels.flatMap(l => l.modules.filter(m => m.status === 'published'));
+  const nameOf = id => LC.members.find(m => m.id === id)?.name || id;
   const members = Object.keys(LC.progressAll);
 
   const inp = (path, val, ph = '', extra = '') => `<input type="text" data-p="${path}" value="${esc(val ?? '')}" placeholder="${esc(ph)}" ${extra}>`;
@@ -402,19 +423,28 @@ function renderAdminLearn() {
     <h3>Completion</h3>
     <p class="lead">Who has passed what. A member appears here after submitting their first assessment. Only published modules with questions can be completed.</p>
     ${members.length && published.length ? `<div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th>${published.map(m => `<th>${esc(m.title)}</th>`).join('')}</tr></thead><tbody>
-      ${members.map(u => `<tr><td><b>${esc(u)}</b></td>${published.map(m => { const p = LC.progressAll[u]?.[m.id]; return `<td>${p ? (p.passed ? `Passed (${p.best}%)` : `${p.best}% · ${p.attempts} tr${p.attempts === 1 ? 'y' : 'ies'}`) : '—'}</td>`; }).join('')}</tr>`).join('')}
+      ${members.map(u => `<tr><td><b>${esc(nameOf(u))}</b></td>${published.map(m => { const p = LC.progressAll[u]?.[m.id]; return `<td>${p ? (p.passed ? `Passed (${p.best}%)` : `${p.best}% · ${p.attempts} tr${p.attempts === 1 ? 'y' : 'ies'}`) : '—'}</td>`; }).join('')}</tr>`).join('')}
     </tbody></table></div>` : '<p class="hint" style="margin:0">Nobody has submitted an assessment yet.</p>'}
   </div>
   <div class="setblock">
-    <h3>Committee logins</h3>
-    <p class="lead">Committee members sign in to the Learning Portal with logins from the <b>COMMITTEE_USERS</b> environment variable, written as <b>name:password,name:password</b>. They cannot see applicants or this admin area. Give each person their own login so completion is recorded against their name. Add or remove logins in Vercel → Settings → Environment Variables, then redeploy.</p>
-  </div>`;
+    <h3>Committee sign-up</h3>
+    <p class="lead">Committee members create their own Learning Portal account, so you do not add anyone by hand. Share this join code in the committee chat. Anyone with the code can sign up, so change it when people leave. Clear it to close sign-up. Members never see applicants or this admin area.</p>
+    <div class="setgrid"><div style="grid-column:1/-1"><label for="lcJoin">Join code</label>
+      <input type="text" id="lcJoin" value="${esc(LC.joinCode)}" placeholder="No code set, so sign-up is closed" autocomplete="off"></div></div>
+    <div class="lc-row" style="margin-top:0"><button class="mini" type="button" data-act="gencode">Generate a new code</button></div>
+    <h3 style="margin-top:26px">Members (${LC.members.length})</h3>
+    ${LC.members.length ? `<div class="lc-scroll"><table class="lc-table"><thead><tr><th>Name</th><th>Email</th><th>Joined</th><th></th></tr></thead><tbody>
+      ${LC.members.map(m => `<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.imail)}</td><td>${esc((m.createdAt || '').slice(0, 10))}</td>
+        <td><button class="mini danger" type="button" data-act="delmember" data-id="${esc(m.id)}">Remove</button></td></tr>`).join('')}
+    </tbody></table></div>` : '<p class="hint" style="margin:0">Nobody has joined yet.</p>'}
+  </div>  `;
 }
 
 /* one delegated set of listeners for the whole editor */
 (function wireAdminLearn() {
   const el = $('#panelLearn'); if (!el) return;
   el.addEventListener('input', e => {
+    if (e.target.id === 'lcJoin') { LC.joinCode = e.target.value.trim(); lcSave(); return; }
     const p = e.target.dataset.p; if (!p || !LC.data) return;
     let v = e.target.value;
     if (p.endsWith('.passMark')) v = parseInt(v, 10) || 0;
@@ -441,6 +471,17 @@ function renderAdminLearn() {
   el.addEventListener('click', async e => {
     const b = e.target.closest('[data-act]'); if (!b || !LC.data) return;
     const { act } = b.dataset, li = Number(b.dataset.li), mi = Number(b.dataset.mi), qi = Number(b.dataset.qi), L = LC.data.levels;
+    if (act === 'gencode') {
+      const a = new Uint8Array(6); crypto.getRandomValues(a);
+      LC.joinCode = 'SEC-' + [...a].map(n => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n % 32]).join('');
+      renderAdminLearn(); lcSave(); return;
+    }
+    if (act === 'delmember') {
+      if (!await uiConfirm('Remove this member?', 'They are signed out straight away and their progress is deleted. They can sign up again with the join code.', 'Remove')) return;
+      try { await api('/api/learning?member=' + encodeURIComponent(b.dataset.id), { method: 'DELETE' }); LC.members = LC.members.filter(m => m.id !== b.dataset.id); delete LC.progressAll[b.dataset.id]; renderAdminLearn(); }
+      catch (ex) { $('#saveState').textContent = 'Not removed: ' + ex.message; }
+      return;
+    }
     const swap = (arr, i, j) => { if (j >= 0 && j < arr.length) [arr[i], arr[j]] = [arr[j], arr[i]]; };
     if (act === 'addstep') LC.data.public.steps.push({ title: '', text: '' });
     else if (act === 'delstep') LC.data.public.steps.splice(Number(b.dataset.i), 1);

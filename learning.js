@@ -2,9 +2,10 @@
      1. public recruitment page  -> #learnTeaser (read-only, text set by admin)
      2. committee Learning Portal -> #viewLearn   (sign-in required)
      3. SEC Admin                 -> #panelLearn  (admin sign-in; edits layers 1 and 2)
-   Uses helpers from the main script: $, esc, api, showView, applyLock, loadState, ADMIN, DEPT_COLORS. */
+   Uses helpers from the main script: $, esc, api, showView, applyLock, loadState, uiConfirm. */
 
-const { $, esc, api, showView, applyLock, loadState, uiConfirm, DEPT_COLORS } = window.SEC;
+const { $, esc, api, showView, applyLock, loadState, uiConfirm } = window.SEC;
+const LEVEL_COLORS = ['#9FC9F3', '#EFBE79', '#E2B0BE', '#C6B7E5', '#F19A91', '#E9D38D'];
 
 /* ---------- small helpers ---------- */
 function lpFmt(text) {
@@ -28,7 +29,7 @@ function lpVideo(url) {
   if (src) return `<div class="lp-video"><iframe src="${src}" title="Module video" loading="lazy" allowfullscreen></iframe></div>`;
   return `<p style="margin-top:56px"><a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener">Watch the video</a></p>`;
 }
-const lpColor = i => DEPT_COLORS[i % DEPT_COLORS.length];
+const lpColor = i => LEVEL_COLORS[i % LEVEL_COLORS.length];
 
 /* same scroll motion as the public page */
 const lpReveal = (() => {

@@ -3873,7 +3873,7 @@ window.addEventListener('pageshow', () => {
 
 
 /* hand the Learning Portal (learning.js) the few helpers it shares with this page */
-window.SEC = { $, esc, api, showView, applyLock, loadState, uiConfirm, DEPT_COLORS,
+window.SEC = { $, esc, api, showView, applyLock, loadState, uiConfirm,
   dismissGate() { const g = $('#introSplash'); if (g) { g.hidden = true; INTRO_DISMISSED = true; document.body.style.overflow = ''; } },
   signedOutReset() { ADMIN = false; USER = null; APPLICATIONS = []; } };
 import('./learning.js');

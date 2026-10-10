@@ -103,9 +103,9 @@ export function currentUser(req) {
   const [u, exp] = payload.split('.');
   if (Number(exp) < Date.now()) return null;
   const username = Buffer.from(u, 'base64url').toString();
-  // Removing a reviewer from ADMIN_USERS revokes even an unexpired cookie.
-  return (process.env.ADMIN_USERS || '').split(',').some(entry =>
-    entry.trim().split(':', 1)[0] === username) ? username : null;
+  // Removing someone from ADMIN_USERS or COMMITTEE_USERS revokes even an unexpired cookie.
+  return [...parseUsers(process.env.ADMIN_USERS), ...parseUsers(process.env.COMMITTEE_USERS)]
+    .some(e => e.u === username) ? username : null;
 }
 
 /* ADMIN_USERS = "amadeus:password1,angelene:password2" — one login per reviewer. */

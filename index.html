@@ -24,6 +24,7 @@
 <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon-167.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="learning.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400;1,500&display=swap" rel="stylesheet">
 <style>
 /* The main website's next/font Inter Latin file, scoped to its shared chrome. */
@@ -1707,6 +1708,8 @@ textarea{min-height:110px;resize:vertical}
         <div class="home-role-list" id="homeRoles"><div class="empty">Loading positions…</div></div>
         <button class="home-roles-all" id="homeRolesAll" type="button">View all roles</button>
       </section>
+
+      <section class="abandsection" id="learnTeaser" data-reveal hidden><div id="learnTeaserBody"></div></section>
     </div>
 
     <div class="pubpanel chapter-light roles-chapter" id="pp-apply" role="tabpanel" aria-labelledby="pt-apply" hidden>
@@ -1749,7 +1752,7 @@ textarea{min-height:110px;resize:vertical}
       </div>
       <div class="footer-bottom">
         <span>© 2026 Sunway Entrepreneurs Club</span>
-        <a href="#" id="adminEntry">Committee Sign In</a>
+        <span class="footer-bottom-links"><a href="#" id="footerLearn">Learning Portal</a> <a href="#" id="adminEntry">Committee Sign In</a></span>
       </div>
     </div>
   </footer>
@@ -1893,6 +1896,18 @@ textarea{min-height:110px;resize:vertical}
   </dialog>
 </section>
 
+<section class="view" id="viewLearn" hidden>
+  <nav class="lp-bar" aria-label="Learning Portal">
+    <div class="lp-bar-inner">
+      <a href="#learning" class="lp-brand">Sunway Entrepreneurs Club</a>
+      <span class="lp-tab">Learning Portal</span>
+      <div class="lp-nav" id="lpNav"></div>
+    </div>
+  </nav>
+  <div class="lp-spacer"></div>
+  <main id="lpMain"></main>
+</section>
+
 <section class="view" id="viewAdmin" hidden>
   <div class="wrap">
     <div class="lockscreen" id="adminLock">
@@ -1917,6 +1932,7 @@ textarea{min-height:110px;resize:vertical}
     <div class="subnav" role="group" aria-label="Admin sections">
       <button id="tabApps" aria-pressed="true">Applicants</button>
       <button id="tabPos" aria-pressed="false">Positions &amp; questions</button>
+      <button id="tabLearn" aria-pressed="false">Learning portal</button>
       <button id="tabSet" aria-pressed="false">Settings</button>
       <span class="subnav-spacer"></span>
       <div class="save-feedback" role="status" aria-live="polite">
@@ -1944,7 +1960,8 @@ textarea{min-height:110px;resize:vertical}
 
     <div id="panelPos" hidden><div id="posEditor"></div></div>
     <div id="panelSet" hidden></div>
-    <div style="margin-top:22px"><button class="mini" id="btnLock">Sign out</button></div>
+    <div id="panelLearn" hidden></div>
+    <div style="margin-top:22px"><button class="mini" id="btnToLearn">Open Learning Portal</button> <button class="mini" id="btnLock">Sign out</button></div>
   </div>
 </section>
 
@@ -2962,6 +2979,7 @@ $('#navStatus')?.addEventListener('click', () => openStatusCheck());
 function showView(which) {
   $('#viewPublic').hidden = which !== 'public';
   $('#viewAdmin').hidden = which !== 'admin';
+  $('#viewLearn').hidden = which !== 'learn';
   const topbar = document.querySelector('.topbar');
   if (topbar) topbar.hidden = which !== 'public';
   const spacer = $('#topbarSpacer');
@@ -2987,6 +3005,7 @@ async function doLogin() {
     $('#lgPass').value = '';
     await loadState();
     applyLock();
+    if (!ADMIN) { err.textContent = 'This login is for the Learning Portal, not the admin area. Use "Learning Portal" in the footer.'; err.hidden = false; }
   } catch (e) { err.textContent = e.message; err.hidden = false; }
   btn.disabled = false; btn.textContent = 'Sign in';
 }
@@ -3005,17 +3024,20 @@ $('#btnLock').addEventListener('click', async () => {
 });
 
 /* ================= admin tabs ================= */
-const TITLES = { apps: 'Applicant review', pos: 'Positions & questions', set: 'Settings' };
+const TITLES = { apps: 'Applicant review', pos: 'Positions & questions', learn: 'Learning portal', set: 'Settings' };
 function showPanel(which) {
   $('#panelApps').hidden = which !== 'apps';
   $('#panelPos').hidden = which !== 'pos';
   $('#panelSet').hidden = which !== 'set';
+  $('#panelLearn').hidden = which !== 'learn';
+  $('#tabLearn').setAttribute('aria-pressed', which === 'learn');
   $('#tabApps').setAttribute('aria-pressed', which === 'apps');
   $('#tabPos').setAttribute('aria-pressed', which === 'pos');
   $('#tabSet').setAttribute('aria-pressed', which === 'set');
   $('#adminTitle').textContent = TITLES[which];
   if (which === 'pos') renderPositions();
   if (which === 'set') renderSettings();
+  if (which === 'learn') window.SEC.loadAdminLearn?.();
 }
 async function switchPanel(which) {
   if (!$('#panelApps').hidden && which !== 'apps' && hasUnsavedNote() &&
@@ -3026,6 +3048,7 @@ async function switchPanel(which) {
 $('#tabApps').addEventListener('click', () => switchPanel('apps'));
 $('#tabPos').addEventListener('click', () => switchPanel('pos'));
 $('#tabSet').addEventListener('click', () => switchPanel('set'));
+$('#tabLearn').addEventListener('click', () => switchPanel('learn'));
 
 async function refreshAdmin() {
   try { APPLICATIONS = (await api('/api/applications?includeArchived=1')).applications || []; }
@@ -3848,6 +3871,12 @@ window.addEventListener('pageshow', () => {
   showPub('overview');
 });
 
+
+/* hand the Learning Portal (learning.js) the few helpers it shares with this page */
+window.SEC = { $, esc, api, showView, applyLock, loadState, uiConfirm, DEPT_COLORS,
+  dismissGate() { const g = $('#introSplash'); if (g) { g.hidden = true; INTRO_DISMISSED = true; document.body.style.overflow = ''; } },
+  signedOutReset() { ADMIN = false; USER = null; APPLICATIONS = []; } };
+import('./learning.js');
 </script>
 
 <script>

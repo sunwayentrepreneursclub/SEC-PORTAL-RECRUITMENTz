@@ -86,6 +86,24 @@ From the admin panel you can then:
 
 ---
 
+### Learning Portal (committee only)
+
+The Learning Portal lives on the same site. Open it from the footer link, or go straight to `/#learning`.
+
+| Layer | Who | Where |
+|---|---|---|
+| Public recruitment page | Everyone | A short "after you're selected" section, text set from Admin |
+| Learning Portal | Committee members | Footer → Learning Portal |
+| SEC Admin → **Learning portal** tab | Admins | Edit that section, every level and module, assessments, and see completion |
+
+Add one more environment variable for committee logins (these see the Learning Portal only, never applicants):
+
+| Name | Value |
+|---|---|
+| `COMMITTEE_USERS` | `name:password,name:password`, one login per person |
+
+Anyone in `ADMIN_USERS` is an admin and can also use the Learning Portal. Modules stay as drafts ("Coming soon" to members) until you publish them. Run `npm run dev` to try everything locally; it uses in-memory data and the test logins `admin/admin` and `member/member`.
+
 ## How it works
 
 | Route | Method | Access | Purpose |

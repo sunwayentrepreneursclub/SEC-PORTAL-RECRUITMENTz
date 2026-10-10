@@ -34,6 +34,8 @@ export async function kvSet(key, value) {
 export const K_STATE = 'sec:state';
 export const K_APPS  = 'sec:applications';
 export const K_KEY   = 'sec:gemini_key';
+export const K_LEARN = 'sec:learning';
+export const K_PROGRESS = 'sec:learning_progress';
 export const K_STATE_HISTORY = 'sec:state:history';
 export const K_APPS_HISTORY = 'sec:applications:history';
 
@@ -120,6 +122,30 @@ export function checkLogin(username, password) {
   return null;
 }
 
+/* COMMITTEE_USERS = "member1:pw,member2:pw" — Learning Portal only, no applicant data.
+   Anyone in ADMIN_USERS is an admin and can also open the Learning Portal. */
+function parseUsers(raw) {
+  return (raw || '').split(',').map(s => s.trim()).filter(Boolean).map(entry => {
+    const i = entry.indexOf(':');
+    return i < 0 ? null : { u: entry.slice(0, i), p: entry.slice(i + 1) };
+  }).filter(Boolean);
+}
+function samePassword(a, b) {
+  const x = Buffer.from(a), y = Buffer.from(b);
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+}
+export function isAdminUser(username) {
+  return !!username && parseUsers(process.env.ADMIN_USERS).some(e => e.u === username);
+}
+export function roleOf(username) { return username ? (isAdminUser(username) ? 'admin' : 'member') : null; }
+export function checkAnyLogin(username, password) {
+  const admin = parseUsers(process.env.ADMIN_USERS).find(e => e.u === username);
+  if (admin) return samePassword(admin.p, password) ? { user: admin.u, role: 'admin' } : null;
+  const member = parseUsers(process.env.COMMITTEE_USERS).find(e => e.u === username);
+  if (member && samePassword(member.p, password)) return { user: member.u, role: 'member' };
+  return null;
+}
+
 /* ---------------- request helpers ---------------- */
 export async function readBody(req) {
   if (req.body && typeof req.body === 'object') return req.body;
@@ -139,6 +165,7 @@ export function send(res, code, data) {
 export async function requireAdmin(req, res) {
   const u = currentUser(req);
   if (!u) { send(res, 401, { error: 'Not signed in.' }); return null; }
+  if (!isAdminUser(u)) { send(res, 403, { error: 'Admin access only.' }); return null; }
   return u;
 }
 

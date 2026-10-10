@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { send, readBody, requireAdmin, loadStateRecord, kvReplaceSafely,
-         K_STATE, K_STATE_HISTORY, publicState, currentUser, guardEnv,
+         K_STATE, K_STATE_HISTORY, publicState, currentUser, isAdminUser, guardEnv,
          kvGet, K_KEY, WEBSITE_LEVELS, PRESIDENTIAL_DEPARTMENT } from './_lib.js';
 
 const revisionOf = raw => crypto.createHash('sha256').update(raw).digest('hex');
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     const { state, raw } = await loadStateRecord();
-    if (!user) return send(res, 200, publicState(state));
+    if (!isAdminUser(user)) return send(res, 200, publicState(state));
     const keySet = !!(process.env.GEMINI_API_KEY || await kvGet(K_KEY));
     return send(res, 200, { ...state, admin: true, user, keySet, revision: revisionOf(raw) });
   }

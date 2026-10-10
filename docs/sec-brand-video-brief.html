@@ -4,253 +4,213 @@
 <meta charset="utf-8">
 <title>SEC Brand Video</title>
 <style>
-  @page { size: A4; margin: 20mm 18mm 20mm 18mm; }
+  @page { size: A4; margin: 15mm 16mm; }
   * { box-sizing: border-box; }
-  body { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; color: #181C20; font-size: 10.5pt; line-height: 1.55; margin: 0; }
-  h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.02em; line-height: 1.15; margin: 0; }
+  body { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; color: #181C20; font-size: 10pt; line-height: 1.45; margin: 0; }
+  h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.02em; line-height: 1.12; margin: 0; }
   h1 { font-size: 34pt; letter-spacing: -.035em; }
-  h2 { font-size: 20pt; margin: 30px 0 10px; padding-top: 6px; }
-  h3 { font-size: 13.5pt; margin: 20px 0 6px; }
+  h2 { font-size: 23pt; letter-spacing: -.03em; margin-bottom: 6px; }
+  h3 { font-size: 12.5pt; margin: 14px 0 6px; }
   p { margin: 0 0 9px; }
   ul, ol { margin: 0 0 10px; padding-left: 20px; }
   li { margin-bottom: 3px; }
-  .cover { padding-bottom: 14px; border-bottom: 2px solid #181C20; margin-bottom: 8px; }
-  .cover .org { font-size: 9pt; letter-spacing: .14em; text-transform: uppercase; color: #535B60; margin-bottom: 18px; }
-  .cover .sub { font-size: 13pt; color: #535B60; margin-top: 10px; }
-  .meta { font-size: 9.5pt; color: #535B60; margin-top: 14px; }
-  .lead { font-size: 12pt; line-height: 1.5; margin: 14px 0; }
-  .key { border-left: 3px solid #181C20; padding: 2px 0 2px 14px; margin: 12px 0; font-weight: 600; }
-  table { width: 100%; border-collapse: collapse; margin: 8px 0 14px; font-size: 9.8pt; page-break-inside: auto; }
-  th, td { border-bottom: 1px solid #CFD2D4; padding: 7px 8px 7px 0; text-align: left; vertical-align: top; }
+  .page { page-break-after: always; }
+  .page:last-child { page-break-after: auto; }
+  .org { font-size: 9pt; letter-spacing: .14em; text-transform: uppercase; color: #535B60; margin-bottom: 16px; }
+  .lead { font-size: 11.5pt; line-height: 1.45; margin: 10px 0; }
+  .num { font-size: 10pt; letter-spacing: .1em; text-transform: uppercase; color: #535B60; margin-bottom: 10px; }
+  table { width: 100%; border-collapse: collapse; margin: 8px 0 10px; font-size: 9.8pt; }
+  th, td { border-bottom: 1px solid #CFD2D4; padding: 5px 10px 5px 0; text-align: left; vertical-align: top; }
   th { font-weight: 600; color: #535B60; font-size: 9pt; text-transform: uppercase; letter-spacing: .05em; }
-  tr { page-break-inside: avoid; }
-  .tag { display: inline-block; font-size: 7.5pt; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; vertical-align: 2px; margin-left: 6px; }
-  .paper { background: #181C20; color: #F6F5F2; }
-  .rec { background: #EFBE79; color: #181C20; }
-  .box { background: #F1F1EE; border-radius: 8px; padding: 12px 16px; margin: 12px 0; page-break-inside: avoid; }
-  .box.blue { background: #DCEBFA; }
-  .box.warm { background: #FBEFD3; }
-  .checks { list-style: none; padding-left: 0; columns: 2; column-gap: 28px; }
-  .checks li { padding-left: 22px; position: relative; break-inside: avoid; margin-bottom: 5px; }
-  .checks li::before { content: ""; position: absolute; left: 0; top: 4px; width: 11px; height: 11px; border: 1.5px solid #181C20; border-radius: 2px; }
-  .ts { font-weight: 700; white-space: nowrap; }
+  .meta { background: #F1F1EE; border-radius: 8px; padding: 2px 14px; margin: 10px 0 4px; }
+  .meta table { margin: 6px 0; }
+  .meta td { border-bottom: 1px solid #DEDFDA; }
+  .meta tr:last-child td { border-bottom: 0; }
+  .meta td:first-child { width: 24%; color: #535B60; font-weight: 600; }
+  .link { background: #FFF; border: 1.5px dashed #181C20; border-radius: 6px; padding: 4px 12px; display: inline-block; min-width: 330px; color: #535B60; }
+  .key { border-left: 3px solid #181C20; padding: 2px 0 2px 14px; margin: 10px 0; font-weight: 600; }
+  .must li::marker { font-weight: 700; }
+  .not { background: #FBE3DF; border-radius: 8px; padding: 8px 14px 1px; margin-top: 10px; }
+  .not b { display: block; margin-bottom: 4px; }
   .small { font-size: 9pt; color: #535B60; }
-  .pb { page-break-before: always; }
-  .keep { page-break-inside: avoid; }
+  .quote { font-family: Georgia, serif; font-size: 15pt; letter-spacing: -.02em; }
 </style>
 </head>
 <body>
 
-<header class="cover">
+<!-- ============ OVERVIEW ============ -->
+<section class="page">
   <div class="org">Sunway Entrepreneurs Club &nbsp;·&nbsp; AI &amp; Web Innovation (AWI)</div>
   <h1>SEC Brand Video</h1>
-  <div class="sub">Production brief for Brand &amp; Content</div>
-  <div class="meta">Source: AWI Working Paper, Recruitment &amp; Learning Platforms (sections 4, 5, 9, 11–13, 15 and checklist D).</div>
-</header>
+  <p class="lead">What AWI needs from Brand &amp; Content. This brief says what each video must contain, how long it should be and how to send it back. Design, editing and filming style are your call.</p>
 
-<div class="box">
-  <b>How to read this brief.</b> Items marked <span class="tag paper">Working paper</span> come straight from the AWI Working Paper and are requirements.
-  Items marked <span class="tag rec">AWI suggestion</span> are practical suggestions that the paper does not specify; Brand &amp; Content can change them.
-  Anything the paper leaves open is listed under <i>Decisions for Brand &amp; Content</i>.
-</div>
+  <h3>3 videos to make now</h3>
+  <table>
+    <tr><th style="width:6%">#</th><th style="width:34%">Video</th><th style="width:30%">Where it goes</th><th style="width:15%">Length</th><th>Send as</th></tr>
+    <tr><td>1</td><td><b>SEC brand video</b></td><td>Recruitment website, homepage</td><td>60–90 seconds</td><td>YouTube link</td></tr>
+    <tr><td>2</td><td><b>Learning module:</b> The SEC standard</td><td>Learning Portal, Level 1 (SEC Core)</td><td>5–10 minutes</td><td>YouTube link</td></tr>
+    <tr><td>3</td><td><b>Learning module:</b> How SEC builds people</td><td>Learning Portal, Level 1 (SEC Core)</td><td>5–10 minutes</td><td>YouTube link</td></tr>
+  </table>
 
-<h2>Part A. The SEC brand video</h2>
-<p class="lead">This is the main recruitment video. It sits on the recruitment homepage and does the work of making SEC look credible before anyone reads a role.</p>
+  <h3>How to send each video</h3>
+  <ul>
+    <li>Upload it to YouTube as <b>Unlisted</b>, so only people with the link can open it.</li>
+    <li>Send AWI the <b>YouTube link</b> for each video, one link per video.</li>
+    <li>AWI pastes the link into the website. Nothing else needs to be sent.</li>
+  </ul>
 
-<h3>Purpose <span class="tag paper">Working paper</span></h3>
-<p class="key">Make SEC feel credible, active and worth joining.</p>
-<p>The paper's success standard for the recruitment platform (section 22), which the video supports: a strong candidate should think <i>SEC looks serious, I understand exactly what they expect, and I want the responsibility.</i></p>
+  <h3>The same rules for all three</h3>
+  <ul>
+    <li>Use real SEC footage and real SEC work wherever possible.</li>
+    <li>The tone is high standards and real responsibility. It is <b>not</b> fun, networking, certificates or resume building, and it is <b>not</b> burnout.</li>
+    <li>Do not use company logos, university branding, corporate footage or music without permission.</li>
+  </ul>
 
-<h3>The message <span class="tag paper">Working paper</span></h3>
-<p class="key">SEC is for people who want to build, take ownership and improve fast.</p>
-<p>The stronger positioning is: <i>Join SEC to work on real projects, own meaningful responsibilities and build capabilities you would normally not get from a normal student club.</i></p>
-<p><b>Do not</b> market SEC mainly as fun, networking, certificates or resume building. These can be benefits, but not the main positioning. <b>Avoid</b> generic club-video language, and do not focus mainly on friendship, smiling group shots or certificates.</p>
-<p>The paper also says the platform should communicate <b>high standards, not burnout</b> (section 7), so keep the video's tone consistent with that.</p>
+  <h3>More learning videos come later</h3>
+  <p>The rest of the Learning Portal needs videos too, but each one waits until its content owner finishes the content. They are listed on the last page. Please do not start them yet.</p>
 
-<h3>Length <span class="tag paper">Working paper</span></h3>
-<p>60 to 90 seconds. Keep the main video under 90 seconds.</p>
+  <p class="small" style="margin-top:22px">Source: AWI Working Paper, Recruitment &amp; Learning Platforms.</p>
+</section>
 
-<h3>What the video should show <span class="tag paper">Working paper</span></h3>
-<ul>
-  <li>Sunway campus</li>
-  <li>SEC events</li>
-  <li>Corporate visits</li>
-  <li>Members working</li>
-  <li>Meetings</li>
-  <li>Project execution</li>
-  <li>External stakeholders</li>
-  <li>Filming</li>
-  <li>Presentations</li>
-  <li>Results</li>
-</ul>
-<p>Use real SEC footage wherever possible. Show evidence rather than saying SEC is "highly professional"; let people reach that conclusion themselves.</p>
+<!-- ============ VIDEO 1 ============ -->
+<section class="page">
+  <div class="num">Video 1 of 3</div>
+  <h2>SEC brand video</h2>
+  <p class="lead" style="margin-top:8px">The main recruitment video. It makes SEC feel credible, active and worth joining before anyone reads a role.</p>
 
-<h2>Who appears on camera</h2>
-<p><span class="tag paper">Working paper</span> Use a small number of credible people. Do not turn the video into a compilation of endorsements. Each person serves a different authority function. Three strong voices are enough.</p>
+  <div class="meta"><table>
+    <tr><td>Length</td><td><b>60 to 90 seconds.</b> Under 90.</td></tr>
+    <tr><td>Where it goes</td><td>Recruitment website, homepage</td></tr>
+    <tr><td>Send as</td><td><b>YouTube link</b> (Unlisted)</td></tr>
+    <tr><td>YouTube link</td><td><span class="link">Paste the link here</span></td></tr>
+  </table></div>
 
-<div class="box blue keep">
-  <b>The recommended stack:</b> University / Student LIFE authority &rarr; External founder or corporate partner &rarr; SEC President.<br>
-  <span class="small">Viewer takeaway: Sunway recognises us &rarr; external organisations have worked with us &rarr; leadership has a clear standard.</span>
-</div>
+  <h3>The message the viewer must take away</h3>
+  <p class="key">SEC is for people who want to build, take ownership and improve fast.</p>
+  <p>Join SEC to work on real projects, own meaningful responsibilities and build capabilities you would normally not get from a normal student club.</p>
 
-<table>
-  <tr><th style="width:23%">Voice</th><th style="width:25%">Who</th><th>What they say</th></tr>
-  <tr>
-    <td><b>1. Institutional authority</b><br>University / Student LIFE</td>
-    <td>One senior university representative with legitimate oversight of student development, clubs or entrepreneurship. Order of preference: (1) senior Student LIFE representative, Head or Director level; (2) SEC club advisor; (3) a senior university leader whose portfolio covers student experience, entrepreneurship or industry engagement.</td>
-    <td>Short and factual. SEC is a recognised Sunway student organisation. SEC creates meaningful opportunities for students. SEC gives students exposure to projects, external stakeholders and practical development. <b>No exaggerated praise.</b> Their position already provides the authority.</td>
-  </tr>
-  <tr>
-    <td><b>2. External authority</b><br>Founder or corporate partner</td>
-    <td>One person who has actually worked with SEC: members have interacted with their organisation through a visit, event, partnership or project. <b>Use real collaborators.</b> Do not seek a famous person with no real relationship with SEC just for status.</td>
-    <td>What they observed. SEC members were prepared. SEC created a useful engagement. Students were exposed to real business environments. SEC showed initiative or professionalism.</td>
-  </tr>
-  <tr>
-    <td><b>3. Leadership authority</b><br>SEC President</td>
-    <td>The President.</td>
-    <td>Direct, <b>not a welcome speech</b>. What SEC is building, why standards matter, what type of people SEC wants, what members will be trusted to own. Core message: <i>We are building SEC for people who want responsibility, not just titles. If you want to build, learn quickly and be accountable for real outcomes, this is the environment we want to create.</i></td>
-  </tr>
-  <tr>
-    <td><b>Optional: member proof</b></td>
-    <td>One or two members, only if they add proof footage cannot show. For example a Project Lead explaining what they actually owned, or a member explaining a capability they developed through a real project.</td>
-    <td>Avoid generic testimonials such as "SEC is fun" or "I made many friends".</td>
-  </tr>
-</table>
+  <h3>What must be in the video</h3>
+  <ol class="must">
+    <li><b>Proof that SEC is real and active.</b> Sunway campus, SEC events, corporate visits, members working, meetings, project execution, external stakeholders, presentations and results.</li>
+    <li><b>A university voice.</b> One senior Student LIFE or university representative saying: SEC is a recognised Sunway student organisation, it creates meaningful opportunities for students, and it gives students exposure to projects, external stakeholders and practical development. Facts only, no exaggerated praise. Preferred order: senior Student LIFE representative (Head or Director), then the SEC club advisor, then a senior university leader whose work covers student experience, entrepreneurship or industry engagement.</li>
+    <li><b>An external voice.</b> One founder, corporate partner or stakeholder who has really worked with SEC, saying what they saw: members were prepared, the engagement was useful, students saw real business environments, SEC showed initiative or professionalism. Not a famous person with no real link to SEC.</li>
+    <li><b>The SEC President.</b> Direct, not a welcome speech: what SEC is building, why standards matter, what type of people SEC wants and what members will be trusted to own. Core message: <i>We are building SEC for people who want responsibility, not just titles. If you want to build, learn quickly and be accountable for real outcomes, this is the environment we want to create.</i></li>
+    <li><b>The closing line.</b> <span class="quote">Don't join for the title. Join to become capable.</span> then the call to action: <b>Explore Roles &rarr; Apply</b>.</li>
+  </ol>
+  <p class="small">Optional: one or two members, only if they add proof footage cannot show, such as a Project Lead explaining what they actually owned. Three strong voices in total are enough.</p>
 
-<h2 class="pb">Structure and timing <span class="tag paper">Working paper</span></h2>
-<table>
-  <tr><th style="width:15%">Time</th><th style="width:21%">Section</th><th>What to show and say</th><th style="width:25%">Objective</th></tr>
-  <tr><td class="ts">0–10 s</td><td><b>Establish SEC</b></td><td>Sunway campus. SEC name and identity. Fast evidence of events, corporate visits and projects.</td><td>This is a real organisation doing real work.</td></tr>
-  <tr><td class="ts">10–25 s</td><td><b>Institutional authority</b></td><td>Short university / Student LIFE statement mixed with SEC footage.</td><td>SEC is recognised and supported within Sunway.</td></tr>
-  <tr><td class="ts">25–45 s</td><td><b>Execution + external authority</b></td><td>Show corporate visits, founder engagement, events and members executing. Add a short external stakeholder statement.</td><td>SEC has access and actually executes.</td></tr>
-  <tr><td class="ts">45–70 s</td><td><b>President message</b></td><td>The President communicates the standard and the type of people SEC wants.</td><td>I understand what this organisation expects from me.</td></tr>
-  <tr><td class="ts">70–90 s</td><td><b>Close</b></td><td>Strongest project and team footage. One clear message and the call to action.</td><td>Reinforce the recruitment position.</td></tr>
-</table>
+  <div class="not"><b>Must not be in the video</b>
+    <ul>
+      <li>Friendship, smiling group shots or certificates as the main focus.</li>
+      <li>Generic club-video language, or anyone saying "SEC is highly professional". Show the evidence instead.</li>
+      <li>Every speaker repeating the same point. Each voice has a different job.</li>
+    </ul>
+  </div>
+  <p class="small" style="margin-top:10px">Before filming, confirm who the university and external speakers are, that they agree to appear, and that you have permission for any logos, locations or footage that are not SEC's own.</p>
+</section>
 
-<div class="box warm keep">
-  <b>Closing line <span class="tag paper">Working paper</span></b><br>
-  <span style="font-family: Georgia, serif; font-size: 15pt;">Don't join for the title. Join to become capable.</span><br>
-  Call to action: <b>Explore Roles &rarr; Apply</b>
-</div>
+<!-- ============ VIDEO 2 ============ -->
+<section class="page">
+  <div class="num">Video 2 of 3 &nbsp;·&nbsp; Learning module</div>
+  <h2>The SEC standard</h2>
+  <p class="lead" style="margin-top:8px">Level 1, SEC Core. Required for every member.</p>
 
-<h2>Production rules <span class="tag paper">Working paper</span></h2>
-<ul>
-  <li>Keep the main video under 90 seconds.</li>
-  <li>Use real SEC footage wherever possible.</li>
-  <li>Use talking heads only when they add authority or meaning.</li>
-  <li>Keep each authority statement short, ideally 8 to 15 seconds.</li>
-  <li>Use names and titles on screen so viewers understand why the speaker matters.</li>
-  <li>Do not make every speaker repeat the same point.</li>
-  <li>Show evidence while people are speaking instead of leaving the screen on a talking head.</li>
-  <li>Prioritise clear audio, lighting and editing over unnecessary cinematic effects.</li>
-  <li>Maintain consistent SEC and Sunway visual treatment.</li>
-  <li>Do not use company logos, restricted university branding or corporate footage without the required permission.</li>
-  <li>Use music that SEC has the right to publish.</li>
-</ul>
+  <div class="meta"><table>
+    <tr><td>Topic</td><td><b>What SEC expects from every member, and what members should not expect.</b></td></tr>
+    <tr><td>Length</td><td><b>5 to 10 minutes.</b> One topic only.</td></tr>
+    <tr><td>Who speaks</td><td>The President or an ExCo member (Leadership owns the standards)</td></tr>
+    <tr><td>Send as</td><td><b>YouTube link</b> (Unlisted)</td></tr>
+    <tr><td>YouTube link</td><td><span class="link">Paste the link here</span></td></tr>
+  </table></div>
 
-<h3>Before filming starts <span class="tag paper">Working paper (checklist D)</span></h3>
-<ul class="checks">
-  <li>Finalise video objective</li>
-  <li>Finalise message</li>
-  <li>Confirm university / Student LIFE authority to feature</li>
-  <li>Confirm external founder / corporate authority to feature</li>
-  <li>Finalise President script</li>
-  <li>Keep each authority statement to one clear purpose</li>
-  <li>Collect existing event footage</li>
-  <li>Identify missing footage</li>
-  <li>Identify Sunway establishing shots</li>
-  <li>Identify external / corporate footage</li>
-  <li>Confirm permission for university branding, locations, company logos and external footage</li>
-  <li>Confirm speaker consent and correct names / titles</li>
-  <li>Decide production team</li>
-  <li>Decide filming standard</li>
-  <li>Decide editing style</li>
-  <li>Confirm music usage rights</li>
-  <li>Finalise closing message and call to action</li>
-</ul>
-<p class="small">Who owns what: Brand &amp; Content owns the recruitment film, photography, visual assets and platform visual support. Leadership (President / ExCo) owns the overall recruitment positioning and the President's script.</p>
+  <h3>By the end the viewer can</h3>
+  <p>Say what SEC expects of them in six areas, name what they should not expect from SEC, and know what to do when a teammate goes quiet on a deadline.</p>
 
-<h2 class="pb">Part B. Learning Portal module videos</h2>
-<p class="lead">Every module on the Learning Portal has one short video, followed by a written guide, a good and bad example, a scenario and a short assessment. The portal teaches only what members need to perform; it is not a course library.</p>
+  <h3>What must be in the video</h3>
+  <ol class="must">
+    <li><b>The situation to open with.</b> You own the sponsor deck for an event next week. A teammate who was meant to supply the budget slide has gone quiet for three days, and your lead has not asked about it. What do you do?</li>
+    <li><b>The six standards</b>, each with one real SEC example:
+      <ul>
+        <li><b>Ownership:</b> if it is yours, you carry it to the end.</li>
+        <li><b>Reliability:</b> people can plan around what you said you would do.</li>
+        <li><b>Quality:</b> you check your own work before anyone else has to.</li>
+        <li><b>Learning:</b> you get better quickly and use feedback.</li>
+        <li><b>Communication:</b> you raise problems early, while they can still be solved.</li>
+        <li><b>Accountability:</b> you can explain what happened and what you will do next.</li>
+      </ul></li>
+    <li><b>What members should not expect:</b> constant instructions, titles without responsibility, guaranteed leadership positions, repeated deadline extensions, no accountability, or lower standards because the club is voluntary.</li>
+    <li><b>Good versus bad.</b> Good: you tell your lead on Monday, explain the blocker, propose a new date and ask for help on the one part you cannot solve alone. Bad: you say nothing, hope to catch up, and ask for another extension on the deadline.</li>
+    <li><b>The closing point.</b> SEC asks for high standards, not burnout. Members give SEC their time, so SEC owes them an organisation worth that time.</li>
+  </ol>
 
-<h3>What the working paper requires <span class="tag paper">Working paper</span></h3>
-<ul>
-  <li>Each module video is <b>5 to 10 minutes</b>. Keep every module short.</li>
-  <li>The portal should reduce the time between <i>member selected</i> and <i>member able to execute independently</i>.</li>
-  <li>Content owners: departments own the knowledge; Leadership owns the standards; AWI owns the systems. <i>Each department creates its own content.</i></li>
-  <li>AI tools such as NotebookLM can help, but <b>a human must review the content quality</b>.</li>
-  <li>Learning levels: SEC Core (every member), Department training, Project training, Project Lead training, Leadership training.</li>
-</ul>
+  <h3>The member is then tested on</h3>
+  <p class="small">So these points must be clear in the video: raise a problem early with a plan; SEC offers responsibility and accountability, not titles or extensions; SEC wants high standards, not burnout; telling your lead early is the communication standard.</p>
+</section>
 
-<h3>Suggested approach <span class="tag rec">AWI suggestion</span></h3>
-<p>The paper gives no video production rules for modules, so the simplest approach is to apply the same rules as Part A: real SEC footage, clear audio and lighting, names and titles on screen, consistent SEC and Sunway treatment, and no logos, branding or music without permission. In addition:</p>
-<ul>
-  <li>Teach one thing per video. The video must say the same thing as the written guide, in the same order.</li>
-  <li>Open with the module's scenario or the mistake it prevents. Close with one sentence of summary and a short end card: "Now take the check".</li>
-  <li>Add captions, because members often watch with the sound off.</li>
-  <li>The module owner appears on camera or approves the script. The same high-standards, not-burnout tone applies.</li>
-</ul>
+<!-- ============ VIDEO 3 ============ -->
+<section class="page">
+  <div class="num">Video 3 of 3 &nbsp;·&nbsp; Learning module</div>
+  <h2>How SEC builds people</h2>
+  <p class="lead" style="margin-top:8px">Level 1, SEC Core. Required for every member.</p>
 
-<h3>Videos to film now</h3>
-<table>
-  <tr><th style="width:21%">Module</th><th style="width:19%">Length and speaker</th><th>Content, in order</th></tr>
-  <tr>
-    <td><b>1. The SEC standard</b><br><span class="small">Level 1, SEC Core</span></td>
-    <td>5–7 minutes.<br>Suggested speaker: President or an ExCo member, since Leadership owns standards.</td>
-    <td>
-      <ol>
-        <li>Hook: the scenario. You own the sponsor deck for an event next week. A teammate who was meant to supply the budget slide has gone quiet for three days, and your lead has not asked.</li>
-        <li>The six standards, with a real SEC example for each: ownership, reliability, quality, learning, communication, accountability. <span class="small">(Working paper, section 7.)</span></li>
-        <li>What members should not expect: constant instructions, titles without responsibility, guaranteed leadership positions, repeated deadline extensions, no accountability, low standards because the club is voluntary. <span class="small">(Section 7.)</span></li>
-        <li>Good versus bad: tell your lead early with a plan, versus say nothing and ask for another extension at the deadline.</li>
-        <li>Close: SEC communicates high standards, not burnout.</li>
-      </ol>
-    </td>
-  </tr>
-  <tr>
-    <td><b>2. How SEC builds people</b><br><span class="small">Level 1, SEC Core</span></td>
-    <td>4–6 minutes.<br>Suggested speaker: whoever owns the systems (AWI), with a Leadership line on standards.</td>
-    <td>
-      <ol>
-        <li>Hook: a new member's first week. What happens after you are selected?</li>
-        <li>The lifecycle: Attract, Select, Train, Deploy, Evaluate, Promote. <span class="small">(Section 1.)</span></li>
-        <li>The learning path: Know SEC, Know your role, Know how to execute, Know how to lead. Show the Learning Portal on screen. <span class="small">(Section 12.)</span></li>
-        <li>Who owns what: <i>Leadership owns standards. Departments own knowledge. AWI owns systems.</i> If a guide is out of date, tell the owner shown on the module. <span class="small">(Section 15.)</span></li>
-        <li>How a module works: video, written guide, good and bad example, scenario, assessment, completion record. <span class="small">(Section 13.)</span></li>
-      </ol>
-    </td>
-  </tr>
-</table>
+  <div class="meta"><table>
+    <tr><td>Topic</td><td><b>The path from selection to leadership, and who owns each part of it.</b></td></tr>
+    <tr><td>Length</td><td><b>5 to 10 minutes.</b> One topic only.</td></tr>
+    <tr><td>Who speaks</td><td>Whoever owns SEC's systems (AWI), with the President on standards if available</td></tr>
+    <tr><td>Send as</td><td><b>YouTube link</b> (Unlisted)</td></tr>
+    <tr><td>YouTube link</td><td><span class="link">Paste the link here</span></td></tr>
+  </table></div>
 
-<h3>Planned, but not ready to film</h3>
-<p>These modules are drafts. The video follows the guide, so each owner must finish the content first, and the paper's own checklist says the underlying decisions are not yet final. Do not film these until the owner confirms the script.</p>
-<table>
-  <tr><th style="width:36%">Module</th><th>Needed from the owner first</th></tr>
-  <tr><td>SEC vision and direction</td><td>The final SEC vision, why standards exist and why SEC is changing.</td></tr>
-  <tr><td>Structure, departments and projects</td><td>The finalised organisation structure, departments, reporting lines and Project Lead model.</td></tr>
-  <tr><td>Communication and weekly updates</td><td>Final communication rules, weekly update format and the tools list.</td></tr>
-  <tr><td>Authority and escalation</td><td>Authority rules, escalation process and real cases.</td></tr>
-  <tr><td>Department training</td><td>Each department submits its purpose, workflow, good and bad examples, common mistakes, templates and SOPs, then films its own.</td></tr>
-  <tr><td>Project, Project Lead and Leadership levels</td><td>Content from the project and leadership owners.</td></tr>
-</table>
+  <h3>By the end the viewer can</h3>
+  <p>Describe how SEC takes someone from selected to capable to leader, say who owns standards, knowledge and systems, and know what a module is and how it is completed.</p>
 
-<h3>Handing videos back <span class="tag rec">AWI suggestion</span></h3>
-<ol>
-  <li>Name each file by level, order and module, for example <b>L1-01-the-sec-standard.mp4</b>.</li>
-  <li>Upload to YouTube as <b>Unlisted</b> (or Vimeo). The portal accepts a link.</li>
-  <li>Send AWI the link, the captions or transcript, and the names of anyone on screen.</li>
-  <li>The module owner reviews the video against the written guide before it is published.</li>
-</ol>
+  <h3>What must be in the video</h3>
+  <ol class="must">
+    <li><b>The situation to open with.</b> A new member's first week. They have been selected. What happens next?</li>
+    <li><b>The SEC talent lifecycle:</b> Attract, Select, Train, Deploy, Evaluate, Promote. Recruitment controls who enters. Learning controls how quickly they become capable. Projects give them responsibility. Performance shows who delivers. Leadership development decides who is given more authority.</li>
+    <li><b>The learning path:</b>
+      <ul>
+        <li><b>Know SEC:</b> required for every member.</li>
+        <li><b>Know your role:</b> your department's own training.</li>
+        <li><b>Know how to execute:</b> project training.</li>
+        <li><b>Know how to lead:</b> Project Lead and Leadership training, for those heading that way.</li>
+      </ul></li>
+    <li><b>Who owns what.</b> <i>Leadership owns standards. Departments own knowledge. AWI owns systems.</i> If a guide is out of date, tell the owner named on the module so it is fixed for everyone.</li>
+    <li><b>How a module works.</b> Every module is short: a video, a written guide, a good and a bad example, a scenario and a short assessment. Passing the assessment marks the module complete.</li>
+  </ol>
 
-<h2>Decisions for Brand &amp; Content</h2>
-<p>The working paper leaves these to the team that makes the video. Please confirm them with AWI and the President before filming.</p>
-<ul>
-  <li>Production team and filming standard</li>
-  <li>Editing style, within the consistent SEC and Sunway treatment</li>
-  <li>Which Student LIFE or university representative and which external partner will appear, and written permission from each</li>
-  <li>Which existing footage can be used, and what still has to be filmed</li>
-  <li>Music that SEC has the right to publish</li>
-</ul>
+  <h3>The member is then tested on</h3>
+  <p class="small">So these points must be clear in the video: who owns standards, knowledge and systems; what to do about an out-of-date guide (tell the owner); a module is complete when you pass the assessment.</p>
+</section>
+
+<!-- ============ LATER ============ -->
+<section class="page">
+  <div class="num">Not yet</div>
+  <h2>Learning videos for later</h2>
+  <p class="lead" style="margin-top:8px">17 more Learning Portal modules need a video, 5 to 10 minutes each, sent as a YouTube link like the three above. Each waits until its content owner has finished the content, because the video must match the written guide. A separate brief will follow for each.</p>
+
+  <table>
+    <tr><th style="width:30%">Level</th><th style="width:36%">Module (video topic)</th><th>Needed first from the content owner</th></tr>
+    <tr><td rowspan="4"><b>Level 1, SEC Core</b><br><span class="small">4 more videos</span></td><td>SEC vision and direction</td><td>Final SEC vision; why standards exist</td></tr>
+    <tr><td>Structure, departments and projects</td><td>Finalised structure, reporting lines, Project Lead model</td></tr>
+    <tr><td>Communication and weekly updates</td><td>Communication rules, weekly update format, tools</td></tr>
+    <tr><td>Authority and escalation</td><td>Authority rules, escalation process, real cases</td></tr>
+    <tr><td><b>Level 2, Department training</b><br><span class="small">1 per department</span></td><td>How each department works (Brand &amp; Content is the example)</td><td>Each department writes and owns its own content</td></tr>
+    <tr><td rowspan="4"><b>Level 3, Project training</b><br><span class="small">4 videos</span></td><td>Project lifecycle and timelines</td><td rowspan="4">Content from the project owners</td></tr>
+    <tr><td>Budgeting and risk</td></tr>
+    <tr><td>Stakeholder management</td></tr>
+    <tr><td>Execution and post-event review</td></tr>
+    <tr><td rowspan="4"><b>Level 4, Project Lead training</b><br><span class="small">4 videos</span></td><td>Delegation and coordination</td><td rowspan="4">Content from the Project Lead owners</td></tr>
+    <tr><td>Decisions and managing delays</td></tr>
+    <tr><td>Escalation and alignment calls</td></tr>
+    <tr><td>Stakeholder communication and accountability</td></tr>
+    <tr><td rowspan="4"><b>Level 5, Leadership training</b><br><span class="small">4 videos</span></td><td>Performance management and feedback</td><td rowspan="4">Content from Leadership</td></tr>
+    <tr><td>Delegation and department management</td></tr>
+    <tr><td>Succession and organisational planning</td></tr>
+    <tr><td>Leadership communication</td></tr>
+  </table>
+  <p class="small">Level 2 has one example module today. The final count depends on how many departments there are.</p>
+</section>
 
 </body>
 </html>

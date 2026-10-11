@@ -158,22 +158,32 @@ test('flashcards are cleaned, and instant feedback only works for published modu
   assert.equal(after.data.progress.m1.attempts, before.data.progress.m1.attempts);
 });
 
-test('new draft modules are added to saved content without overwriting admin edits', async () => {
-  // simulate content saved by an admin before the drafts existed
-  data.set('sec:learning', JSON.stringify({ version: 2, updatedBy: 'reviewer', public: { enabled: true, steps: [] }, levels: [
-    { id: 'l3', title: 'My own level name', modules: [
-      { id: 'l3-lifecycle', title: 'Renamed by admin', objective: 'Admin wording', status: 'draft', cards: [], questions: [] },
-      { id: 'l3-budget', title: 'Budget', objective: '', status: 'published', passMark: 75,
-        cards: [{ front: 'Admin card', back: 'Admin answer' }], questions: [{ q: 'Admin q?', options: ['a', 'b'], answer: 0 }] }] }] }));
-  const all = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data.content;
-  const [life, budget] = all.levels[0].modules;
-  assert.equal(all.levels[0].title, 'My own level name');
-  assert.equal(life.title, 'Renamed by admin');
-  assert.equal(life.objective, 'Admin wording');
-  assert.ok(life.cards.length >= 5 && life.questions.length >= 4, 'empty module is filled from the seed');
-  assert.equal(life.status, 'draft', 'a module the admin set to draft stays a draft');
-  assert.deepEqual(budget.cards, [{ front: 'Admin card', back: 'Admin answer' }], 'edited modules are left alone');
-  assert.equal(all.version, 5);
+test('old content is wiped once, structure and accounts stay, and later edits are kept', async () => {
+  const memberId = 'm:' + join.imail.toLowerCase();
+  data.set('sec:learning', JSON.stringify({ version: 5, updatedBy: 'reviewer', public: { enabled: true, headline: 'My headline', steps: [] }, levels: [
+    { id: 'l2', title: 'Department training', modules: [
+      { id: 'l2-brand', title: 'Brand & Content: roles and reporting', objective: 'x', status: 'published', owner: 'Someone', cards: [{ front: 'a', back: 'b' }], questions: [{ q: 'q?', options: ['a', 'b'], answer: 0 }] },
+      { id: 'l2-events', title: 'Events', status: 'published', cards: [{ front: 'a', back: 'b' }], questions: [] }] },
+    { id: 'custom', title: 'My own level', modules: [
+      { id: 'mine', title: 'Written by an admin', status: 'published', passMark: 60, cards: [{ front: 'old', back: 'old' }], questions: [{ q: 'old?', options: ['a', 'b'], answer: 1 }] }] }] }));
+  data.set('sec:learning_progress', JSON.stringify({ [memberId]: { mine: { passed: true, best: 100, attempts: 1 } } }));
+
+  const first = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data;
+  const mods = first.content.levels.flatMap(l => l.modules);
+  assert.equal(first.content.version, 6);
+  assert.deepEqual(mods.map(m => m.id), ['l2-brand', 'mine'], 'generated department modules removed, custom module kept');
+  assert.ok(mods.every(m => m.cards.length === 0 && m.questions.length === 0 && m.status === 'draft'), 'all cards, questions and publishing cleared');
+  assert.equal(first.content.levels[0].modules[0].title, 'Department training');
+  assert.equal(first.content.levels[1].title, 'My own level');
+  assert.equal(first.content.public.headline, 'My headline', 'public page text is kept');
+  assert.deepEqual(first.progressAll, {}, 'old quiz results are cleared');
+  assert.ok(first.members.some(m => m.id === memberId), 'accounts are kept');
+
+  // an admin then writes new content: it must survive later loads (the wipe never runs again)
+  await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', public: first.content.public, levels: [{ id: 'a', title: 'A', modules: [
+    { id: 'new', title: 'New', status: 'published', cards: [{ front: 'f', back: 'b' }], questions: [{ q: 'n?', options: ['x', 'y'], answer: 0 }] }] }] }, adminCookie);
+  const again = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data.content;
+  assert.deepEqual(again.levels[0].modules[0].cards, [{ front: 'f', back: 'b' }]);
 });
 
 test('removing a member ends their session at once', async () => {

@@ -1,34 +1,23 @@
 import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, kvUpdate, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN } from './_lib.js';
-import { seedLearning, migrateCitations, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
+import { seedLearning, wipeGeneratedContent, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
 
-const VERSION = 5;
-
-/* Fill modules that are still empty in saved content from the current seed, so new drafts appear without
-   overwriting anything an admin has written. Admin edits always win. */
-function mergeSeed(stored, seed) {
-  const byId = new Map();
-  for (const l of stored.levels || []) for (const m of l.modules || []) byId.set(m.id, m);
-  for (const l of seed.levels) for (const sm of l.modules) {
-    const m = byId.get(sm.id);
-    if (m && !(m.cards || []).length && !(m.questions || []).length && (sm.cards || []).length) {
-      m.cards = sm.cards; m.questions = sm.questions;
-      if (!m.objective) m.objective = sm.objective;
-    }
-  }
-  // modules added to the seed since this content was saved are appended to their level once
-  for (const l of seed.levels) {
-    const sl = (stored.levels || []).find(x => x.id === l.id);
-    if (sl) for (const sm of l.modules) if (!byId.has(sm.id)) sl.modules.push(sm);
-  }
-  return stored;
-}
+const VERSION = 6;
 
 async function loadLearning() {
   let c = await kvGet(K_LEARN);
-  if (!c || (c.version !== VERSION && !c.updatedBy)) { // old format, never edited: use the new seed
-    c = { ...seedLearning(), version: VERSION }; await kvUpdate(K_LEARN, () => c, 'system');
+  if (!c) {
+    const seed = { ...seedLearning(), version: VERSION };
+    c = await kvUpdate(K_LEARN, cur => cur || seed, 'system');
   } else if (c.version !== VERSION) {
-    c = { ...migrateCitations(mergeSeed(c, seedLearning())), version: VERSION }; await kvUpdate(K_LEARN, () => c, 'system');
+    // one-time clean-out of the content that came from the wrong source document (see wipeGeneratedContent)
+    let migrated = false;
+    c = await kvUpdate(K_LEARN, cur => {
+      if (cur.version === VERSION) return cur;
+      migrated = true;
+      return { ...wipeGeneratedContent(cur), version: VERSION };
+    }, 'system');
+    // quiz results belonged to the removed questions, so they would wrongly count against future ones
+    if (migrated) await kvUpdate(K_PROGRESS, () => ({}), 'system');
   }
   return c;
 }

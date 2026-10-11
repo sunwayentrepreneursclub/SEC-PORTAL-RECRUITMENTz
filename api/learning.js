@@ -1,7 +1,7 @@
 import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN } from './_lib.js';
 import { seedLearning, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
 
-const VERSION = 3;
+const VERSION = 4;
 
 /* Fill modules that are still empty in saved content from the current seed, so new drafts appear without
    overwriting anything an admin has written. Admin edits always win. */
@@ -15,12 +15,17 @@ function mergeSeed(stored, seed) {
       if (!m.objective) m.objective = sm.objective;
     }
   }
+  // modules added to the seed since this content was saved are appended to their level once
+  for (const l of seed.levels) {
+    const sl = (stored.levels || []).find(x => x.id === l.id);
+    if (sl) for (const sm of l.modules) if (!byId.has(sm.id)) sl.modules.push(sm);
+  }
   return stored;
 }
 
 async function loadLearning() {
   let c = await kvGet(K_LEARN);
-  if (!c || (c.version !== 2 && c.version !== VERSION && !c.updatedBy)) { // old format, never edited: use the new seed
+  if (!c || (c.version !== VERSION && !c.updatedBy)) { // old format, never edited: use the new seed
     c = { ...seedLearning(), version: VERSION }; await kvSet(K_LEARN, c);
   } else if (c.version !== VERSION) {
     c = { ...mergeSeed(c, seedLearning()), version: VERSION }; await kvSet(K_LEARN, c);

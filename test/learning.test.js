@@ -160,9 +160,9 @@ test('new draft modules are added to saved content without overwriting admin edi
   assert.equal(life.title, 'Renamed by admin');
   assert.equal(life.objective, 'Admin wording');
   assert.ok(life.cards.length >= 5 && life.questions.length >= 4, 'empty module is filled from the seed');
-  assert.equal(life.status, 'draft', 'filled modules stay drafts until an owner publishes');
+  assert.equal(life.status, 'draft', 'a module the admin set to draft stays a draft');
   assert.deepEqual(budget.cards, [{ front: 'Admin card', back: 'Admin answer' }], 'edited modules are left alone');
-  assert.equal(all.version, 3);
+  assert.equal(all.version, 4);
 });
 
 test('removing a member ends their session at once', async () => {

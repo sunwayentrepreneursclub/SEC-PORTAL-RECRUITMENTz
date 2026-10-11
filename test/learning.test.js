@@ -147,6 +147,24 @@ test('flashcards are cleaned, and instant feedback only works for published modu
   assert.equal(after.data.progress.m1.attempts, before.data.progress.m1.attempts);
 });
 
+test('new draft modules are added to saved content without overwriting admin edits', async () => {
+  // simulate content saved by an admin before the drafts existed
+  data.set('sec:learning', JSON.stringify({ version: 2, updatedBy: 'reviewer', public: { enabled: true, steps: [] }, levels: [
+    { id: 'l3', title: 'My own level name', modules: [
+      { id: 'l3-lifecycle', title: 'Renamed by admin', objective: 'Admin wording', status: 'draft', cards: [], questions: [] },
+      { id: 'l3-budget', title: 'Budget', objective: '', status: 'published', passMark: 75,
+        cards: [{ front: 'Admin card', back: 'Admin answer' }], questions: [{ q: 'Admin q?', options: ['a', 'b'], answer: 0 }] }] }] }));
+  const all = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data.content;
+  const [life, budget] = all.levels[0].modules;
+  assert.equal(all.levels[0].title, 'My own level name');
+  assert.equal(life.title, 'Renamed by admin');
+  assert.equal(life.objective, 'Admin wording');
+  assert.ok(life.cards.length >= 5 && life.questions.length >= 4, 'empty module is filled from the seed');
+  assert.equal(life.status, 'draft', 'filled modules stay drafts until an owner publishes');
+  assert.deepEqual(budget.cards, [{ front: 'Admin card', back: 'Admin answer' }], 'edited modules are left alone');
+  assert.equal(all.version, 3);
+});
+
 test('removing a member ends their session at once', async () => {
   const cookie = (await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).cookie;
   assert.equal((await call(sessionApi, 'GET', '/api/session', null, cookie)).data.role, 'member');

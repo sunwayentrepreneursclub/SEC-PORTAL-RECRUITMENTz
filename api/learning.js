@@ -1,10 +1,30 @@
 import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN } from './_lib.js';
 import { seedLearning, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
 
+const VERSION = 3;
+
+/* Fill modules that are still empty in saved content from the current seed, so new drafts appear without
+   overwriting anything an admin has written. Admin edits always win. */
+function mergeSeed(stored, seed) {
+  const byId = new Map();
+  for (const l of stored.levels || []) for (const m of l.modules || []) byId.set(m.id, m);
+  for (const l of seed.levels) for (const sm of l.modules) {
+    const m = byId.get(sm.id);
+    if (m && !(m.cards || []).length && !(m.questions || []).length && (sm.cards || []).length) {
+      m.cards = sm.cards; m.questions = sm.questions;
+      if (!m.objective) m.objective = sm.objective;
+    }
+  }
+  return stored;
+}
+
 async function loadLearning() {
   let c = await kvGet(K_LEARN);
-  // Content saved before the flashcard format and never edited by an admin is replaced by the new seed.
-  if (!c || (c.version !== 2 && !c.updatedBy)) { c = { ...seedLearning(), version: 2 }; await kvSet(K_LEARN, c); }
+  if (!c || (c.version !== 2 && c.version !== VERSION && !c.updatedBy)) { // old format, never edited: use the new seed
+    c = { ...seedLearning(), version: VERSION }; await kvSet(K_LEARN, c);
+  } else if (c.version !== VERSION) {
+    c = { ...mergeSeed(c, seedLearning()), version: VERSION }; await kvSet(K_LEARN, c);
+  }
   return c;
 }
 
@@ -39,7 +59,7 @@ export default async function handler(req, res) {
       if (code && code.length < 6) return send(res, 400, { error: 'Use a join code of at least 6 characters, or leave it empty to close sign-up.' });
       await kvSet(K_JOIN, { code, updatedAt: new Date().toISOString(), updatedBy: admin });
     }
-    const next = { ...cleanLearning(body), version: 2, updatedAt: new Date().toISOString(), updatedBy: admin };
+    const next = { ...cleanLearning(body), version: VERSION, updatedAt: new Date().toISOString(), updatedBy: admin };
     await kvSet(K_LEARN, next);
     return send(res, 200, { ok: true, updatedAt: next.updatedAt });
   }

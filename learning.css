@@ -5,6 +5,7 @@
 /* ---------- page ---------- */
 #viewLearn{
   --ink:#181C20;--ink-weak:#535B60;--muted:#535B60;--board-line:rgba(24,28,32,.16);--line-strong:rgba(24,28,32,.3);
+  --paper:#FFFFFF;--open:#181C20;--open-soft:rgba(24,28,32,.14); /* fields, autofill and focus follow the light page */
   background:#F6F5F2;color:#181C20;min-height:100vh;
 }
 #viewLearn .lp-bar{position:fixed;top:0;left:0;right:0;z-index:30;background:#111214;border-bottom:1px solid rgba(246,245,242,.12)}
@@ -165,3 +166,9 @@
 #panelLearn .lc-chip{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;border:1px solid var(--line-strong);color:var(--muted);white-space:nowrap;margin:0 4px 4px 0}
 #panelLearn .lc-chip.is-full{background:var(--open);border-color:var(--open);color:#fff}
 #panelLearn .lc-table td:nth-child(2){white-space:nowrap}
+
+/* inputs: always dark text on white, including autofill and focus */
+#viewLearn .lp-field input,#viewLearn .lp-field input:focus{background:#fff;color:#181C20;-webkit-text-fill-color:#181C20;caret-color:#181C20}
+#viewLearn .lp-field input:-webkit-autofill,#viewLearn .lp-field input:-webkit-autofill:hover,#viewLearn .lp-field input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#181C20;-webkit-box-shadow:0 0 0 1000px #fff inset;box-shadow:0 0 0 1000px #fff inset;caret-color:#181C20}
+#viewLearn .lp-field input::placeholder{color:#6B7075;-webkit-text-fill-color:#6B7075}

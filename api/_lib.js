@@ -65,6 +65,19 @@ export async function kvReplaceSafely(key, historyKey, expectedRaw, next, actor)
   return Number(result) === 1;
 }
 
+/* Read-change-write that cannot lose another request's change: if the stored value moved while we were
+   working, re-read and try again. Every replaced value is also kept in a history list. `change` receives the
+   current value (or null) and returns the new one; it may throw to refuse the change. */
+export async function kvUpdate(key, change, actor = 'system') {
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const raw = await kvGetRaw(key);
+    const next = await change(raw === null ? null : JSON.parse(raw));
+    if (await kvReplaceSafely(key, `${key}:history`, raw, next, actor)) return next;
+    await new Promise(r => setTimeout(r, 5 + Math.random() * 25 * (attempt + 1)));
+  }
+  throw new Error('The data is busy. Please try again.');
+}
+
 export async function kvHistory(key, start = 0, end = 9) {
   const rows = await cmd(['LRANGE', key, start, end]);
   return (rows || []).map(row => JSON.parse(row));

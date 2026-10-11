@@ -1,4 +1,4 @@
-import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN } from './_lib.js';
+import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, kvUpdate, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN } from './_lib.js';
 import { seedLearning, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
 
 const VERSION = 4;
@@ -26,9 +26,9 @@ function mergeSeed(stored, seed) {
 async function loadLearning() {
   let c = await kvGet(K_LEARN);
   if (!c || (c.version !== VERSION && !c.updatedBy)) { // old format, never edited: use the new seed
-    c = { ...seedLearning(), version: VERSION }; await kvSet(K_LEARN, c);
+    c = { ...seedLearning(), version: VERSION }; await kvUpdate(K_LEARN, () => c, 'system');
   } else if (c.version !== VERSION) {
-    c = { ...mergeSeed(c, seedLearning()), version: VERSION }; await kvSet(K_LEARN, c);
+    c = { ...mergeSeed(c, seedLearning()), version: VERSION }; await kvUpdate(K_LEARN, () => c, 'system');
   }
   return c;
 }
@@ -65,7 +65,7 @@ export default async function handler(req, res) {
       await kvSet(K_JOIN, { code, updatedAt: new Date().toISOString(), updatedBy: admin });
     }
     const next = { ...cleanLearning(body), version: VERSION, updatedAt: new Date().toISOString(), updatedBy: admin };
-    await kvSet(K_LEARN, next);
+    await kvUpdate(K_LEARN, () => next, admin);
     return send(res, 200, { ok: true, updatedAt: next.updatedAt });
   }
 
@@ -82,31 +82,29 @@ export default async function handler(req, res) {
     const picked = Array.isArray(answers) ? answers.map(a => (Number.isInteger(a) ? a : -1)) : [];
     if (picked.length !== (m.questions || []).length) return send(res, 400, { error: 'Answer every question first.' });
     const result = grade(m, picked);
-    const all = (await kvGet(K_PROGRESS)) || {};
-    const mine = all[user] || {};
-    const prev = mine[m.id] || { attempts: 0, best: 0, passed: false };
-    mine[m.id] = {
-      attempts: prev.attempts + 1,
-      best: Math.max(prev.best, result.score),
-      passed: prev.passed || result.passed,
-      at: new Date().toISOString(),
-    };
-    all[user] = mine;
-    await kvSet(K_PROGRESS, all);
-    return send(res, 200, { ...result, progress: mine[m.id] });
+    let saved;
+    await kvUpdate(K_PROGRESS, all => {
+      all = all || {};
+      const mine = all[user] || {};
+      const prev = mine[m.id] || { attempts: 0, best: 0, passed: false };
+      saved = {
+        attempts: prev.attempts + 1,
+        best: Math.max(prev.best, result.score),
+        passed: prev.passed || result.passed,
+        at: new Date().toISOString(),
+      };
+      return { ...all, [user]: { ...mine, [m.id]: saved } };
+    }, user);
+    return send(res, 200, { ...result, progress: saved });
   }
 
   if (req.method === 'DELETE') { // admin removes a member: their login stops working at once
     if (!await requireAdmin(req, res)) return;
     const id = new URL(req.url, 'http://x').searchParams.get('member') || '';
     const key = id.startsWith('m:') ? id.slice(2) : '';
-    const members = (await kvGet(K_MEMBERS)) || {};
-    if (!key || !members[key]) return send(res, 404, { error: 'No such member.' });
-    delete members[key];
-    await kvSet(K_MEMBERS, members);
-    const progress = (await kvGet(K_PROGRESS)) || {};
-    delete progress[id];
-    await kvSet(K_PROGRESS, progress);
+    if (!key || !((await kvGet(K_MEMBERS)) || {})[key]) return send(res, 404, { error: 'No such member.' });
+    await kvUpdate(K_MEMBERS, members => { const next = { ...(members || {}) }; delete next[key]; return next; }, 'admin');
+    await kvUpdate(K_PROGRESS, all => { const next = { ...(all || {}) }; delete next[id]; return next; }, 'admin');
     return send(res, 200, { ok: true });
   }
 

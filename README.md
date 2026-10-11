@@ -98,6 +98,8 @@ The Learning Portal lives on the same site. Open it from the footer link, or go 
 
 No extra environment variable is needed. Committee members create their own account on the Learning Portal sign-in screen (**Create account**), using a **join code** that an admin sets in Admin → Learning portal → Committee sign-up. Share the code in the committee chat; change or clear it when people leave. Members can only use the Learning Portal. They never see applicants or the admin area, and an admin can remove a member at any time (their login stops working immediately). Passwords are stored as salted hashes. Anyone in `ADMIN_USERS` is an admin and can also use the Learning Portal.
 
+**Where the Learning Portal data lives.** Accounts (passwords hashed), quiz progress, the module content you edit and the join code are all saved in the same Upstash Redis database as the applications, never in the browser or in the sign-in cookie. Signing out only deletes the cookie, so everything is still there when a member signs back in, from any device. Writes are safe when many people submit at once, and each saved version of members, progress and content is kept in a history list (the last 50, for 30 days) in case anything needs recovering. Only `npm run dev` uses temporary in-memory data that resets when it restarts.
+
 Modules stay as drafts ("Coming soon" to members) until you publish them. Run `npm run dev` to try everything locally; it uses in-memory data, the test login `admin/admin` and the join code `dev-join-code`.
 
 ## How it works

@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { send, readBody, guardEnv, kvGet, kvSet, issueSession, hashPassword, memberKey, K_MEMBERS, K_JOIN } from './_lib.js';
+import { send, readBody, guardEnv, kvGet, kvUpdate, issueSession, hashPassword, memberKey, K_MEMBERS, K_JOIN } from './_lib.js';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -30,10 +30,16 @@ export default async function handler(req, res) {
   if (!EMAIL.test(email) || email.length > 120) return send(res, 400, { error: 'Enter a valid email address.' });
   if (password.length < 8) return send(res, 400, { error: 'Use a password of at least 8 characters.' });
 
-  const members = (await kvGet(K_MEMBERS)) || {};
-  if (members[email]) return send(res, 409, { error: 'That email already has an account. Sign in instead.' });
-  members[email] = { name, imail: email, hash: await hashPassword(password), createdAt: new Date().toISOString() };
-  await kvSet(K_MEMBERS, members);
+  const record = { name, imail: email, hash: await hashPassword(password), createdAt: new Date().toISOString() };
+  try {
+    await kvUpdate(K_MEMBERS, members => {
+      if (members?.[email]) throw Object.assign(new Error('exists'), { code: 'EXISTS' });
+      return { ...(members || {}), [email]: record };
+    }, email);
+  } catch (e) {
+    if (e.code === 'EXISTS') return send(res, 409, { error: 'That email already has an account. Sign in instead.' });
+    throw e;
+  }
 
   issueSession(res, 'm:' + email);
   return send(res, 200, { user: name, role: 'member' });

@@ -7,12 +7,23 @@ process.env.SESSION_SECRET = 'test-session-secret';
 process.env.ADMIN_USERS = 'reviewer:test-password';
 
 const data = new Map();
+const history = new Map();
 globalThis.fetch = async (_url, opts) => {
-  const [command, key, value] = JSON.parse(opts.body);
+  const [command, ...rest] = JSON.parse(opts.body);
   let result = null;
-  if (command === 'GET') result = data.get(key) ?? null;
-  else if (command === 'SET') { data.set(key, value); result = 'OK'; }
+  if (command === 'GET') result = data.get(rest[0]) ?? null;
+  else if (command === 'SET') { if (rest[2] !== 'NX' || !data.has(rest[0])) data.set(rest[0], rest[1]); result = 'OK'; }
+  else if (command === 'EVAL') { // compare-and-swap, as in api/_lib.js
+    const [, , key, historyKey, expected, previous, next] = rest;
+    await new Promise(r => setTimeout(r, Math.random() * 3)); // let requests interleave like a real network
+    if ((data.get(key) ?? '') !== expected) result = 0;
+    else {
+      if (data.has(key)) history.set(historyKey, [previous, ...(history.get(historyKey) || [])].slice(0, 50));
+      data.set(key, next); result = 1;
+    }
+  } else if (command === 'LRANGE') result = (history.get(rest[0]) || []).slice(rest[1], rest[2] + 1);
   else throw Error(`Unexpected Redis command: ${command}`);
+  if (command === 'GET') await new Promise(r => setTimeout(r, Math.random() * 3));
   return { ok: true, json: async () => ({ result }) };
 };
 
@@ -172,6 +183,36 @@ test('removing a member ends their session at once', async () => {
   assert.equal((await call(learning, 'DELETE', '/api/learning?member=' + id, null, adminCookie)).status, 200);
   assert.equal((await call(sessionApi, 'GET', '/api/session', null, cookie)).data.user, null);
   assert.equal((await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).status, 401);
+});
+
+test('records survive signing out and back in', async () => {
+  await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', public: { enabled: true, steps: [] }, levels: [{ id: 'a', title: 'A', modules: [
+    { id: 'keep', title: 'Keep', status: 'published', passMark: 50, cards: [], questions: [{ q: 'One?', options: ['x', 'y'], answer: 1 }] }] }] }, adminCookie);
+  const first = await call(signup, 'POST', '/api/signup', { ...join, imail: 'keeper@x.com' });
+  const pass = await call(learning, 'POST', '/api/learning', { moduleId: 'keep', answers: [1] }, first.cookie);
+  assert.equal(pass.data.passed, true);
+
+  await sessionApi({ method: 'DELETE', url: '/api/session', body: {}, headers: { cookie: first.cookie } }, { setHeader() {}, end() {} });
+  assert.equal((await call(sessionApi, 'POST', '/api/session', { username: 'keeper@x.com', password: join.password })).status, 200);
+  const back = (await call(sessionApi, 'POST', '/api/session', { username: 'KEEPER@x.com', password: join.password })).cookie;
+  const view = (await call(learning, 'GET', '/api/learning', null, back)).data;
+  assert.equal(view.progress.keep.passed, true, 'completion is still there after signing out and in');
+  assert.equal(view.progress.keep.attempts, 1);
+});
+
+test('many members writing at the same moment never lose each other\'s records', async () => {
+  const N = 15;
+  const people = await Promise.all(Array.from({ length: N }, (_, i) =>
+    call(signup, 'POST', '/api/signup', { ...join, name: `Person ${i}`, imail: `p${i}@x.com` })));
+  assert.ok(people.every(r => r.status === 200), 'every sign-up succeeded');
+  await Promise.all(people.map(r => call(learning, 'POST', '/api/learning', { moduleId: 'keep', answers: [1] }, r.cookie)));
+
+  const admin = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data;
+  const mine = admin.members.filter(m => /^p\d+@x\.com$/.test(m.imail));
+  assert.equal(mine.length, N, 'all accounts were saved');
+  const withProgress = mine.filter(m => admin.progressAll[m.id]?.keep?.passed);
+  assert.equal(withProgress.length, N, 'all quiz completions were saved');
+  assert.ok((history.get('sec:learning_progress:history') || []).length > 0, 'previous versions are kept for recovery');
 });
 
 test('clearing the join code closes sign-up again', async () => {

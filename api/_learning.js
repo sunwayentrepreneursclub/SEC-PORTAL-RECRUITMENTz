@@ -21,6 +21,31 @@ const fromCharter = (id, title, objective, owner, cards, questions) => ({
   ...draft(id, title, objective, cards, questions), status: 'published', owner,
 });
 
+/* Source notes ("Charter 4.4.15", "AWI Working Paper, section 7") are for admins only. Members see a plain
+   explanation. This moves any citation out of the text members read and into the admin-only `source` field, and it
+   is safe to run on already-saved content. */
+const CITE_PAREN = /\s*\(((?:Charter|AWI Working Paper)[^)]*)\)/g;
+const SOURCE_PREFIX = /^((?:Charter\b|AWI Working Paper,|This portal)[^:]*?)(?::\s*([\s\S]*))?$/;
+export function migrateCitations(c) {
+  for (const l of c.levels || []) for (const m of l.modules || []) {
+    for (const card of m.cards || []) {
+      card.back = String(card.back || '').replace(CITE_PAREN, '').trim();
+      card.front = String(card.front || '').replace(CITE_PAREN, '').trim();
+    }
+    for (const q of m.questions || []) {
+      let why = String(q.why || ''), source = q.source || '';
+      const parens = [...why.matchAll(CITE_PAREN)].map(x => x[1]);
+      why = why.replace(CITE_PAREN, '').trim();
+      const hit = why.match(SOURCE_PREFIX);
+      if (hit) { source = source || hit[1].replace(/[.\s]+$/, ''); why = (hit[2] || '').trim(); }
+      if (parens.length) source = source || parens.join('; ');
+      if (/^[a-z]/.test(why) || why.length < 12) why = ''; // terse fragments read badly; the client shows the answer instead
+      q.why = why; q.source = source;
+    }
+  }
+  return c;
+}
+
 export function seedLearning() {
   const c = {
     public: {
@@ -457,7 +482,7 @@ export function seedLearning() {
     ],
     updatedAt: null, updatedBy: null,
   };
-  return c;
+  return migrateCitations(c);
 }
 
 /* ---------- sanitising (admin writes) ---------- */
@@ -487,7 +512,7 @@ export function cleanLearning(body) {
       const questions = (Array.isArray(m?.questions) ? m.questions : []).slice(0, 30).map(q => {
         const options = (Array.isArray(q?.options) ? q.options : []).slice(0, 6).map(o => str(o, 200)).filter(Boolean);
         const answer = Number.isInteger(q?.answer) && q.answer >= 0 && q.answer < options.length ? q.answer : 0;
-        return { q: str(q?.q, 400), options, answer, why: str(q?.why, 400) };
+        return { q: str(q?.q, 400), options, answer, why: str(q?.why, 400), source: str(q?.source, 160) };
       }).filter(q => q.q && q.options.length >= 2);
       level.modules.push({
         id: mid, title: str(m?.title, 120) || 'Untitled module', objective: str(m?.objective, 300),

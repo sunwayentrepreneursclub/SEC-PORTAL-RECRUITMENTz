@@ -276,7 +276,7 @@ function lpRenderQuestion() {
         const cls = fb ? (j === fb.answer ? 'is-right' : (j === picked ? 'is-wrong' : 'is-dim')) : '';
         return `<button type="button" class="lp-opt ${cls}" data-o="${j}" ${fb ? 'disabled' : ''}><span class="k">${String.fromCharCode(65 + j)}</span><span>${esc(o)}</span></button>`;
       }).join('')}</div>
-      ${fb ? `<div class="lp-feedback ${fb.correct ? 'ok' : 'no'}"><b>${fb.correct ? 'Correct.' : 'Not quite.'}</b> ${esc(fb.why || '')}</div>
+      ${fb ? `<div class="lp-feedback ${fb.correct ? 'ok' : 'no'}"><b>${fb.correct ? 'Correct.' : 'Not quite.'}</b> ${esc(fb.why || (fb.correct ? '' : 'The answer is: ' + q.options[fb.answer]))}</div>
         <button class="lp-pill lp-pill-lg" id="lpNextQ" type="button">${last ? 'See result' : 'Next question'}</button>` : `<p class="lp-hint">Press 1 to ${q.options.length} to answer</p>`}
       <p class="lp-err" id="lpQErr" hidden></p>
     </div>`, `Question ${S.qi + 1} of ${qs.length}`, ((S.qi + (fb ? 1 : 0)) / qs.length) * 100);
@@ -431,13 +431,14 @@ function lcProgressBlock() {
       <select id="lcSort" style="width:auto"><option value="progress" ${LC.sort === 'progress' ? 'selected' : ''}>Most complete</option><option value="name" ${LC.sort === 'name' ? 'selected' : ''}>Name</option><option value="recent" ${LC.sort === 'recent' ? 'selected' : ''}>Last active</option></select>
       <span style="flex:1"></span><button class="mini" type="button" data-act="csv">Export CSV</button>
     </div>
-    <div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th><th style="min-width:210px">Progress</th><th>Avg score</th><th>Last active</th><th>By level</th></tr></thead><tbody>
+    <div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th><th style="min-width:210px">Progress</th><th>Avg score</th><th>Last active</th><th>By level</th><th></th></tr></thead><tbody>
       ${sorted.map(x => `<tr>
         <td><b>${esc(x.name)}</b><br><span class="small" style="color:var(--muted)">${esc(x.email)}</span></td>
         <td><span class="lc-bar"><i style="width:${x.pct}%"></i></span> <b>${x.done}</b> of ${x.total} · ${x.pct}%</td>
         <td>${x.avg == null ? '—' : x.avg + '%'}</td>
         <td>${esc(lcAgo(x.last))}</td>
         <td>${x.byLevel.map(l => `<span class="lc-chip ${l.done === l.total ? 'is-full' : ''}" title="${esc(l.title)}">${esc(l.title.replace(/ training$/i, ''))} ${l.done}/${l.total}</span>`).join(' ')}</td>
+        <td>${x.id.startsWith('m:') ? `<button class="lc-x" type="button" data-act="delmember" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}" title="Remove ${esc(x.name)}">&#10005;</button>` : ''}</td>
       </tr>`).join('')}
     </tbody></table></div>
     <details class="lc-mod" style="margin-top:18px"><summary><span class="lc-sum">Which modules are hardest, and who is stuck</span></summary><div class="lc-body">
@@ -490,6 +491,7 @@ function renderAdminLearn() {
             <input type="radio" name="ans-${esc(m.id)}-${qi}" data-ans="${base}.questions.${qi}.answer" value="${oi}" ${q.answer === oi ? 'checked' : ''} title="Correct answer">
             <input type="text" data-p="${base}.questions.${qi}.options.${oi}" value="${esc(q.options[oi] || '')}" placeholder="Option ${oi + 1}${oi < 2 ? '' : ' (optional)'}"></div>`).join('')}</div>
           <input type="text" data-p="${base}.questions.${qi}.why" value="${esc(q.why || '')}" placeholder="Why that answer is right (shown right after they answer)">
+          <input type="text" data-p="${base}.questions.${qi}.source" value="${esc(q.source || '')}" placeholder="Source, e.g. Charter 4.4.15 (admin only, members never see this)" style="margin-top:8px">
           <div class="lc-row"><button class="mini danger" type="button" data-act="delq" data-li="${li}" data-mi="${mi}" data-qi="${qi}">Remove question</button></div>
         </div>`).join('') || `<p class="hint">No questions yet. A module with no questions cannot be completed.</p>`}
         <div class="lc-row">
@@ -597,7 +599,7 @@ function renderAdminLearn() {
       renderAdminLearn(); lcSave(); return;
     }
     if (act === 'delmember') {
-      if (!await uiConfirm('Remove this member?', 'They are signed out straight away and their progress is deleted. They can sign up again with the join code.', 'Remove')) return;
+      if (!await uiConfirm('Remove this member?', 'They are signed out straight away and all their progress is deleted. They can sign up again with the join code.', 'Remove')) return;
       try { await api('/api/learning?member=' + encodeURIComponent(b.dataset.id), { method: 'DELETE' }); LC.members = LC.members.filter(m => m.id !== b.dataset.id); delete LC.progressAll[b.dataset.id]; renderAdminLearn(); }
       catch (ex) { $('#saveState').textContent = 'Not removed: ' + ex.message; }
       return;

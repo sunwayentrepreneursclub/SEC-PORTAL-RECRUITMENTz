@@ -1,7 +1,7 @@
 import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, kvUpdate, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN } from './_lib.js';
-import { seedLearning, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
+import { seedLearning, migrateCitations, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
 
-const VERSION = 4;
+const VERSION = 5;
 
 /* Fill modules that are still empty in saved content from the current seed, so new drafts appear without
    overwriting anything an admin has written. Admin edits always win. */
@@ -28,7 +28,7 @@ async function loadLearning() {
   if (!c || (c.version !== VERSION && !c.updatedBy)) { // old format, never edited: use the new seed
     c = { ...seedLearning(), version: VERSION }; await kvUpdate(K_LEARN, () => c, 'system');
   } else if (c.version !== VERSION) {
-    c = { ...mergeSeed(c, seedLearning()), version: VERSION }; await kvUpdate(K_LEARN, () => c, 'system');
+    c = { ...migrateCitations(mergeSeed(c, seedLearning())), version: VERSION }; await kvUpdate(K_LEARN, () => c, 'system');
   }
   return c;
 }
@@ -102,7 +102,9 @@ export default async function handler(req, res) {
     if (!await requireAdmin(req, res)) return;
     const id = new URL(req.url, 'http://x').searchParams.get('member') || '';
     const key = id.startsWith('m:') ? id.slice(2) : '';
-    if (!key || !((await kvGet(K_MEMBERS)) || {})[key]) return send(res, 404, { error: 'No such member.' });
+    const exists = !!key && !!((await kvGet(K_MEMBERS)) || {})[key];
+    const hasProgress = !!key && !!((await kvGet(K_PROGRESS)) || {})[id];
+    if (!exists && !hasProgress) return send(res, 404, { error: 'No such member.' });
     await kvUpdate(K_MEMBERS, members => { const next = { ...(members || {}) }; delete next[key]; return next; }, 'admin');
     await kvUpdate(K_PROGRESS, all => { const next = { ...(all || {}) }; delete next[id]; return next; }, 'admin');
     return send(res, 200, { ok: true });

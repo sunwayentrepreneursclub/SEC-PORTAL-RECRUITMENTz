@@ -172,3 +172,5 @@
 #viewLearn .lp-field input:-webkit-autofill,#viewLearn .lp-field input:-webkit-autofill:hover,#viewLearn .lp-field input:-webkit-autofill:focus{
   -webkit-text-fill-color:#181C20;-webkit-box-shadow:0 0 0 1000px #fff inset;box-shadow:0 0 0 1000px #fff inset;caret-color:#181C20}
 #viewLearn .lp-field input::placeholder{color:#6B7075;-webkit-text-fill-color:#6B7075}
+#panelLearn .lc-x{width:30px;height:30px;border-radius:50%;border:1px solid var(--err);background:transparent;color:var(--err);font-size:13px;line-height:1;display:grid;place-items:center;padding:0}
+#panelLearn .lc-x:hover{background:var(--err);color:#fff}

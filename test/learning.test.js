@@ -173,7 +173,7 @@ test('new draft modules are added to saved content without overwriting admin edi
   assert.ok(life.cards.length >= 5 && life.questions.length >= 4, 'empty module is filled from the seed');
   assert.equal(life.status, 'draft', 'a module the admin set to draft stays a draft');
   assert.deepEqual(budget.cards, [{ front: 'Admin card', back: 'Admin answer' }], 'edited modules are left alone');
-  assert.equal(all.version, 4);
+  assert.equal(all.version, 5);
 });
 
 test('removing a member ends their session at once', async () => {
@@ -213,6 +213,19 @@ test('many members writing at the same moment never lose each other\'s records',
   const withProgress = mine.filter(m => admin.progressAll[m.id]?.keep?.passed);
   assert.equal(withProgress.length, N, 'all quiz completions were saved');
   assert.ok((history.get('sec:learning_progress:history') || []).length > 0, 'previous versions are kept for recovery');
+});
+
+test('members shown in the progress table can be removed, including leftover progress', async () => {
+  const gone = await call(signup, 'POST', '/api/signup', { ...join, imail: 'gone@x.com' });
+  await call(learning, 'POST', '/api/learning', { moduleId: 'keep', answers: [1] }, gone.cookie);
+  const id = 'm:gone@x.com';
+  assert.ok((await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data.progressAll[id]);
+  assert.equal((await call(learning, 'DELETE', '/api/learning?member=' + encodeURIComponent(id), null, adminCookie)).status, 200);
+  const after = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data;
+  assert.equal(after.progressAll[id], undefined);
+  assert.equal(after.members.some(m => m.id === id), false);
+  assert.equal((await call(learning, 'DELETE', '/api/learning?member=' + encodeURIComponent(id), null, adminCookie)).status, 404);
+  assert.equal((await call(sessionApi, 'GET', '/api/session', null, gone.cookie)).data.user, null, 'removed member is signed out');
 });
 
 test('clearing the join code closes sign-up again', async () => {

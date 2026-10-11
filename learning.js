@@ -1,55 +1,15 @@
 /* Learning Portal (ES module, loaded by the main script). Three layers share one data set (/api/learning):
      1. public recruitment page  -> #learnTeaser (read-only, text set by admin)
-     2. committee Learning Portal -> #viewLearn   (sign-in required)
+     2. committee Learning Portal -> #viewLearn   (sign-in required): flashcards, then a multiple-choice quiz
      3. SEC Admin                 -> #panelLearn  (admin sign-in; edits layers 1 and 2)
    Uses helpers from the main script: $, esc, api, showView, applyLock, loadState, uiConfirm. */
 
 const { $, esc, api, showView, applyLock, loadState, uiConfirm } = window.SEC;
 const LEVEL_COLORS = ['#9FC9F3', '#EFBE79', '#E2B0BE', '#C6B7E5', '#F19A91', '#E9D38D'];
-
-/* ---------- small helpers ---------- */
-function lpFmt(text) {
-  let html = '', list = false;
-  const close = () => { if (list) { html += '</ul>'; list = false; } };
-  String(text || '').split('\n').forEach(line => {
-    const t = line.trim();
-    if (!t) { close(); return; }
-    if (t.startsWith('## ')) { close(); html += `<h3>${esc(t.slice(3))}</h3>`; }
-    else if (t.startsWith('- ')) { if (!list) { html += '<ul>'; list = true; } html += `<li>${esc(t.slice(2))}</li>`; }
-    else { close(); html += `<p>${esc(t)}</p>`; }
-  });
-  close();
-  return html;
-}
-function lpVideo(url) {
-  if (!url) return '';
-  let m, src = '';
-  if ((m = url.match(/youtu\.be\/([\w-]{11})/) || url.match(/youtube\.com\/watch\?v=([\w-]{11})/))) src = `https://www.youtube.com/embed/${m[1]}`;
-  else if ((m = url.match(/vimeo\.com\/(\d+)/))) src = `https://player.vimeo.com/video/${m[1]}`;
-  if (src) return `<div class="lp-video"><iframe src="${src}" title="Module video" loading="lazy" allowfullscreen></iframe></div>`;
-  return `<p style="margin-top:56px"><a class="hero-cta" href="${esc(url)}" target="_blank" rel="noopener">Watch the video</a></p>`;
-}
 const lpColor = i => LEVEL_COLORS[i % LEVEL_COLORS.length];
 
-/* same scroll motion as the public page */
-const lpReveal = (() => {
-  if (!('IntersectionObserver' in window) || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches)) return () => {};
-  const seen = new Set(), running = new Map();
-  const io = new IntersectionObserver(es => es.forEach(e => {
-    if (e.isIntersecting) {
-      if (e.intersectionRatio >= .12 && !seen.has(e.target)) {
-        seen.add(e.target);
-        const a = e.target.animate([{ opacity: .45, transform: 'translateY(16px)' }, { opacity: 1, transform: 'translateY(0)' }],
-          { duration: 620, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
-        running.set(e.target, a); a.finished.then(() => running.delete(e.target)).catch(() => {});
-      }
-    } else { seen.delete(e.target); running.get(e.target)?.cancel(); running.delete(e.target); }
-  }), { threshold: [0, .12] });
-  return root => root.querySelectorAll('[data-lp-reveal]').forEach(el => io.observe(el));
-})();
-
 /* =====================================================================
-   Layer 1 — public teaser on the recruitment page
+   Layer 1: public teaser on the recruitment page
    ===================================================================== */
 async function lpLoadTeaser() {
   const sec = $('#learnTeaser'); if (!sec) return;
@@ -70,12 +30,13 @@ async function lpLoadTeaser() {
 }
 
 /* =====================================================================
-   Layer 2 — committee Learning Portal
+   Layer 2: committee Learning Portal
    ===================================================================== */
-const LP = { user: null, role: null, pub: null, levels: [], progress: {}, mod: null, result: null, picked: [] };
+const LP = { user: null, role: null, pub: null, levels: [], progress: {} };
 const lpRoot = () => $('#lpMain');
 const lpAllMods = () => LP.levels.flatMap((l, li) => l.modules.map(m => ({ ...m, level: l, li })));
 const lpDone = id => !!LP.progress[id]?.passed;
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
 function lpBar() {
   const signed = !!LP.user;
@@ -83,11 +44,12 @@ function lpBar() {
     <button class="lp-link" id="lpToSite" type="button">Recruitment site</button>
     ${LP.role === 'admin' ? `<button class="lp-link" id="lpToAdmin" type="button">Admin</button>` : ''}
     ${signed ? `<button class="lp-link" id="lpSignOut" type="button">Sign out</button>` : ''}`;
-  $('#lpToSite').onclick = () => { history.replaceState(null, '', location.pathname); showView('public'); };
-  $('#lpToAdmin')?.addEventListener('click', async () => { await loadState(); showView('admin'); applyLock(); });
+  $('#lpToSite').onclick = () => { lpCloseStudy(); history.replaceState(null, '', location.pathname); showView('public'); };
+  $('#lpToAdmin')?.addEventListener('click', async () => { lpCloseStudy(); await loadState(); showView('admin'); applyLock(); });
   $('#lpSignOut')?.addEventListener('click', async () => {
+    lpCloseStudy();
     await api('/api/session', { method: 'DELETE' });
-    Object.assign(LP, { user: null, role: null, levels: [], progress: {}, mod: null });
+    Object.assign(LP, { user: null, role: null, levels: [], progress: {} });
     window.SEC.signedOutReset();
     await loadState();
     lpRender();
@@ -105,18 +67,17 @@ async function openLearn() {
   window.SEC.dismissGate();
   showView('learn');
   if (location.hash !== '#learning') history.replaceState(null, '', '#learning');
-  try { await lpLoad(); } catch { /* shows the locked screen */ }
-  LP.mod = null;
+  try { await lpLoad(); } catch { /* shows the sign-in screen */ }
   lpRender();
 }
 
 function lpRender() {
   lpBar();
   if (!LP.user) return lpRenderLocked();
-  if (LP.mod) return lpRenderModule();
   lpRenderHome();
 }
 
+/* ---------- sign in / create account ---------- */
 function lpRenderLocked(err, mode = 'in') {
   const create = mode === 'up';
   lpRoot().innerHTML = `
@@ -136,7 +97,7 @@ function lpRenderLocked(err, mode = 'in') {
         <div class="lp-field"><label for="lpUser">Email</label><input id="lpUser" type="text" autocomplete="username"></div>
         <div class="lp-field"><label for="lpPass">Password</label><input id="lpPass" type="password" autocomplete="current-password"></div>`}
       <div class="lp-lock-err" id="lpErr" ${err ? '' : 'hidden'}>${esc(err || '')}</div>
-      <button class="hero-cta" id="lpLogin" type="button">${create ? 'Create account' : 'Sign in'}</button>
+      <button class="lp-pill lp-pill-lg" id="lpLogin" type="button">${create ? 'Create account' : 'Sign in'}</button>
     </div></div></div>`;
   lpRoot().querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => lpRenderLocked('', b.dataset.mode)));
   const go = async () => {
@@ -158,135 +119,213 @@ function lpRenderLocked(err, mode = 'in') {
   setTimeout(() => $(create ? '#lpName' : '#lpUser')?.focus(), 30);
 }
 
+/* ---------- home: levels and modules as compact rows ---------- */
 function lpRenderHome() {
   const mods = lpAllMods().filter(m => m.status === 'published');
   const done = mods.filter(m => lpDone(m.id)).length;
   const next = mods.find(m => !lpDone(m.id));
-  const pct = mods.length ? Math.round(done / mods.length * 100) : 0;
-  const steps = LP.pub?.steps || [];
   lpRoot().innerHTML = `
-    <div class="wrap">
-      <header class="lp-hero">
-        <h1 class="lp-h1">Become<br><em>capable.</em></h1>
-        <p class="lede">Short modules on how SEC works, what you own and how to deliver. Pass the check at the end of each one.</p>
-        <div class="lp-hero-actions">
-          ${next ? `<button class="hero-cta" id="lpContinue" type="button">${done ? 'Continue learning' : 'Start learning'}</button>`
-                 : (mods.length ? `<span class="lede" style="margin:0">Everything published is complete.</span>` : '')}
-        </div>
-        <div class="lp-progress">
-          <div class="lp-progress-n">${done}<span style="color:var(--muted)">/${mods.length}</span></div>
-          <div class="lp-progress-l">modules complete</div>
-          <div class="lp-bar-track"><div class="lp-bar-fill" style="width:${pct}%"></div></div>
+    <div class="wrap lp-page">
+      <header class="lp-head">
+        <h1>Learn.</h1>
+        <p class="lede">Go through the flashcards, then take a short quiz. Pass the quiz and the module is complete.</p>
+        <div class="lp-head-row">
+          <span class="lp-prog"><b>${done}</b> of ${mods.length} modules complete</span>
+          ${next ? `<button class="lp-pill lp-pill-lg" id="lpContinue" type="button">${done ? 'Continue' : 'Start'}: ${esc(next.title)}</button>` : ''}
         </div>
       </header>
-
-      ${steps.length ? `<section class="lp-section" data-lp-reveal>
-        <h2 class="lp-h2">The path.</h2>
-        <div class="lp-path">${steps.map((s, i) => `<div class="lp-step" data-lp-reveal><div class="n">${i + 1}</div><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>`).join('')}</div>
-      </section>` : ''}
-
-      <section class="lp-light">
-        <h2 class="lp-h2" data-lp-reveal>Levels.</h2>
-        <div class="lp-levels">${LP.levels.map((l, i) => {
-          const pub = l.modules.filter(m => m.status === 'published');
-          const d = pub.filter(m => lpDone(m.id)).length;
-          return `<article class="lp-level" style="--lc:${lpColor(i)}" data-lp-reveal>
-            <div class="lp-level-top"><span class="lp-pill">${esc(l.audience || 'Level ' + (i + 1))}</span><span class="lp-count">${pub.length ? `${d} of ${pub.length} complete` : 'Coming soon'}</span></div>
-            <h3>${esc(l.title)}</h3>
-            ${l.summary ? `<p>${esc(l.summary)}</p>` : ''}
-            <ul class="lp-mods">${l.modules.map(m => m.status === 'published'
-              ? `<li class="lp-mod"><button type="button" data-mod="${esc(m.id)}"><span>${esc(m.title)}</span><span class="lp-state ${lpDone(m.id) ? 'is-done' : ''}">${lpDone(m.id) ? 'Complete' : 'Start'}</span></button></li>`
-              : `<li class="lp-mod"><button type="button" disabled><span>${esc(m.title)}</span><span class="lp-state is-soon">Coming soon</span></button></li>`).join('')}</ul>
-          </article>`;
-        }).join('')}</div>
-      </section>
-    </div>`;
-  lpRoot().querySelectorAll('[data-mod]').forEach(b => b.addEventListener('click', () => lpOpenModule(b.dataset.mod)));
-  $('#lpContinue')?.addEventListener('click', () => next && lpOpenModule(next.id));
-  lpReveal(lpRoot());
-  window.scrollTo({ top: 0, behavior: 'instant' });
-}
-
-function lpOpenModule(id) {
-  LP.mod = id; LP.result = null; LP.picked = [];
-  lpRender();
-  window.scrollTo({ top: 0, behavior: 'instant' });
-}
-
-function lpRenderModule() {
-  const m = lpAllMods().find(x => x.id === LP.mod);
-  if (!m || m.status !== 'published') { LP.mod = null; return lpRenderHome(); }
-  const mine = LP.progress[m.id];
-  const pub = lpAllMods().filter(x => x.status === 'published');
-  const nextMod = pub[pub.findIndex(x => x.id === m.id) + 1];
-  const r = LP.result;
-
-  const questions = m.questions.map((q, i) => `
-    <fieldset class="lp-q"><legend>${i + 1}. ${esc(q.q)}</legend>
-      ${q.options.map((o, j) => {
-        const cls = r ? (j === r.results[i].answer ? 'is-right' : (LP.picked[i] === j ? 'is-wrong' : '')) : (LP.picked[i] === j ? 'is-picked' : '');
-        return `<label class="lp-opt ${cls}"><input type="radio" name="q${i}" value="${j}" ${LP.picked[i] === j ? 'checked' : ''} ${r ? 'disabled' : ''}><span>${esc(o)}</span></label>`;
+      ${LP.levels.map((l, i) => {
+        const pub = l.modules.filter(m => m.status === 'published');
+        const d = pub.filter(m => lpDone(m.id)).length;
+        return `<section class="lp-sec" style="--lc:${lpColor(i)}">
+          <div class="lp-sec-head"><h2><span class="lp-dot"></span>${esc(l.title)}</h2>
+            <p>${esc([l.audience, pub.length ? `${d} of ${pub.length} complete` : 'Coming soon'].filter(Boolean).join(' · '))}</p></div>
+          <div class="lp-rows">${l.modules.map(m => m.status === 'published' ? `
+            <article class="lp-row">
+              <div><h3>${esc(m.title)}</h3>
+                <p>${esc([plural(m.cards.length, 'card'), plural(m.questions.length, 'question'), lpDone(m.id) ? `Complete · best ${LP.progress[m.id].best}%` : ''].filter(Boolean).join(' · '))}</p></div>
+              <button class="lp-pill" type="button" data-mod="${esc(m.id)}">${lpDone(m.id) ? 'Review' : 'Study'}</button>
+            </article>` : `
+            <article class="lp-row is-soon">
+              <div><h3>${esc(m.title)}</h3><p>Coming soon</p></div>
+              <button class="lp-pill is-ghost" type="button" disabled>Soon</button>
+            </article>`).join('')}</div>
+        </section>`;
       }).join('')}
-      ${r && r.results[i].why ? `<p class="lp-why">${esc(r.results[i].why)}</p>` : ''}
-    </fieldset>`).join('');
-
-  lpRoot().innerHTML = `
-    <div class="lp-light" style="padding-top:72px;margin-bottom:0"><div class="wrap lp-module">
-      <button class="lp-back" id="lpBack" type="button">← All modules</button>
-      <h1 data-lp-reveal>${esc(m.title)}</h1>
-      <p class="lede">${esc(m.objective)}</p>
-      <div class="lp-meta"><span class="lp-pill">${esc(m.level.title)}</span>${m.owner ? `<span class="lp-pill" style="background:transparent;color:#181C20;border:1.5px solid rgba(24,28,32,.4)">Owner: ${esc(m.owner)}</span>` : ''}</div>
-      ${mine?.passed ? `<div class="lp-done-banner">Complete · best score ${mine.best}%</div>` : ''}
-      ${lpVideo(m.video)}
-
-      ${m.guide ? `<section class="lp-block" data-lp-reveal><h2>The guide.</h2><div class="lp-guide">${lpFmt(m.guide)}</div></section>` : ''}
-
-      ${(m.good || m.bad) ? `<section class="lp-block" data-lp-reveal><h2>Good and bad.</h2><div class="lp-gb">
-        ${m.good ? `<div class="lp-card good"><h3>Good</h3><p>${esc(m.good)}</p></div>` : ''}
-        ${m.bad ? `<div class="lp-card bad"><h3>Bad</h3><p>${esc(m.bad)}</p></div>` : ''}
-      </div></section>` : ''}
-
-      ${m.scenario ? `<section class="lp-block" data-lp-reveal><h2>Scenario.</h2><div class="lp-card scenario"><p>${esc(m.scenario)}</p></div></section>` : ''}
-
-      ${m.questions.length ? `<section class="lp-block" data-lp-reveal><h2>Check yourself.</h2>
-        <form id="lpQuiz" novalidate>${questions}
-          <p class="lp-err" id="lpQErr" hidden></p>
-          ${r ? '' : `<button class="hero-cta" type="submit">Submit answers</button>`}
-        </form>
-        ${r ? `<div class="lp-result"><b>${r.score}%</b><p>${r.passed ? 'Passed. This module is marked complete.' : `Not yet. You need ${m.passMark}% to complete this module. Read the guide again and retake.`}</p>
-          ${r.passed ? '' : `<button class="hero-cta" id="lpRetake" type="button">Retake</button>`}</div>` : ''}
-      </section>` : ''}
-
-      <div class="lp-next">
-        <button class="hero-cta" id="lpAll" type="button">All modules</button>
-        ${nextMod ? `<button class="hero-cta" id="lpNextMod" type="button">Next: ${esc(nextMod.title)}</button>` : ''}
-      </div>
-    </div></div>`;
-
-  $('#lpBack').onclick = $('#lpAll').onclick = () => { LP.mod = null; lpRender(); };
-  $('#lpNextMod')?.addEventListener('click', () => lpOpenModule(nextMod.id));
-  $('#lpRetake')?.addEventListener('click', () => { LP.result = null; LP.picked = []; lpRenderModule(); document.getElementById('lpQuiz')?.scrollIntoView(); });
-  lpRoot().querySelectorAll('.lp-opt input').forEach(inp => inp.addEventListener('change', () => {
-    const i = Number(inp.name.slice(1)); LP.picked[i] = Number(inp.value);
-    inp.closest('fieldset').querySelectorAll('.lp-opt').forEach(l => l.classList.toggle('is-picked', l.contains(inp) && inp.checked));
-  }));
-  $('#lpQuiz')?.addEventListener('submit', async e => {
-    e.preventDefault();
-    const err = $('#lpQErr');
-    if (m.questions.some((_, i) => LP.picked[i] === undefined)) { err.textContent = 'Answer every question first.'; err.hidden = false; return; }
-    const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Checking…';
-    try {
-      const res = await api('/api/learning', { method: 'POST', body: JSON.stringify({ moduleId: m.id, answers: LP.picked }) });
-      LP.result = res; LP.progress[m.id] = res.progress;
-      lpRenderModule();
-      document.querySelector('#lpQuiz')?.scrollIntoView();
-    } catch (ex) { err.textContent = ex.message; err.hidden = false; btn.disabled = false; btn.textContent = 'Submit answers'; }
-  });
-  lpReveal(lpRoot());
+    </div>`;
+  lpRoot().querySelectorAll('[data-mod]').forEach(b => b.addEventListener('click', () => lpOpenStudy(b.dataset.mod)));
+  $('#lpContinue')?.addEventListener('click', () => next && lpOpenStudy(next.id));
 }
 
 /* =====================================================================
-   Layer 3 — SEC Admin: Learning portal settings
+   Study mode: flashcards, then one multiple-choice question at a time
+   ===================================================================== */
+let S = null; // current study session
+
+function lpOpenStudy(id) {
+  const m = lpAllMods().find(x => x.id === id);
+  if (!m || m.status !== 'published') return;
+  S = { m, phase: m.cards.length ? 'cards' : 'quiz', deck: m.cards.map((_, i) => i), i: 0, flipped: false,
+        got: new Set(), miss: new Set(), qi: 0, picked: [], fb: [], result: null, busy: false };
+  let el = $('#lpStudy');
+  if (!el) { el = document.createElement('div'); el.id = 'lpStudy'; el.className = 'lp-study'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); document.body.appendChild(el); }
+  el.style.setProperty('--lc', lpColor(m.li));
+  document.body.style.overflow = 'hidden';
+  document.addEventListener('keydown', lpKeys);
+  lpStudyRender();
+}
+function lpCloseStudy() {
+  $('#lpStudy')?.remove();
+  document.removeEventListener('keydown', lpKeys);
+  document.body.style.overflow = '';
+  S = null;
+}
+
+function lpKeys(e) {
+  if (!S || e.target.closest?.('input,textarea')) return;
+  if (e.key === 'Escape') { lpExit(); return; }
+  if (S.phase === 'cards' && S.i < S.deck.length) {
+    if (e.key === ' ' || e.key === 'Enter' || e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); lpFlip(); }
+    else if (e.key === 'ArrowRight') lpGrade(true);
+    else if (e.key === 'ArrowLeft') lpGrade(false);
+  } else if (S.phase === 'quiz' && !S.result) {
+    const q = S.m.questions[S.qi];
+    if (S.fb[S.qi]) { if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); lpNextQ(); } }
+    else if (q && /^[1-6]$/.test(e.key) && Number(e.key) <= q.options.length) lpPick(Number(e.key) - 1);
+  }
+}
+
+async function lpExit() {
+  const inProgress = S && !S.result && (S.phase === 'quiz' ? S.picked.some(v => v !== undefined) : S.got.size + S.miss.size > 0);
+  if (inProgress && !await uiConfirm('Leave this module?', 'Your answers so far will not be saved.', 'Leave')) return;
+  lpCloseStudy(); lpRenderHome();
+}
+
+function lpStudyShell(inner, label, pct) {
+  $('#lpStudy').innerHTML = `
+    <div class="lp-study-top">
+      <button class="lp-x" id="lpX" type="button" aria-label="Close">&#10005;</button>
+      <div class="lp-study-title">${esc(S.m.title)}</div>
+      <div class="lp-study-step">${esc(label)}</div>
+    </div>
+    <div class="lp-study-bar"><i style="width:${Math.round(pct)}%"></i></div>
+    <div class="lp-study-body">${inner}</div>`;
+  $('#lpX').onclick = lpExit;
+}
+
+function lpStudyRender() {
+  if (S.phase === 'cards') return S.i < S.deck.length ? lpRenderCard() : lpRenderCardsDone();
+  if (S.result) return lpRenderResult();
+  return lpRenderQuestion();
+}
+
+/* ---------- flashcards ---------- */
+function lpRenderCard() {
+  const c = S.m.cards[S.deck[S.i]];
+  lpStudyShell(`
+    <div class="lp-card-wrap">
+      <button class="lp-flash ${S.flipped ? 'is-flipped' : ''}" id="lpFlash" type="button" aria-label="Flip card">
+        <span class="lp-face front"><small>Question</small><span>${esc(c.front)}</span><em>Tap to flip</em></span>
+        <span class="lp-face back"><small>Answer</small><span>${esc(c.back)}</span></span>
+      </button>
+      <div class="lp-card-actions">
+        <button class="lp-pill is-ghost lp-pill-lg" id="lpMiss" type="button">Still learning</button>
+        <button class="lp-pill lp-pill-lg" id="lpGot" type="button">Got it</button>
+      </div>
+      <p class="lp-hint">Space flips · ← still learning · → got it</p>
+    </div>`, `Card ${S.i + 1} of ${S.deck.length}`, (S.i / S.deck.length) * 100);
+  $('#lpFlash').onclick = lpFlip;
+  $('#lpGot').onclick = () => lpGrade(true);
+  $('#lpMiss').onclick = () => lpGrade(false);
+}
+function lpFlip() { S.flipped = !S.flipped; $('#lpFlash')?.classList.toggle('is-flipped', S.flipped); }
+function lpGrade(knew) {
+  const idx = S.deck[S.i];
+  if (knew) { S.got.add(idx); S.miss.delete(idx); } else { S.miss.add(idx); S.got.delete(idx); }
+  S.i++; S.flipped = false;
+  lpStudyRender();
+}
+function lpRenderCardsDone() {
+  const total = S.m.cards.length, known = S.got.size, missed = [...S.miss];
+  const hasQuiz = S.m.questions.length > 0;
+  lpStudyShell(`
+    <div class="lp-center">
+      <p class="lp-big">${known}<span>/${total}</span></p>
+      <h2>${missed.length ? `${plural(missed.length, 'card')} still to learn.` : 'You know every card.'}</h2>
+      <p class="lede">${hasQuiz ? `Next is a quiz of ${plural(S.m.questions.length, 'question')}. You need ${S.m.passMark}% to complete the module.` : 'This module has no quiz yet.'}</p>
+      <div class="lp-actions">
+        ${missed.length ? `<button class="lp-pill is-ghost lp-pill-lg" id="lpRedo" type="button">Review ${missed.length} missed</button>` : ''}
+        ${hasQuiz ? `<button class="lp-pill lp-pill-lg" id="lpToQuiz" type="button">Start the quiz</button>` : `<button class="lp-pill lp-pill-lg" id="lpBackHome" type="button">Back to modules</button>`}
+      </div>
+      <button class="lp-text-link" id="lpAgain" type="button">Go through all the cards again</button>
+    </div>`, 'Cards done', 100);
+  $('#lpRedo')?.addEventListener('click', () => { S.deck = missed; S.i = 0; S.flipped = false; S.miss = new Set(); lpStudyRender(); });
+  $('#lpToQuiz')?.addEventListener('click', () => { S.phase = 'quiz'; S.qi = 0; S.picked = []; S.fb = []; lpStudyRender(); });
+  $('#lpBackHome')?.addEventListener('click', () => { lpCloseStudy(); lpRenderHome(); });
+  $('#lpAgain').onclick = () => { S.deck = S.m.cards.map((_, i) => i); S.i = 0; S.flipped = false; S.got = new Set(); S.miss = new Set(); lpStudyRender(); };
+}
+
+/* ---------- quiz ---------- */
+function lpRenderQuestion() {
+  const qs = S.m.questions, q = qs[S.qi], fb = S.fb[S.qi], picked = S.picked[S.qi];
+  const last = S.qi === qs.length - 1;
+  lpStudyShell(`
+    <div class="lp-quiz">
+      <h2 class="lp-q">${esc(q.q)}</h2>
+      <div class="lp-opts" role="group" aria-label="Answers">${q.options.map((o, j) => {
+        const cls = fb ? (j === fb.answer ? 'is-right' : (j === picked ? 'is-wrong' : 'is-dim')) : '';
+        return `<button type="button" class="lp-opt ${cls}" data-o="${j}" ${fb ? 'disabled' : ''}><span class="k">${String.fromCharCode(65 + j)}</span><span>${esc(o)}</span></button>`;
+      }).join('')}</div>
+      ${fb ? `<div class="lp-feedback ${fb.correct ? 'ok' : 'no'}"><b>${fb.correct ? 'Correct.' : 'Not quite.'}</b> ${esc(fb.why || '')}</div>
+        <button class="lp-pill lp-pill-lg" id="lpNextQ" type="button">${last ? 'See result' : 'Next question'}</button>` : `<p class="lp-hint">Press 1 to ${q.options.length} to answer</p>`}
+      <p class="lp-err" id="lpQErr" hidden></p>
+    </div>`, `Question ${S.qi + 1} of ${qs.length}`, ((S.qi + (fb ? 1 : 0)) / qs.length) * 100);
+  document.querySelectorAll('#lpStudy .lp-opt').forEach(b => b.addEventListener('click', () => lpPick(Number(b.dataset.o))));
+  $('#lpNextQ')?.addEventListener('click', lpNextQ);
+}
+async function lpPick(j) {
+  if (S.busy || S.fb[S.qi]) return;
+  S.busy = true; S.picked[S.qi] = j;
+  try {
+    S.fb[S.qi] = await api('/api/learning', { method: 'POST', body: JSON.stringify({ moduleId: S.m.id, check: { i: S.qi, choice: j } }) });
+    lpRenderQuestion();
+  } catch (e) { const el = $('#lpQErr'); if (el) { el.textContent = e.message; el.hidden = false; } S.picked[S.qi] = undefined; }
+  S.busy = false;
+}
+async function lpNextQ() {
+  if (S.qi < S.m.questions.length - 1) { S.qi++; lpRenderQuestion(); return; }
+  try {
+    const res = await api('/api/learning', { method: 'POST', body: JSON.stringify({ moduleId: S.m.id, answers: S.picked }) });
+    S.result = res; LP.progress[S.m.id] = res.progress;
+    lpRenderResult();
+  } catch (e) { const el = $('#lpQErr'); if (el) { el.textContent = e.message; el.hidden = false; } }
+}
+function lpRenderResult() {
+  const r = S.result, qs = S.m.questions;
+  const wrong = qs.map((q, i) => ({ q, i })).filter(({ i }) => !r.results[i].correct);
+  lpStudyShell(`
+    <div class="lp-center">
+      <p class="lp-big">${r.score}<span>%</span></p>
+      <h2>${r.passed ? 'Module complete.' : 'Not yet.'}</h2>
+      <p class="lede">${r.passed ? `You passed with ${r.score}%.${wrong.length ? ' Review what you missed below.' : ''}` : `You need ${S.m.passMark}% to complete this module. Go back through the cards and try again.`}</p>
+      <div class="lp-actions">
+        <button class="lp-pill lp-pill-lg" id="lpDone" type="button">Back to modules</button>
+        ${r.passed ? '' : `<button class="lp-pill is-ghost lp-pill-lg" id="lpRetry" type="button">Retake the quiz</button>`}
+        <button class="lp-pill is-ghost lp-pill-lg" id="lpRestudy" type="button">Study the cards</button>
+      </div>
+      ${wrong.length ? `<div class="lp-review"><h3>What you missed</h3>${wrong.map(({ q, i }) => `
+        <div class="lp-review-item"><p><b>${esc(q.q)}</b></p>
+          <p class="you">You said: ${esc(q.options[S.picked[i]] ?? '')}</p>
+          <p class="right">Answer: ${esc(q.options[r.results[i].answer])}</p>
+          ${r.results[i].why ? `<p class="why">${esc(r.results[i].why)}</p>` : ''}</div>`).join('')}</div>` : ''}
+    </div>`, 'Result', 100);
+  $('#lpDone').onclick = () => { lpCloseStudy(); lpRenderHome(); };
+  $('#lpRetry')?.addEventListener('click', () => { S.result = null; S.qi = 0; S.picked = []; S.fb = []; S.phase = 'quiz'; lpStudyRender(); });
+  $('#lpRestudy').onclick = () => { S.result = null; S.phase = 'cards'; S.deck = S.m.cards.map((_, i) => i); S.i = 0; S.flipped = false; S.got = new Set(); S.miss = new Set(); lpStudyRender(); };
+}
+
+/* =====================================================================
+   Layer 3: SEC Admin, Learning portal settings
    ===================================================================== */
 const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null };
 
@@ -331,6 +370,12 @@ const lcSet = (path, val) => {
   o[keys[keys.length - 1]] = val;
 };
 const lcId = () => 'm' + Math.random().toString(36).slice(2, 8);
+/* flashcards are edited as plain lines: "front | back" */
+const cardsToText = cards => (cards || []).map(c => `${c.front} | ${c.back}`).join('\n');
+const textToCards = text => String(text).split('\n').map(line => {
+  const i = line.indexOf('|');
+  return i < 0 ? null : { front: line.slice(0, i).trim(), back: line.slice(i + 1).trim() };
+}).filter(c => c && c.front && c.back);
 
 function renderAdminLearn() {
   const el = $('#panelLearn'); if (!el || !LC.data) return;
@@ -346,6 +391,7 @@ function renderAdminLearn() {
     const base = `levels.${li}.modules.${mi}`;
     return `<details class="lc-mod" data-mid="${esc(m.id)}" ${LC.open.has(m.id) ? 'open' : ''}>
       <summary><span class="lc-sum">${esc(m.title || 'Untitled module')}</span>
+        <span class="small" style="font-weight:400;color:var(--muted)">${m.cards.length} cards · ${m.questions.length} questions</span>
         <span class="pill ${m.status === 'published' ? 'ok' : 'no'}">${m.status === 'published' ? 'Published' : 'Draft'}</span></summary>
       <div class="lc-body">
         <div class="setgrid" style="margin-top:16px">
@@ -355,25 +401,19 @@ function renderAdminLearn() {
           <div><label>Content owner</label>${inp(base + '.owner', m.owner, 'e.g. President / ExCo')}</div>
           <div><label>Reviewer</label>${inp(base + '.reviewer', m.reviewer)}</div>
           <div><label>Pass mark (%)</label>${inp(base + '.passMark', m.passMark, '75', 'inputmode="numeric"')}</div>
-          <div style="grid-column:1/-1"><label>Video link (YouTube, Vimeo or any https link)</label>${inp(base + '.video', m.video, 'https://')}</div>
         </div>
-        <label>Written guide</label>
-        <p class="hint" style="margin-top:0">Start a line with <b>## </b> for a heading and <b>- </b> for a bullet. Key information only.</p>
-        ${area(base + '.guide', m.guide, 'lc-tall')}
-        <div class="setgrid" style="margin-top:14px">
-          <div><label>Good example</label>${area(base + '.good', m.good)}</div>
-          <div><label>Bad example</label>${area(base + '.bad', m.bad)}</div>
-          <div style="grid-column:1/-1"><label>Scenario</label>${area(base + '.scenario', m.scenario)}</div>
-        </div>
-        <label>Assessment questions</label>
+        <label>Flashcards</label>
+        <p class="hint" style="margin-top:0">One card per line, written as <b>question | answer</b>. Keep each side short: one idea per card.</p>
+        <textarea class="lc-tall" data-cards="${base}" placeholder="Ownership | If it is yours, you carry it to the end.">${esc(cardsToText(m.cards))}</textarea>
+        <label style="margin-top:14px">Quiz questions (multiple choice)</label>
         ${m.questions.map((q, qi) => `<div class="lc-q">
           <input type="text" data-p="${base}.questions.${qi}.q" value="${esc(q.q)}" placeholder="Question ${qi + 1}">
           <div style="margin-top:10px">${[0, 1, 2, 3].map(oi => `<div class="lc-opt">
             <input type="radio" name="ans-${esc(m.id)}-${qi}" data-ans="${base}.questions.${qi}.answer" value="${oi}" ${q.answer === oi ? 'checked' : ''} title="Correct answer">
             <input type="text" data-p="${base}.questions.${qi}.options.${oi}" value="${esc(q.options[oi] || '')}" placeholder="Option ${oi + 1}${oi < 2 ? '' : ' (optional)'}"></div>`).join('')}</div>
-          <input type="text" data-p="${base}.questions.${qi}.why" value="${esc(q.why || '')}" placeholder="Why that answer is right (shown after they submit)">
+          <input type="text" data-p="${base}.questions.${qi}.why" value="${esc(q.why || '')}" placeholder="Why that answer is right (shown right after they answer)">
           <div class="lc-row"><button class="mini danger" type="button" data-act="delq" data-li="${li}" data-mi="${mi}" data-qi="${qi}">Remove question</button></div>
-        </div>`).join('') || `<p class="hint">No questions yet. A module with no questions has no completion check.</p>`}
+        </div>`).join('') || `<p class="hint">No questions yet. A module with no questions cannot be completed.</p>`}
         <div class="lc-row">
           <button class="mini" type="button" data-act="addq" data-li="${li}" data-mi="${mi}">Add question</button>
           <span style="flex:1"></span>
@@ -387,13 +427,13 @@ function renderAdminLearn() {
   el.innerHTML = `
   <div class="setblock">
     <h3>Public recruitment page</h3>
-    <p class="lead">Shown to applicants on the public page, under "How it works". It tells them what happens after they are selected. Switch it off to hide the whole section.</p>
+    <p class="lead">Shown to applicants on the public page. It tells them what happens after they are selected. Switch it off to hide the whole section.</p>
     <label style="display:flex;gap:10px;align-items:center;margin-bottom:18px"><input type="checkbox" data-bool="public.enabled" ${pub.enabled !== false ? 'checked' : ''} style="width:auto"> Show this section on the public page</label>
     <div class="setgrid">
       <div style="grid-column:1/-1"><label>Headline</label>${inp('public.headline', pub.headline)}</div>
       <div style="grid-column:1/-1"><label>Intro</label>${area('public.intro', pub.intro)}</div>
     </div>
-    <label>Learning path (also shown on the Learning Portal home)</label>
+    <label>Learning path (also shown on the Learning Portal)</label>
     ${(pub.steps || []).map((s, i) => `<div class="qrow">
       <input type="text" data-p="public.steps.${i}.title" value="${esc(s.title)}" placeholder="Step" style="flex:1">
       <input type="text" data-p="public.steps.${i}.text" value="${esc(s.text)}" placeholder="One line" style="flex:2.4">
@@ -421,10 +461,10 @@ function renderAdminLearn() {
 
   <div class="setblock">
     <h3>Completion</h3>
-    <p class="lead">Who has passed what. A member appears here after submitting their first assessment. Only published modules with questions can be completed.</p>
+    <p class="lead">Who has passed what. A member appears here after finishing their first quiz. Only published modules with questions can be completed.</p>
     ${members.length && published.length ? `<div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th>${published.map(m => `<th>${esc(m.title)}</th>`).join('')}</tr></thead><tbody>
       ${members.map(u => `<tr><td><b>${esc(nameOf(u))}</b></td>${published.map(m => { const p = LC.progressAll[u]?.[m.id]; return `<td>${p ? (p.passed ? `Passed (${p.best}%)` : `${p.best}% · ${p.attempts} tr${p.attempts === 1 ? 'y' : 'ies'}`) : '—'}</td>`; }).join('')}</tr>`).join('')}
-    </tbody></table></div>` : '<p class="hint" style="margin:0">Nobody has submitted an assessment yet.</p>'}
+    </tbody></table></div>` : '<p class="hint" style="margin:0">Nobody has finished a quiz yet.</p>'}
   </div>
   <div class="setblock">
     <h3>Committee sign-up</h3>
@@ -437,7 +477,7 @@ function renderAdminLearn() {
       ${LC.members.map(m => `<tr><td><b>${esc(m.name)}</b></td><td>${esc(m.imail)}</td><td>${esc((m.createdAt || '').slice(0, 10))}</td>
         <td><button class="mini danger" type="button" data-act="delmember" data-id="${esc(m.id)}">Remove</button></td></tr>`).join('')}
     </tbody></table></div>` : '<p class="hint" style="margin:0">Nobody has joined yet.</p>'}
-  </div>  `;
+  </div>`;
 }
 
 /* one delegated set of listeners for the whole editor */
@@ -445,6 +485,12 @@ function renderAdminLearn() {
   const el = $('#panelLearn'); if (!el) return;
   el.addEventListener('input', e => {
     if (e.target.id === 'lcJoin') { LC.joinCode = e.target.value.trim(); lcSave(); return; }
+    if (e.target.dataset.cards && LC.data) { // flashcards: parse the lines back into cards
+      lcSet(e.target.dataset.cards + '.cards', textToCards(e.target.value));
+      const sum = e.target.closest('details.lc-mod')?.querySelector('summary .small');
+      if (sum) { const m = e.target.dataset.cards.split('.'); const mod = LC.data.levels[m[1]].modules[m[3]]; sum.textContent = `${mod.cards.length} cards · ${mod.questions.length} questions`; }
+      lcSave(); return;
+    }
     const p = e.target.dataset.p; if (!p || !LC.data) return;
     let v = e.target.value;
     if (p.endsWith('.passMark')) v = parseInt(v, 10) || 0;
@@ -489,7 +535,7 @@ function renderAdminLearn() {
     else if (act === 'dell') { if (!await uiConfirm('Delete this level?', 'Every module in it goes too. Members’ completion records for those modules stop showing.', 'Delete')) return; L.splice(li, 1); }
     else if (act === 'lup') swap(L, li, li - 1);
     else if (act === 'ldown') swap(L, li, li + 1);
-    else if (act === 'addm') { const id = lcId(); L[li].modules.push({ id, title: 'New module', objective: '', status: 'draft', owner: '', reviewer: '', video: '', guide: '', good: '', bad: '', scenario: '', passMark: 75, questions: [] }); LC.open.add(id); }
+    else if (act === 'addm') { const id = lcId(); L[li].modules.push({ id, title: 'New module', objective: '', status: 'draft', owner: '', reviewer: '', passMark: 75, cards: [], questions: [] }); LC.open.add(id); }
     else if (act === 'delm') { if (!await uiConfirm('Delete this module?', L[li].modules[mi].title || 'Untitled module', 'Delete')) return; L[li].modules.splice(mi, 1); }
     else if (act === 'mup') swap(L[li].modules, mi, mi - 1);
     else if (act === 'mdown') swap(L[li].modules, mi, mi + 1);
@@ -499,7 +545,6 @@ function renderAdminLearn() {
     renderAdminLearn(); lcSave();
   });
 })();
-
 window.SEC.loadAdminLearn = loadAdminLearn;
 
 /* =====================================================================

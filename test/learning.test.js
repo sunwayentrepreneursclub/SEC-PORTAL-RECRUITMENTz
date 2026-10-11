@@ -122,6 +122,31 @@ test('quiz grading is server-side and completion is recorded per member', async 
   assert.equal(all.data.members[0].name, 'Aisha Rahman');
 });
 
+test('flashcards are cleaned, and instant feedback only works for published modules', async () => {
+  const cookie = (await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).cookie;
+  await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', public: { enabled: true, steps: [] }, levels: [{ id: 'a', title: 'A', modules: [
+    { id: 'm1', title: 'M1', status: 'published', passMark: 50,
+      cards: [{ front: ' Ownership ', back: 'Carry it to the end' }, { front: 'No back side', back: '' }, { front: '', back: 'No front' }],
+      questions: [{ q: 'One?', options: ['x', 'y'], answer: 1, why: 'Because y' }] },
+    { id: 'm2', title: 'Draft', status: 'draft', cards: [{ front: 'secret', back: 'draft card' }], questions: [{ q: 'Hidden?', options: ['a', 'b'], answer: 0 }] }] }] }, adminCookie);
+
+  const before = await call(learning, 'GET', '/api/learning', null, cookie);
+  const view = before.data;
+  assert.deepEqual(view.levels[0].modules[0].cards, [{ front: 'Ownership', back: 'Carry it to the end' }]);
+  assert.equal(JSON.stringify(view).includes('draft card'), false, 'draft cards must not reach members');
+  assert.equal(JSON.stringify(view).includes('"answer"'), false);
+
+  const right = await call(learning, 'POST', '/api/learning', { moduleId: 'm1', check: { i: 0, choice: 1 } }, cookie);
+  assert.deepEqual([right.data.correct, right.data.answer, right.data.why], [true, 1, 'Because y']);
+  const wrong = await call(learning, 'POST', '/api/learning', { moduleId: 'm1', check: { i: 0, choice: 0 } }, cookie);
+  assert.equal(wrong.data.correct, false);
+  assert.equal((await call(learning, 'POST', '/api/learning', { moduleId: 'm2', check: { i: 0, choice: 0 } }, cookie)).status, 404);
+  assert.equal((await call(learning, 'POST', '/api/learning', { moduleId: 'm1', check: { i: 0, choice: 1 } })).status, 401);
+  // checking an answer is feedback only: it never adds an attempt or changes completion
+  const after = await call(learning, 'GET', '/api/learning', null, cookie);
+  assert.equal(after.data.progress.m1.attempts, before.data.progress.m1.attempts);
+});
+
 test('removing a member ends their session at once', async () => {
   const cookie = (await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).cookie;
   assert.equal((await call(sessionApi, 'GET', '/api/session', null, cookie)).data.role, 'member');

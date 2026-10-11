@@ -3,7 +3,8 @@ import { seedLearning, cleanLearning, publicLearning, memberLevels, findModule, 
 
 async function loadLearning() {
   let c = await kvGet(K_LEARN);
-  if (!c) { c = seedLearning(); await kvSet(K_LEARN, c); }
+  // Content saved before the flashcard format and never edited by an admin is replaced by the new seed.
+  if (!c || (c.version !== 2 && !c.updatedBy)) { c = { ...seedLearning(), version: 2 }; await kvSet(K_LEARN, c); }
   return c;
 }
 
@@ -38,16 +39,21 @@ export default async function handler(req, res) {
       if (code && code.length < 6) return send(res, 400, { error: 'Use a join code of at least 6 characters, or leave it empty to close sign-up.' });
       await kvSet(K_JOIN, { code, updatedAt: new Date().toISOString(), updatedBy: admin });
     }
-    const next = { ...cleanLearning(body), updatedAt: new Date().toISOString(), updatedBy: admin };
+    const next = { ...cleanLearning(body), version: 2, updatedAt: new Date().toISOString(), updatedBy: admin };
     await kvSet(K_LEARN, next);
     return send(res, 200, { ok: true, updatedAt: next.updatedAt });
   }
 
   if (req.method === 'POST') {
     if (!user) return send(res, 401, { error: 'Not signed in.' });
-    const { moduleId, answers } = await readBody(req);
+    const { moduleId, answers, check } = await readBody(req);
     const m = findModule(await loadLearning(), String(moduleId || ''));
     if (!m || m.status !== 'published') return send(res, 404, { error: 'That module is not available.' });
+    if (check) { // instant feedback on one question while studying; completion still needs the final submit
+      const q = (m.questions || [])[Number(check.i)];
+      if (!q || !Number.isInteger(check.choice)) return send(res, 400, { error: 'Pick an answer.' });
+      return send(res, 200, { correct: check.choice === q.answer, answer: q.answer, why: q.why });
+    }
     const picked = Array.isArray(answers) ? answers.map(a => (Number.isInteger(a) ? a : -1)) : [];
     if (picked.length !== (m.questions || []).length) return send(res, 400, { error: 'Answer every question first.' });
     const result = grade(m, picked);

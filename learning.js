@@ -327,7 +327,7 @@ function lpRenderResult() {
 /* =====================================================================
    Layer 3: SEC Admin, Learning portal settings
    ===================================================================== */
-const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null };
+const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null, sort: 'progress' };
 
 async function loadAdminLearn() {
   const el = $('#panelLearn'); if (!el) return;
@@ -377,12 +377,90 @@ const textToCards = text => String(text).split('\n').map(line => {
   return i < 0 ? null : { front: line.slice(0, i).trim(), back: line.slice(i + 1).trim() };
 }).filter(c => c && c.front && c.back);
 
+/* ---------- committee progress ---------- */
+function lcProgress() {
+  const levels = LC.data.levels;
+  const mods = levels.flatMap((l, li) => l.modules.filter(m => m.status === 'published' && m.questions.length).map(m => ({ ...m, li })));
+  const known = new Map(LC.members.map(m => [m.id, m]));
+  // everyone who joined, plus any admin who has studied
+  const ids = [...new Set([...LC.members.map(m => m.id), ...Object.keys(LC.progressAll)])];
+  const people = ids.map(id => {
+    const prog = LC.progressAll[id] || {};
+    const mine = mods.map(m => ({ m, p: prog[m.id] }));
+    const done = mine.filter(x => x.p?.passed).length;
+    const tried = mine.filter(x => x.p);
+    const best = mine.filter(x => x.p).map(x => x.p.best);
+    const last = tried.map(x => x.p.at).filter(Boolean).sort().pop() || '';
+    return {
+      id, name: known.get(id)?.name || id, email: known.get(id)?.imail || (id.startsWith('m:') ? id.slice(2) : 'Admin'),
+      done, total: mods.length, pct: mods.length ? Math.round(done / mods.length * 100) : 0,
+      avg: best.length ? Math.round(best.reduce((a, b) => a + b, 0) / best.length) : null, last,
+      byLevel: levels.map((l, li) => ({ title: l.title, done: mine.filter(x => x.m.li === li && x.p?.passed).length, total: mine.filter(x => x.m.li === li).length })).filter(x => x.total),
+      mine,
+    };
+  });
+  return { mods, people };
+}
+const lcAgo = iso => {
+  if (!iso) return 'Not started';
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+  return days <= 0 ? 'Today' : days === 1 ? 'Yesterday' : days < 30 ? `${days} days ago` : new Date(iso).toISOString().slice(0, 10);
+};
+function lcProgressBlock() {
+  const { mods, people } = lcProgress();
+  if (!people.length) return `<div class="setblock"><h3>Committee progress</h3><p class="lead" style="margin:0">Nobody has joined yet. Share the join code (below) in the committee chat and everyone who signs up appears here.</p></div>`;
+  const sorted = [...people].sort(LC.sort === 'name' ? (a, b) => a.name.localeCompare(b.name)
+    : LC.sort === 'recent' ? (a, b) => (b.last || '').localeCompare(a.last || '')
+    : (a, b) => b.pct - a.pct || a.name.localeCompare(b.name));
+  const finished = people.filter(x => x.total && x.done === x.total).length;
+  const notStarted = people.filter(x => !x.last).length;
+  const avgPct = Math.round(people.reduce((a, x) => a + x.pct, 0) / people.length);
+  const stat = (n, l) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`;
+  const moduleRows = mods.map(m => {
+    const passed = people.filter(x => x.mine.find(y => y.m.id === m.id)?.p?.passed).length;
+    const scores = people.map(x => x.mine.find(y => y.m.id === m.id)?.p?.best).filter(v => v != null);
+    return `<tr><td>${esc(m.title)}</td><td><span class="lc-bar"><i style="width:${Math.round(passed / people.length * 100)}%"></i></span> ${passed} of ${people.length}</td>
+      <td>${scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) + '%' : '—'}</td></tr>`;
+  }).join('');
+  return `<div class="setblock">
+    <h3>Committee progress</h3>
+    <p class="lead">How far each member has got. A module counts as complete when they pass its quiz. ${mods.length} modules are open for completion.</p>
+    <div class="stats" style="margin-bottom:22px">${stat(people.length, 'Members')}${stat(avgPct + '%', 'Average complete')}${stat(finished, 'Finished everything')}${stat(notStarted, 'Not started')}</div>
+    <div class="lc-row" style="margin:0 0 12px;align-items:center">
+      <label for="lcSort" style="margin:0">Sort by</label>
+      <select id="lcSort" style="width:auto"><option value="progress" ${LC.sort === 'progress' ? 'selected' : ''}>Most complete</option><option value="name" ${LC.sort === 'name' ? 'selected' : ''}>Name</option><option value="recent" ${LC.sort === 'recent' ? 'selected' : ''}>Last active</option></select>
+      <span style="flex:1"></span><button class="mini" type="button" data-act="csv">Export CSV</button>
+    </div>
+    <div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th><th style="min-width:210px">Progress</th><th>Avg score</th><th>Last active</th><th>By level</th></tr></thead><tbody>
+      ${sorted.map(x => `<tr>
+        <td><b>${esc(x.name)}</b><br><span class="small" style="color:var(--muted)">${esc(x.email)}</span></td>
+        <td><span class="lc-bar"><i style="width:${x.pct}%"></i></span> <b>${x.done}</b> of ${x.total} · ${x.pct}%</td>
+        <td>${x.avg == null ? '—' : x.avg + '%'}</td>
+        <td>${esc(lcAgo(x.last))}</td>
+        <td>${x.byLevel.map(l => `<span class="lc-chip ${l.done === l.total ? 'is-full' : ''}" title="${esc(l.title)}">${esc(l.title.replace(/ training$/i, ''))} ${l.done}/${l.total}</span>`).join(' ')}</td>
+      </tr>`).join('')}
+    </tbody></table></div>
+    <details class="lc-mod" style="margin-top:18px"><summary><span class="lc-sum">Which modules are hardest, and who is stuck</span></summary><div class="lc-body">
+      <h3 style="margin-top:16px">By module</h3>
+      <div class="lc-scroll"><table class="lc-table"><thead><tr><th>Module</th><th>Completed</th><th>Average best score</th></tr></thead><tbody>${moduleRows}</tbody></table></div>
+      <h3 style="margin-top:22px">Tried but not passed yet</h3>
+      ${(() => { const rows = people.flatMap(x => x.mine.filter(y => y.p && !y.p.passed).map(y => `<tr><td><b>${esc(x.name)}</b></td><td>${esc(y.m.title)}</td><td>${y.p.best}% best · ${y.p.attempts} ${y.p.attempts === 1 ? 'try' : 'tries'}</td></tr>`)); return rows.length ? `<div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th><th>Module</th><th>Result</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Nobody is stuck right now.</p>'; })()}
+    </div></details>
+  </div>`;
+}
+function lcCsv() {
+  const { mods, people } = lcProgress();
+  const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [['Name', 'Email', 'Modules passed', 'Modules open', 'Percent complete', 'Average best score', 'Last active', ...mods.map(m => m.title)]];
+  people.forEach(x => rows.push([x.name, x.email, x.done, x.total, x.pct, x.avg ?? '', x.last ? x.last.slice(0, 10) : '', ...x.mine.map(y => y.p ? (y.p.passed ? `Passed ${y.p.best}%` : `${y.p.best}% (not passed)`) : '')]));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv' }));
+  a.download = 'sec-learning-progress.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+
 function renderAdminLearn() {
   const el = $('#panelLearn'); if (!el || !LC.data) return;
   const { public: pub, levels } = LC.data;
-  const published = levels.flatMap(l => l.modules.filter(m => m.status === 'published'));
-  const nameOf = id => LC.members.find(m => m.id === id)?.name || id;
-  const members = Object.keys(LC.progressAll);
 
   const inp = (path, val, ph = '', extra = '') => `<input type="text" data-p="${path}" value="${esc(val ?? '')}" placeholder="${esc(ph)}" ${extra}>`;
   const area = (path, val, cls = '', ph = '') => `<textarea class="${cls}" data-p="${path}" placeholder="${esc(ph)}">${esc(val ?? '')}</textarea>`;
@@ -425,6 +503,7 @@ function renderAdminLearn() {
   };
 
   el.innerHTML = `
+  ${lcProgressBlock()}
   <div class="setblock">
     <h3>Public recruitment page</h3>
     <p class="lead">Shown to applicants on the public page. It tells them what happens after they are selected. Switch it off to hide the whole section.</p>
@@ -459,13 +538,6 @@ function renderAdminLearn() {
   </div>`).join('')}
   <button class="mini" type="button" data-act="addl" style="margin-bottom:22px">Add level</button>
 
-  <div class="setblock">
-    <h3>Completion</h3>
-    <p class="lead">Who has passed what. A member appears here after finishing their first quiz. Only published modules with questions can be completed.</p>
-    ${members.length && published.length ? `<div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th>${published.map(m => `<th>${esc(m.title)}</th>`).join('')}</tr></thead><tbody>
-      ${members.map(u => `<tr><td><b>${esc(nameOf(u))}</b></td>${published.map(m => { const p = LC.progressAll[u]?.[m.id]; return `<td>${p ? (p.passed ? `Passed (${p.best}%)` : `${p.best}% · ${p.attempts} tr${p.attempts === 1 ? 'y' : 'ies'}`) : '—'}</td>`; }).join('')}</tr>`).join('')}
-    </tbody></table></div>` : '<p class="hint" style="margin:0">Nobody has finished a quiz yet.</p>'}
-  </div>
   <div class="setblock">
     <h3>Committee sign-up</h3>
     <p class="lead">Committee members create their own Learning Portal account, so you do not add anyone by hand. Share this join code in the committee chat. Anyone with the code can sign up, so change it when people leave. Clear it to close sign-up. Members never see applicants or this admin area.</p>
@@ -502,6 +574,7 @@ function renderAdminLearn() {
   });
   el.addEventListener('change', e => {
     if (!LC.data) return;
+    if (e.target.id === 'lcSort') { LC.sort = e.target.value; renderAdminLearn(); return; }
     if (e.target.dataset.bool) { lcSet(e.target.dataset.bool, e.target.checked); lcSave(); }
     else if (e.target.dataset.ans) { lcSet(e.target.dataset.ans, Number(e.target.value)); lcSave(); }
     else if (e.target.tagName === 'SELECT' && e.target.dataset.p) {
@@ -517,6 +590,7 @@ function renderAdminLearn() {
   el.addEventListener('click', async e => {
     const b = e.target.closest('[data-act]'); if (!b || !LC.data) return;
     const { act } = b.dataset, li = Number(b.dataset.li), mi = Number(b.dataset.mi), qi = Number(b.dataset.qi), L = LC.data.levels;
+    if (act === 'csv') { lcCsv(); return; }
     if (act === 'gencode') {
       const a = new Uint8Array(6); crypto.getRandomValues(a);
       LC.joinCode = 'SEC-' + [...a].map(n => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n % 32]).join('');

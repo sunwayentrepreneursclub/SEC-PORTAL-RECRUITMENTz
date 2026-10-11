@@ -158,3 +158,10 @@
 #panelLearn .lc-table th,#panelLearn .lc-table td{border-bottom:1px solid var(--board-line);padding:8px 10px;text-align:left;vertical-align:top}
 #panelLearn .lc-table th{font-weight:600;color:var(--muted)}
 #panelLearn .lc-scroll{overflow-x:auto}
+
+/* committee progress */
+#panelLearn .lc-bar{display:inline-block;vertical-align:middle;width:120px;height:8px;border-radius:99px;background:var(--board-line);overflow:hidden;margin-right:8px}
+#panelLearn .lc-bar i{display:block;height:100%;background:var(--open);border-radius:99px}
+#panelLearn .lc-chip{display:inline-block;font-size:12px;font-weight:600;padding:3px 9px;border-radius:99px;border:1px solid var(--line-strong);color:var(--muted);white-space:nowrap;margin:0 4px 4px 0}
+#panelLearn .lc-chip.is-full{background:var(--open);border-color:var(--open);color:#fff}
+#panelLearn .lc-table td:nth-child(2){white-space:nowrap}

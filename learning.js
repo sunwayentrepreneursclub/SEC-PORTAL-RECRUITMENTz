@@ -41,9 +41,9 @@ const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 function lpBar() {
   const signed = !!LP.user;
   $('#lpNav').innerHTML = `
-    <button class="lp-link" id="lpToSite" type="button">Recruitment site</button>
+    <button class="lp-link" id="lpToSite" type="button"><span class="lp-full">Recruitment site</span><span class="lp-short">Site</span></button>
     ${LP.role === 'admin' ? `<button class="lp-link" id="lpToAdmin" type="button">Admin</button>` : ''}
-    ${signed ? `<button class="lp-link" id="lpSignOut" type="button">Sign out</button>` : ''}`;
+    ${signed ? `<button class="lp-link" id="lpSignOut" type="button"><span class="lp-full">Sign out</span><span class="lp-short">Out</span></button>` : ''}`;
   $('#lpToSite').onclick = () => { lpCloseStudy(); history.replaceState(null, '', location.pathname); showView('public'); };
   $('#lpToAdmin')?.addEventListener('click', async () => { lpCloseStudy(); await loadState(); showView('admin'); applyLock(); });
   $('#lpSignOut')?.addEventListener('click', async () => {
@@ -170,16 +170,25 @@ function lpOpenStudy(id) {
   let el = $('#lpStudy');
   if (!el) { el = document.createElement('div'); el.id = 'lpStudy'; el.className = 'lp-study'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); document.body.appendChild(el); }
   el.style.setProperty('--lc', lpColor(m.li));
-  document.body.style.overflow = 'hidden';
+  window.SEC.lockScroll('study'); // the page's own scroll lock, which also works on iPhone Safari
   document.addEventListener('keydown', lpKeys);
+  history.pushState({ lp: 'study' }, '', '#learning'); // so the phone's back button closes the module instead of leaving the portal
   lpStudyRender();
 }
-function lpCloseStudy() {
+function lpCloseStudy(fromBack = false) {
+  const wasOpen = !!S;
   $('#lpStudy')?.remove();
   document.removeEventListener('keydown', lpKeys);
-  document.body.style.overflow = '';
+  window.SEC.unlockScroll('study');
   S = null;
+  if (wasOpen && !fromBack && history.state?.lp === 'study') history.back(); // drop the entry we pushed
 }
+/* back button / swipe-back while studying: close the module and show the list */
+window.addEventListener('popstate', () => {
+  if (!S) return;
+  lpCloseStudy(true);
+  if (LP.user) lpRenderHome();
+});
 
 function lpKeys(e) {
   if (!S || e.target.closest?.('input,textarea')) return;
@@ -232,7 +241,7 @@ function lpRenderCard() {
         <button class="lp-pill is-ghost lp-pill-lg" id="lpMiss" type="button">Still learning</button>
         <button class="lp-pill lp-pill-lg" id="lpGot" type="button">Got it</button>
       </div>
-      <p class="lp-hint">Space flips · ← still learning · → got it</p>
+      <p class="lp-hint"><span class="lp-kb">Space flips · ← still learning · → got it</span><span class="lp-touch">Tap the card to flip it</span></p>
     </div>`, `Card ${S.i + 1} of ${S.deck.length}`, (S.i / S.deck.length) * 100);
   $('#lpFlash').onclick = lpFlip;
   $('#lpGot').onclick = () => lpGrade(true);
@@ -277,7 +286,7 @@ function lpRenderQuestion() {
         return `<button type="button" class="lp-opt ${cls}" data-o="${j}" ${fb ? 'disabled' : ''}><span class="k">${String.fromCharCode(65 + j)}</span><span>${esc(o)}</span></button>`;
       }).join('')}</div>
       ${fb ? `<div class="lp-feedback ${fb.correct ? 'ok' : 'no'}"><b>${fb.correct ? 'Correct.' : 'Not quite.'}</b> ${esc(fb.why || (fb.correct ? '' : 'The answer is: ' + q.options[fb.answer]))}</div>
-        <button class="lp-pill lp-pill-lg" id="lpNextQ" type="button">${last ? 'See result' : 'Next question'}</button>` : `<p class="lp-hint">Press 1 to ${q.options.length} to answer</p>`}
+        <button class="lp-pill lp-pill-lg" id="lpNextQ" type="button">${last ? 'See result' : 'Next question'}</button>` : `<p class="lp-hint lp-kb">Press 1 to ${q.options.length} to answer</p>`}
       <p class="lp-err" id="lpQErr" hidden></p>
     </div>`, `Question ${S.qi + 1} of ${qs.length}`, ((S.qi + (fb ? 1 : 0)) / qs.length) * 100);
   document.querySelectorAll('#lpStudy .lp-opt').forEach(b => b.addEventListener('click', () => lpPick(Number(b.dataset.o))));
@@ -431,14 +440,14 @@ function lcProgressBlock() {
       <select id="lcSort" style="width:auto"><option value="progress" ${LC.sort === 'progress' ? 'selected' : ''}>Most complete</option><option value="name" ${LC.sort === 'name' ? 'selected' : ''}>Name</option><option value="recent" ${LC.sort === 'recent' ? 'selected' : ''}>Last active</option></select>
       <span style="flex:1"></span><button class="mini" type="button" data-act="csv">Export CSV</button>
     </div>
-    <div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th><th style="min-width:210px">Progress</th><th>Avg score</th><th>Last active</th><th>By level</th><th></th></tr></thead><tbody>
+    <div class="lc-scroll"><table class="lc-table lc-prog"><thead><tr><th>Member</th><th style="min-width:210px">Progress</th><th>Avg score</th><th>Last active</th><th>By level</th></tr></thead><tbody>
       ${sorted.map(x => `<tr>
-        <td><b>${esc(x.name)}</b><br><span class="small" style="color:var(--muted)">${esc(x.email)}</span></td>
-        <td><span class="lc-bar"><i style="width:${x.pct}%"></i></span> <b>${x.done}</b> of ${x.total} · ${x.pct}%</td>
-        <td>${x.avg == null ? '—' : x.avg + '%'}</td>
-        <td>${esc(lcAgo(x.last))}</td>
-        <td>${x.byLevel.map(l => `<span class="lc-chip ${l.done === l.total ? 'is-full' : ''}" title="${esc(l.title)}">${esc(l.title.replace(/ training$/i, ''))} ${l.done}/${l.total}</span>`).join(' ')}</td>
-        <td>${x.id.startsWith('m:') ? `<button class="lc-x" type="button" data-act="delmember" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}" title="Remove ${esc(x.name)}">&#10005;</button>` : ''}</td>
+        <td class="lc-who"><div><b>${esc(x.name)}</b><br><span class="small" style="color:var(--muted)">${esc(x.email)}</span></div>
+          ${x.id.startsWith('m:') ? `<button class="lc-x" type="button" data-act="delmember" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}" title="Remove ${esc(x.name)}">&#10005;</button>` : ''}</td>
+        <td data-label="Progress"><span class="lc-bar"><i style="width:${x.pct}%"></i></span> <b>${x.done}</b> of ${x.total} · ${x.pct}%</td>
+        <td data-label="Avg score">${x.avg == null ? '—' : x.avg + '%'}</td>
+        <td data-label="Last active">${esc(lcAgo(x.last))}</td>
+        <td data-label="By level" class="lc-levels">${x.byLevel.map(l => `<span class="lc-chip ${l.done === l.total ? 'is-full' : ''}" title="${esc(l.title)}">${esc(l.title.replace(/ training$/i, ''))} ${l.done}/${l.total}</span>`).join(' ')}</td>
       </tr>`).join('')}
     </tbody></table></div>
     <details class="lc-mod" style="margin-top:18px"><summary><span class="lc-sum">Which modules are hardest, and who is stuck</span></summary><div class="lc-body">

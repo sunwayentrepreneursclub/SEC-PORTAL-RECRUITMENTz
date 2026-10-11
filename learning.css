@@ -174,3 +174,111 @@
 #viewLearn .lp-field input::placeholder{color:#6B7075;-webkit-text-fill-color:#6B7075}
 #panelLearn .lc-x{width:30px;height:30px;border-radius:50%;border:1px solid var(--err);background:transparent;color:var(--err);font-size:13px;line-height:1;display:grid;place-items:center;padding:0}
 #panelLearn .lc-x:hover{background:var(--err);color:#fff}
+
+/* ================= phones and touch ================= */
+/* The leave-module confirmation is part of the main page. It must sit above the full-screen study view,
+   otherwise tapping the X opens it underneath and the button looks broken. */
+#confirmScrim{z-index:200}
+
+/* keyboard hints are meaningless on a phone; touch hints replace them */
+.lp-touch{display:none}
+@media (hover:none){.lp-kb{display:none}.lp-touch{display:inline}}
+
+/* hover effects stick after a tap on touch screens, so they only apply where there is a real hover */
+@media (hover:none){
+  .lp-pill:hover{background:#181C20;transform:none}
+  .lp-pill.is-ghost:hover{background:transparent}
+  .lp-opt:not([disabled]):hover{border-color:rgba(24,28,32,.25);transform:none}
+  #viewLearn .lp-mod button:not([disabled]):hover{padding-left:2px}
+}
+
+/* study view: use the visible height (iPhone's address bar moves), stay clear of the notch and home bar,
+   and never let scrolling leak to the page underneath */
+.lp-study{height:100vh;height:100dvh;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+
+@media (max-width:640px){
+  /* top bar: one row that fits a 360px phone */
+  #viewLearn .lp-bar-inner{padding:0 12px;gap:8px;height:56px}
+  #viewLearn .lp-spacer{height:56px}
+  #viewLearn .lp-brand{display:none}
+  #viewLearn .lp-tab{font-size:16px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  #viewLearn .lp-nav{gap:0;flex:none}
+  #viewLearn .lp-link{padding:12px 10px;font-size:14px;min-height:44px}
+  .lp-full{display:none}
+  #viewLearn .lp-lock{min-height:calc(100svh - 56px)}
+
+  #viewLearn .wrap{padding:0 18px}
+  #viewLearn .lp-page{padding-block:28px 72px}
+  #viewLearn .lede{font-size:16px}
+  #viewLearn .lp-head h1{font-size:clamp(48px,16vw,72px)}
+  #viewLearn .lp-head-row{margin-top:20px}
+  #viewLearn .lp-head-row .lp-pill{width:100%;white-space:normal;text-align:center}
+  #viewLearn .lp-sec{margin-top:48px}
+  #viewLearn .lp-row{padding:18px 0;gap:14px}
+  #viewLearn .lp-row .lp-pill{min-width:84px;min-height:44px}
+
+  /* study view */
+  .lp-study-top{grid-template-columns:44px 1fr auto;padding:10px 14px;gap:10px}
+  .lp-x{width:44px;height:44px}
+  .lp-study-title{font-size:17px}
+  .lp-study-step{font-size:13px}
+  .lp-study-body{padding:20px 16px 36px;justify-content:flex-start}
+  .lp-flash{min-height:clamp(260px,46dvh,380px)}
+  .lp-face{padding:48px 22px 40px}
+  .lp-face>span{font-size:clamp(22px,6.4vw,30px)}
+  .lp-card-actions{width:100%;flex-wrap:nowrap}
+  .lp-card-actions .lp-pill{flex:1;padding:16px 12px;min-height:52px}
+  .lp-q{font-size:clamp(22px,6vw,28px)}
+  .lp-opt{padding:16px;font-size:16px;gap:12px;min-height:56px}
+  .lp-quiz>.lp-pill,.lp-actions .lp-pill{width:100%;min-height:52px}
+  .lp-actions{flex-direction:column;align-items:stretch}
+  .lp-big{font-size:clamp(72px,26vw,110px)}
+  .lp-center h2{font-size:clamp(28px,8vw,40px)}
+  .lp-review h3{font-size:24px}
+}
+
+/* ---------- admin on a phone ---------- */
+@media (max-width:640px){
+  /* four admin tabs as a tidy 2x2 grid (the existing 3-column phone layout left one tab alone on a second row) */
+  #viewAdmin .admin .subnav{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:visible}
+  #viewAdmin .admin .subnav button{min-height:44px;font-size:14px;padding:10px 8px;text-align:center;white-space:normal;border-color:var(--line-strong)}
+  #viewAdmin .admin .subnav button[aria-pressed="true"]{border-color:var(--open)}
+  #viewAdmin .admin .subnav-spacer{display:none}
+  #viewAdmin .admin .subnav #saveState{grid-column:1/-1;text-align:center}
+  #panelLearn .setblock{padding:18px 16px}
+  #panelLearn .stats{display:grid;grid-template-columns:1fr 1fr}
+  #panelLearn .stats .stat{padding:16px 14px;border-right:0;border-bottom:1px solid var(--board-line)}
+  #panelLearn .stats .stat .n{font-size:30px}
+  #panelLearn textarea,#panelLearn textarea.lc-tall,#panelLearn input[type=text],#panelLearn select{font-size:16px}
+  #panelLearn .mini{min-height:44px;padding:10px 16px}
+  #panelLearn .lc-x{width:44px;height:44px}
+  #panelLearn .lc-row{gap:10px}
+  #panelLearn .lc-opt input[type=radio],#panelLearn input[type=checkbox]{width:24px!important;height:24px;flex:none}
+  #panelLearn .qrow{flex-wrap:wrap}
+  #panelLearn .qrow input{flex:1 1 100%!important}
+  #panelLearn .lc-mod>summary{padding:14px;flex-wrap:wrap}
+  #panelLearn .lc-mod>summary .small{flex:1 1 100%;order:3}
+  #panelLearn .lc-bar{width:70px}
+  #panelLearn .lc-body{padding:4px 12px 14px}
+}
+
+/* member cell: name on the left, remove button always visible next to it */
+#panelLearn .lc-who{min-width:210px}
+#panelLearn .lc-who{display:table-cell}
+#panelLearn .lc-who>div{display:inline-block;vertical-align:middle;max-width:calc(100% - 52px)}
+#panelLearn .lc-who .lc-x{float:right;margin-left:10px}
+@media (max-width:640px){
+  /* each member becomes a card instead of a wide table that needs sideways scrolling */
+  #panelLearn .lc-prog thead{display:none}
+  #panelLearn .lc-prog,#panelLearn .lc-prog tbody{display:block}
+  #panelLearn .lc-prog tr{display:block;border:1px solid var(--board-line);border-radius:12px;padding:12px 14px;margin-bottom:12px;background:var(--paper)}
+  #panelLearn .lc-prog td{display:flex;justify-content:space-between;align-items:center;gap:12px;border:0;padding:6px 0;white-space:normal!important;min-width:0}
+  #panelLearn .lc-prog td::before{content:attr(data-label);color:var(--muted);font-size:13px;font-weight:600;flex:none}
+  #panelLearn .lc-prog td.lc-who{display:flex;padding-bottom:10px;margin-bottom:4px;border-bottom:1px solid var(--board-line)}
+  #panelLearn .lc-prog td.lc-who::before{content:none}
+  #panelLearn .lc-prog td.lc-who>div{display:block;max-width:none;flex:1;min-width:0;overflow-wrap:anywhere}
+  #panelLearn .lc-prog td.lc-who .lc-x{float:none;margin:0;flex:none}
+  #panelLearn .lc-prog td.lc-levels{display:block}
+  #panelLearn .lc-prog td.lc-levels::before{display:block;margin-bottom:6px}
+}

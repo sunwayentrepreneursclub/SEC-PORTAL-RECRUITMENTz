@@ -3874,7 +3874,8 @@ window.addEventListener('pageshow', () => {
 
 /* hand the Learning Portal (learning.js) the few helpers it shares with this page */
 window.SEC = { $, esc, api, showView, applyLock, loadState, uiConfirm,
-  dismissGate() { const g = $('#introSplash'); if (g) { g.hidden = true; INTRO_DISMISSED = true; document.body.style.overflow = ''; } },
+  dismissGate() { const g = $('#introSplash'); if (g) { g.hidden = true; INTRO_DISMISSED = true; unlockPageScroll('intro'); } },
+  lockScroll: lockPageScroll, unlockScroll: unlockPageScroll,
   signedOutReset() { ADMIN = false; USER = null; APPLICATIONS = []; } };
 import('./learning.js');
 </script>

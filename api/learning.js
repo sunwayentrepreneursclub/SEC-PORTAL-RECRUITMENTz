@@ -1,7 +1,7 @@
 import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, kvUpdate, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN, K_KEY } from './_lib.js';
-import { seedLearning, wipeGeneratedContent, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
+import { seedLearning, migrateToCourses, cleanLearning, publicLearning, memberCourses, findCourse, grade } from './_learning.js';
 
-const VERSION = 6;
+const VERSION = 7;
 
 async function loadLearning() {
   let c = await kvGet(K_LEARN);
@@ -9,15 +9,18 @@ async function loadLearning() {
     const seed = { ...seedLearning(), version: VERSION };
     c = await kvUpdate(K_LEARN, cur => cur || seed, 'system');
   } else if (c.version !== VERSION) {
-    // one-time clean-out of the content that came from the wrong source document (see wipeGeneratedContent)
+    // one-time move from levels and modules to a flat list of courses (see migrateToCourses)
     let migrated = false;
     c = await kvUpdate(K_LEARN, cur => {
       if (cur.version === VERSION) return cur;
       migrated = true;
-      return { ...wipeGeneratedContent(cur), version: VERSION };
+      return { ...migrateToCourses(cur), version: VERSION };
     }, 'system');
-    // quiz results belonged to the removed questions, so they would wrongly count against future ones
-    if (migrated) await kvUpdate(K_PROGRESS, () => ({}), 'system');
+    if (migrated) { // quiz results for courses that no longer exist would only be clutter
+      const keep = new Set((c.courses || []).map(x => x.id));
+      await kvUpdate(K_PROGRESS, all => Object.fromEntries(Object.entries(all || {}).map(([u, p]) =>
+        [u, Object.fromEntries(Object.entries(p).filter(([id]) => keep.has(id)))])), 'system');
+    }
   }
   return c;
 }
@@ -42,7 +45,7 @@ export default async function handler(req, res) {
         members: Object.entries(members).map(([key, m]) => ({ id: 'm:' + key, name: m.name, imail: m.imail, createdAt: m.createdAt })),
       });
     }
-    return send(res, 200, { public: pub, user: who.name, role, levels: memberLevels(c), progress: progress[user] || {} });
+    return send(res, 200, { public: pub, user: who.name, role, courses: memberCourses(c), progress: progress[user] || {} });
   }
 
   if (req.method === 'PUT') {
@@ -61,9 +64,9 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     if (!user) return send(res, 401, { error: 'Not signed in.' });
-    const { moduleId, answers, check } = await readBody(req);
-    const m = findModule(await loadLearning(), String(moduleId || ''));
-    if (!m || m.status !== 'published') return send(res, 404, { error: 'That module is not available.' });
+    const { courseId, answers, check } = await readBody(req);
+    const m = findCourse(await loadLearning(), String(courseId || ''));
+    if (!m || m.status !== 'published') return send(res, 404, { error: 'That course is not available.' });
     if (check) { // instant feedback on one question while studying; completion still needs the final submit
       const q = (m.questions || [])[Number(check.i)];
       if (!q || !Number.isInteger(check.choice)) return send(res, 400, { error: 'Pick an answer.' });

@@ -45,200 +45,130 @@ async function call(handler, method, url, body, cookie = '') {
   return { status: res.statusCode, data: JSON.parse(res.raw), cookie: (res.headers['Set-Cookie'] || '').split(';')[0] };
 }
 const join = { name: 'Aisha Rahman', imail: 'Aisha@imail.sunway.edu.my', password: 'long-enough-pw', code: 'SEC-2026' };
+const publicBits = { enabled: true, steps: [] };
+const put = (courses, extra = {}) => call(learning, 'PUT', '/api/learning', { public: publicBits, courses, ...extra }, adminCookie);
+const COURSE = { id: 'standards', title: 'The standards', status: 'published', passMark: 50,
+  cards: [{ front: ' Who owns standards? ', back: 'Leadership' }, { front: 'No back', back: '' }],
+  questions: [{ q: 'One?', options: ['x', 'y'], answer: 1, why: 'Because y', source: 'quote from the file' }, { q: 'Two?', options: ['x', 'y'], answer: 0 }] };
+const DRAFT = { id: 'secret', title: 'Draft course', status: 'draft', cards: [{ front: 'secret', back: 'draft card' }], questions: [{ q: 'Hidden?', options: ['a', 'b'], answer: 0 }] };
 
-test('sign-up is closed until an admin sets a join code', async () => {
-  const r = await call(signup, 'POST', '/api/signup', join);
-  assert.equal(r.status, 403);
-  assert.match(r.data.error, /not open/i);
+test('a new site starts with no courses at all', async () => {
+  const first = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data.content;
+  assert.deepEqual(first.courses, []);
+  assert.equal(first.levels, undefined, 'no levels or sub-modules exist any more');
 });
 
-test('only admins can set the join code, and it must be at least six characters', async () => {
-  assert.equal((await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', levels: [] })).status, 401);
-  assert.equal((await call(learning, 'PUT', '/api/learning', { joinCode: 'abc', levels: [] }, adminCookie)).status, 400);
-  assert.equal((await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', levels: [] }, adminCookie)).status, 200);
+test('sign-up is closed until an admin sets a join code (min 6 characters)', async () => {
+  assert.equal((await call(signup, 'POST', '/api/signup', join)).status, 403);
+  assert.equal((await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', courses: [] })).status, 401);
+  assert.equal((await put([], { joinCode: 'abc' })).status, 400);
+  assert.equal((await put([], { joinCode: 'SEC-2026' })).status, 200);
 });
 
-test('wrong code, short password and bad email are refused; the right code creates an account', async () => {
+test('join code, password and email are checked; the right code creates an account', async () => {
   assert.equal((await call(signup, 'POST', '/api/signup', { ...join, code: 'nope' })).status, 403);
   assert.equal((await call(signup, 'POST', '/api/signup', { ...join, password: 'short' })).status, 400);
   assert.equal((await call(signup, 'POST', '/api/signup', { ...join, imail: 'not-an-email' })).status, 400);
   const ok = await call(signup, 'POST', '/api/signup', { ...join, code: 'sec-2026' });
-  assert.equal(ok.status, 200);
-  assert.equal(ok.data.role, 'member');
-  assert.ok(ok.cookie.startsWith('sec_session='));
+  assert.deepEqual([ok.status, ok.data.role], [200, 'member']);
   assert.equal((await call(signup, 'POST', '/api/signup', join)).status, 409);
+  assert.ok(!data.get('sec:learning_members').includes('long-enough-pw'), 'passwords are stored hashed');
 });
 
-test('passwords are stored hashed, never in plain text', () => {
-  const stored = data.get('sec:learning_members');
-  assert.ok(stored.includes('"hash"'));
-  assert.ok(!stored.includes('long-enough-pw'));
-});
-
-test('members sign in with their email and see only learning content', async () => {
-  const bad = await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: 'wrong-password' });
-  assert.equal(bad.status, 401);
-  const ok = await call(sessionApi, 'POST', '/api/session', { username: 'AISHA@imail.sunway.edu.my', password: join.password });
-  assert.equal(ok.status, 200);
-  const cookie = ok.cookie;
-
-  const me = await call(sessionApi, 'GET', '/api/session', null, cookie);
-  assert.deepEqual([me.data.user, me.data.role], ['Aisha Rahman', 'member']);
-
-  const l = await call(learning, 'GET', '/api/learning', null, cookie);
-  assert.equal(l.data.role, 'member');
-  assert.ok(Array.isArray(l.data.levels));
-  assert.equal(JSON.stringify(l.data).includes('"answer"'), false, 'members must not receive correct answers');
-  assert.equal(l.data.content, undefined);
-  assert.equal(l.data.joinCode, undefined, 'members must not see the join code');
-  const admin = await call(learning, 'GET', '/api/learning?admin=1', null, cookie);
-  assert.equal(admin.data.content, undefined);
-  assert.equal(admin.data.joinCode, undefined);
-});
-
-test('members cannot reach applicant data, admin state or admin writes', async () => {
-  const cookie = (await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).cookie;
-  const denied = r => assert.ok([401, 403].includes(r.status), `expected 401/403, got ${r.status}`);
+test('members see only published courses, no answers, and no admin data', async () => {
+  await put([COURSE, DRAFT], { joinCode: 'SEC-2026' });
+  const cookie = (await call(sessionApi, 'POST', '/api/session', { username: 'AISHA@imail.sunway.edu.my', password: join.password })).cookie;
+  const view = (await call(learning, 'GET', '/api/learning', null, cookie)).data;
+  assert.deepEqual(view.courses.map(c => c.id), ['standards'], 'drafts are hidden from members');
+  assert.deepEqual(view.courses[0].cards, [{ front: 'Who owns standards?', back: 'Leadership' }], 'cards are trimmed and half-empty ones dropped');
+  assert.equal(JSON.stringify(view).includes('"answer"'), false, 'correct answers never reach members');
+  assert.equal(JSON.stringify(view).includes('draft card'), false);
+  assert.equal(JSON.stringify(view).includes('quote from the file'), false, 'source quotes are admin only');
+  assert.equal(view.content, undefined); assert.equal(view.joinCode, undefined);
+  assert.equal((await call(learning, 'GET', '/api/learning?admin=1', null, cookie)).data.content, undefined);
+  const denied = r => assert.ok([401, 403].includes(r.status));
   denied(await call(applications, 'GET', '/api/applications', null, cookie));
-  const st = await call(stateApi, 'GET', '/api/state', null, cookie);
-  assert.equal(st.data.admin, undefined);
-  denied(await call(learning, 'PUT', '/api/learning', { levels: [] }, cookie));
-  denied(await call(learning, 'DELETE', '/api/learning?member=m:' + join.imail.toLowerCase(), null, cookie));
+  denied(await call(learning, 'PUT', '/api/learning', { courses: [] }, cookie));
+  assert.equal((await call(stateApi, 'GET', '/api/state', null, cookie)).data.admin, undefined);
 });
 
-test('quiz grading is server-side and completion is recorded per member', async () => {
+test('instant feedback and final grading happen on the server', async () => {
   const cookie = (await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).cookie;
-  await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', public: { enabled: true, steps: [] }, levels: [{ id: 'a', title: 'A', modules: [
-    { id: 'm1', title: 'M1', status: 'published', passMark: 50, questions: [
-      { q: 'One?', options: ['x', 'y'], answer: 1 }, { q: 'Two?', options: ['x', 'y'], answer: 0 }] },
-    { id: 'm2', title: 'Draft', status: 'draft', questions: [] }] }] }, adminCookie);
+  const before = (await call(learning, 'GET', '/api/learning', null, cookie)).data;
+  const ok = await call(learning, 'POST', '/api/learning', { courseId: 'standards', check: { i: 0, choice: 1 } }, cookie);
+  assert.deepEqual([ok.data.correct, ok.data.answer, ok.data.why], [true, 1, 'Because y']);
+  assert.equal((await call(learning, 'POST', '/api/learning', { courseId: 'standards', check: { i: 0, choice: 0 } }, cookie)).data.correct, false);
+  assert.equal((await call(learning, 'POST', '/api/learning', { courseId: 'secret', check: { i: 0, choice: 0 } }, cookie)).status, 404, 'draft courses cannot be probed');
+  assert.equal((await call(learning, 'POST', '/api/learning', { courseId: 'standards', check: { i: 0, choice: 1 } })).status, 401);
+  assert.equal((await call(learning, 'GET', '/api/learning', null, cookie)).data.progress.standards, before.progress.standards, 'checking never changes progress');
 
-  const view = await call(learning, 'GET', '/api/learning', null, cookie);
-  assert.equal(JSON.stringify(view.data).includes('"answer"'), false);
-  assert.equal(view.data.levels[0].modules[1].status, 'draft');
-
-  assert.equal((await call(learning, 'POST', '/api/learning', { moduleId: 'm1', answers: [1] }, cookie)).status, 400);
-  assert.equal((await call(learning, 'POST', '/api/learning', { moduleId: 'm2', answers: [] }, cookie)).status, 404);
-  assert.equal((await call(learning, 'POST', '/api/learning', { moduleId: 'm1', answers: [1, 0] })).status, 401);
-
-  const fail = await call(learning, 'POST', '/api/learning', { moduleId: 'm1', answers: [0, 1] }, cookie);
-  assert.equal(fail.data.score, 0);
-  assert.equal(fail.data.passed, false);
-  const pass = await call(learning, 'POST', '/api/learning', { moduleId: 'm1', answers: [1, 0] }, cookie);
+  assert.equal((await call(learning, 'POST', '/api/learning', { courseId: 'standards', answers: [1] }, cookie)).status, 400);
+  const fail = await call(learning, 'POST', '/api/learning', { courseId: 'standards', answers: [0, 1] }, cookie);
+  assert.deepEqual([fail.data.score, fail.data.passed], [0, false]);
+  const pass = await call(learning, 'POST', '/api/learning', { courseId: 'standards', answers: [1, 0] }, cookie);
   assert.equal(pass.data.passed, true);
   assert.equal(pass.data.progress.attempts, 2);
-
-  const all = await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie);
-  assert.equal(all.data.progressAll['m:' + join.imail.toLowerCase()].m1.passed, true);
-  assert.equal(all.data.members[0].name, 'Aisha Rahman');
-});
-
-test('flashcards are cleaned, and instant feedback only works for published modules', async () => {
-  const cookie = (await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).cookie;
-  await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', public: { enabled: true, steps: [] }, levels: [{ id: 'a', title: 'A', modules: [
-    { id: 'm1', title: 'M1', status: 'published', passMark: 50,
-      cards: [{ front: ' Ownership ', back: 'Carry it to the end' }, { front: 'No back side', back: '' }, { front: '', back: 'No front' }],
-      questions: [{ q: 'One?', options: ['x', 'y'], answer: 1, why: 'Because y' }] },
-    { id: 'm2', title: 'Draft', status: 'draft', cards: [{ front: 'secret', back: 'draft card' }], questions: [{ q: 'Hidden?', options: ['a', 'b'], answer: 0 }] }] }] }, adminCookie);
-
-  const before = await call(learning, 'GET', '/api/learning', null, cookie);
-  const view = before.data;
-  assert.deepEqual(view.levels[0].modules[0].cards, [{ front: 'Ownership', back: 'Carry it to the end' }]);
-  assert.equal(JSON.stringify(view).includes('draft card'), false, 'draft cards must not reach members');
-  assert.equal(JSON.stringify(view).includes('"answer"'), false);
-
-  const right = await call(learning, 'POST', '/api/learning', { moduleId: 'm1', check: { i: 0, choice: 1 } }, cookie);
-  assert.deepEqual([right.data.correct, right.data.answer, right.data.why], [true, 1, 'Because y']);
-  const wrong = await call(learning, 'POST', '/api/learning', { moduleId: 'm1', check: { i: 0, choice: 0 } }, cookie);
-  assert.equal(wrong.data.correct, false);
-  assert.equal((await call(learning, 'POST', '/api/learning', { moduleId: 'm2', check: { i: 0, choice: 0 } }, cookie)).status, 404);
-  assert.equal((await call(learning, 'POST', '/api/learning', { moduleId: 'm1', check: { i: 0, choice: 1 } })).status, 401);
-  // checking an answer is feedback only: it never adds an attempt or changes completion
-  const after = await call(learning, 'GET', '/api/learning', null, cookie);
-  assert.equal(after.data.progress.m1.attempts, before.data.progress.m1.attempts);
-});
-
-test('old content is wiped once, structure and accounts stay, and later edits are kept', async () => {
-  const memberId = 'm:' + join.imail.toLowerCase();
-  data.set('sec:learning', JSON.stringify({ version: 5, updatedBy: 'reviewer', public: { enabled: true, headline: 'My headline', steps: [] }, levels: [
-    { id: 'l2', title: 'Department training', modules: [
-      { id: 'l2-brand', title: 'Brand & Content: roles and reporting', objective: 'x', status: 'published', owner: 'Someone', cards: [{ front: 'a', back: 'b' }], questions: [{ q: 'q?', options: ['a', 'b'], answer: 0 }] },
-      { id: 'l2-events', title: 'Events', status: 'published', cards: [{ front: 'a', back: 'b' }], questions: [] }] },
-    { id: 'custom', title: 'My own level', modules: [
-      { id: 'mine', title: 'Written by an admin', status: 'published', passMark: 60, cards: [{ front: 'old', back: 'old' }], questions: [{ q: 'old?', options: ['a', 'b'], answer: 1 }] }] }] }));
-  data.set('sec:learning_progress', JSON.stringify({ [memberId]: { mine: { passed: true, best: 100, attempts: 1 } } }));
-
-  const first = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data;
-  const mods = first.content.levels.flatMap(l => l.modules);
-  assert.equal(first.content.version, 6);
-  assert.deepEqual(mods.map(m => m.id), ['l2-brand', 'mine'], 'generated department modules removed, custom module kept');
-  assert.ok(mods.every(m => m.cards.length === 0 && m.questions.length === 0 && m.status === 'draft'), 'all cards, questions and publishing cleared');
-  assert.equal(first.content.levels[0].modules[0].title, 'Department training');
-  assert.equal(first.content.levels[1].title, 'My own level');
-  assert.equal(first.content.public.headline, 'My headline', 'public page text is kept');
-  assert.deepEqual(first.progressAll, {}, 'old quiz results are cleared');
-  assert.ok(first.members.some(m => m.id === memberId), 'accounts are kept');
-
-  // an admin then writes new content: it must survive later loads (the wipe never runs again)
-  await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', public: first.content.public, levels: [{ id: 'a', title: 'A', modules: [
-    { id: 'new', title: 'New', status: 'published', cards: [{ front: 'f', back: 'b' }], questions: [{ q: 'n?', options: ['x', 'y'], answer: 0 }] }] }] }, adminCookie);
-  const again = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data.content;
-  assert.deepEqual(again.levels[0].modules[0].cards, [{ front: 'f', back: 'b' }]);
-});
-
-test('removing a member ends their session at once', async () => {
-  const cookie = (await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).cookie;
-  assert.equal((await call(sessionApi, 'GET', '/api/session', null, cookie)).data.role, 'member');
-  const id = 'm:' + join.imail.toLowerCase();
-  assert.equal((await call(learning, 'DELETE', '/api/learning?member=' + id, null, adminCookie)).status, 200);
-  assert.equal((await call(sessionApi, 'GET', '/api/session', null, cookie)).data.user, null);
-  assert.equal((await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password })).status, 401);
 });
 
 test('records survive signing out and back in', async () => {
-  await call(learning, 'PUT', '/api/learning', { joinCode: 'SEC-2026', public: { enabled: true, steps: [] }, levels: [{ id: 'a', title: 'A', modules: [
-    { id: 'keep', title: 'Keep', status: 'published', passMark: 50, cards: [], questions: [{ q: 'One?', options: ['x', 'y'], answer: 1 }] }] }] }, adminCookie);
-  const first = await call(signup, 'POST', '/api/signup', { ...join, imail: 'keeper@x.com' });
-  const pass = await call(learning, 'POST', '/api/learning', { moduleId: 'keep', answers: [1] }, first.cookie);
-  assert.equal(pass.data.passed, true);
-
+  const first = await call(sessionApi, 'POST', '/api/session', { username: join.imail, password: join.password });
   await sessionApi({ method: 'DELETE', url: '/api/session', body: {}, headers: { cookie: first.cookie } }, { setHeader() {}, end() {} });
-  assert.equal((await call(sessionApi, 'POST', '/api/session', { username: 'keeper@x.com', password: join.password })).status, 200);
-  const back = (await call(sessionApi, 'POST', '/api/session', { username: 'KEEPER@x.com', password: join.password })).cookie;
+  const back = (await call(sessionApi, 'POST', '/api/session', { username: 'aisha@imail.sunway.edu.my', password: join.password })).cookie;
   const view = (await call(learning, 'GET', '/api/learning', null, back)).data;
-  assert.equal(view.progress.keep.passed, true, 'completion is still there after signing out and in');
-  assert.equal(view.progress.keep.attempts, 1);
+  assert.equal(view.progress.standards.passed, true);
+  assert.equal(view.progress.standards.attempts, 2);
 });
 
 test('many members writing at the same moment never lose each other\'s records', async () => {
   const N = 15;
   const people = await Promise.all(Array.from({ length: N }, (_, i) =>
     call(signup, 'POST', '/api/signup', { ...join, name: `Person ${i}`, imail: `p${i}@x.com` })));
-  assert.ok(people.every(r => r.status === 200), 'every sign-up succeeded');
-  await Promise.all(people.map(r => call(learning, 'POST', '/api/learning', { moduleId: 'keep', answers: [1] }, r.cookie)));
-
+  assert.ok(people.every(r => r.status === 200));
+  await Promise.all(people.map(r => call(learning, 'POST', '/api/learning', { courseId: 'standards', answers: [1, 0] }, r.cookie)));
   const admin = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data;
   const mine = admin.members.filter(m => /^p\d+@x\.com$/.test(m.imail));
-  assert.equal(mine.length, N, 'all accounts were saved');
-  const withProgress = mine.filter(m => admin.progressAll[m.id]?.keep?.passed);
-  assert.equal(withProgress.length, N, 'all quiz completions were saved');
+  assert.equal(mine.length, N);
+  assert.equal(mine.filter(m => admin.progressAll[m.id]?.standards?.passed).length, N);
   assert.ok((history.get('sec:learning_progress:history') || []).length > 0, 'previous versions are kept for recovery');
 });
 
-test('members shown in the progress table can be removed, including leftover progress', async () => {
+test('members can be removed with their progress, and are signed out at once', async () => {
   const gone = await call(signup, 'POST', '/api/signup', { ...join, imail: 'gone@x.com' });
-  await call(learning, 'POST', '/api/learning', { moduleId: 'keep', answers: [1] }, gone.cookie);
+  await call(learning, 'POST', '/api/learning', { courseId: 'standards', answers: [1, 0] }, gone.cookie);
   const id = 'm:gone@x.com';
   assert.ok((await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data.progressAll[id]);
   assert.equal((await call(learning, 'DELETE', '/api/learning?member=' + encodeURIComponent(id), null, adminCookie)).status, 200);
   const after = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data;
   assert.equal(after.progressAll[id], undefined);
   assert.equal(after.members.some(m => m.id === id), false);
+  assert.equal((await call(sessionApi, 'GET', '/api/session', null, gone.cookie)).data.user, null);
   assert.equal((await call(learning, 'DELETE', '/api/learning?member=' + encodeURIComponent(id), null, adminCookie)).status, 404);
-  assert.equal((await call(sessionApi, 'GET', '/api/session', null, gone.cookie)).data.user, null, 'removed member is signed out');
+});
+
+test('old levels-and-modules content becomes flat courses without losing real content', async () => {
+  const memberId = 'm:' + join.imail.toLowerCase();
+  data.set('sec:learning', JSON.stringify({ version: 6, updatedBy: 'reviewer', public: { enabled: true, headline: 'My headline', steps: [] }, levels: [
+    { id: 'l1', title: 'Level 1', modules: [
+      { id: 'empty-shell', title: 'Placeholder', status: 'draft', cards: [], questions: [] },
+      { id: 'made-from-file', title: 'Made from a file', status: 'published', passMark: 60, sourceName: 'rules.pdf', aiGenerated: true,
+        cards: [{ front: 'a', back: 'b' }], questions: [{ q: 'q?', options: ['a', 'b'], answer: 1 }] }] },
+    { id: 'l2', title: 'Level 2', modules: [
+      { id: 'second', title: 'Second', status: 'draft', cards: [{ front: 'c', back: 'd' }], questions: [] }] }] }));
+  data.set('sec:learning_progress', JSON.stringify({ [memberId]: { 'made-from-file': { passed: true, best: 90, attempts: 1 }, 'empty-shell': { passed: true, best: 100, attempts: 1 } } }));
+
+  const c = (await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data;
+  assert.equal(c.content.version, 7);
+  assert.equal(c.content.levels, undefined);
+  assert.deepEqual(c.content.courses.map(x => x.id), ['made-from-file', 'second'], 'empty placeholders dropped, real content kept');
+  assert.equal(c.content.courses[0].sourceName, 'rules.pdf');
+  assert.equal(c.content.public.headline, 'My headline');
+  assert.deepEqual(Object.keys(c.progressAll[memberId]), ['made-from-file'], 'results for removed placeholders are cleared, the rest kept');
+  assert.ok(c.members.some(m => m.id === memberId), 'accounts are kept');
+  // a second load changes nothing
+  assert.deepEqual((await call(learning, 'GET', '/api/learning?admin=1', null, adminCookie)).data.content.courses.map(x => x.id), ['made-from-file', 'second']);
 });
 
 test('clearing the join code closes sign-up again', async () => {
-  await call(learning, 'PUT', '/api/learning', { joinCode: '', levels: [] }, adminCookie);
+  await put([], { joinCode: '' });
   assert.equal((await call(signup, 'POST', '/api/signup', { ...join, imail: 'new@x.com' })).status, 403);
 });

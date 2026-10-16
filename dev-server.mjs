@@ -43,8 +43,9 @@ globalThis.fetch = async (url, opts) => {
     const doc = prompt.slice(prompt.lastIndexOf('<document>') + 10, prompt.lastIndexOf('</document>'));
     const sentences = doc.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/).filter(x => x.split(' ').length >= 9);
     const quote = x => x.split(' ').slice(0, 12).join(' ');
-    const cards = sentences.slice(0, 12).map(x => ({ front: 'Complete the statement: ' + x.split(' ').slice(0, 4).join(' ') + '…', back: x, evidence: quote(x) }));
-    const questions = sentences.slice(0, 6).map((x, i) => {
+    const nCards = +(prompt.match(/up to (\d+) flashcards/) || [])[1] || 12, nQs = +(prompt.match(/and up to (\d+) multiple/) || [])[1] || 6;
+    const cards = sentences.slice(0, nCards).map(x => ({ front: 'Complete the statement: ' + x.split(' ').slice(0, 4).join(' ') + '…', back: x, evidence: quote(x) }));
+    const questions = sentences.slice(0, nQs).map((x, i) => {
       const others = sentences.filter((_, j) => j !== i).slice(0, 3).map(y => y.split(' ').slice(0, 9).join(' ') + '…');
       const right = x.split(' ').slice(0, 9).join(' ') + '…', at = i % 4, options = [...others]; options.splice(at, 0, right);
       return { q: 'Which statement appears in the file?', options: options.slice(0, 4), answer: at, why: 'The file says: ' + right, evidence: quote(x) };

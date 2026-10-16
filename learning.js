@@ -1,12 +1,12 @@
-/* Learning Portal (ES module, loaded by the main script). Three layers share one data set (/api/learning):
+/* Learning Portal (ES module, loaded by the main script). Three layers share one list of courses (/api/learning):
      1. public recruitment page  -> #learnTeaser (read-only, text set by admin)
      2. committee Learning Portal -> #viewLearn   (sign-in required): flashcards, then a multiple-choice quiz
      3. SEC Admin                 -> #panelLearn  (admin sign-in; edits layers 1 and 2)
    Uses helpers from the main script: $, esc, api, showView, applyLock, loadState, uiConfirm. */
 
 const { $, esc, api, showView, applyLock, loadState, uiConfirm } = window.SEC;
-const LEVEL_COLORS = ['#9FC9F3', '#EFBE79', '#E2B0BE', '#C6B7E5', '#F19A91', '#E9D38D'];
-const lpColor = i => LEVEL_COLORS[i % LEVEL_COLORS.length];
+const COLORS = ['#9FC9F3', '#EFBE79', '#E2B0BE', '#C6B7E5', '#F19A91', '#E9D38D'];
+const lpColor = i => COLORS[i % COLORS.length];
 
 /* =====================================================================
    Layer 1: public teaser on the recruitment page
@@ -36,9 +36,9 @@ async function lpLoadTeaser() {
 /* =====================================================================
    Layer 2: committee Learning Portal
    ===================================================================== */
-const LP = { user: null, role: null, pub: null, levels: [], progress: {} };
+const LP = { user: null, role: null, pub: null, courses: [], progress: {} };
 const lpRoot = () => $('#lpMain');
-const lpAllMods = () => LP.levels.flatMap((l, li) => l.modules.map(m => ({ ...m, level: l, li })));
+const lpCourses = () => LP.courses.map((m, ci) => ({ ...m, ci }));
 const lpDone = id => !!LP.progress[id]?.passed;
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 
@@ -53,7 +53,7 @@ function lpBar() {
   $('#lpSignOut')?.addEventListener('click', async () => {
     lpCloseStudy();
     await api('/api/session', { method: 'DELETE' });
-    Object.assign(LP, { user: null, role: null, levels: [], progress: {} });
+    Object.assign(LP, { user: null, role: null, courses: [], progress: {} });
     window.SEC.signedOutReset();
     await loadState();
     lpRender();
@@ -64,7 +64,7 @@ async function lpLoad() {
   const d = await api('/api/learning');
   LP.pub = d.public || null;
   LP.user = d.user || null; LP.role = d.role || null;
-  LP.levels = d.levels || []; LP.progress = d.progress || {};
+  LP.courses = d.courses || []; LP.progress = d.progress || {};
 }
 
 async function openLearn() {
@@ -120,42 +120,32 @@ function lpRenderLocked(err, mode = 'in') {
   };
   $('#lpLogin').onclick = go;
   lpRoot().querySelectorAll('.lp-field input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') go(); }));
-  setTimeout(() => $(create ? '#lpName' : '#lpUser')?.focus(), 30);
+  // focus the first field on a computer; on a phone that would pop the keyboard up over the form
+  if (window.matchMedia('(hover: hover)').matches) setTimeout(() => $(create ? '#lpName' : '#lpUser')?.focus(), 30);
 }
 
-/* ---------- home: levels and modules as compact rows ---------- */
+/* ---------- home: a plain list of courses ---------- */
 function lpRenderHome() {
-  const mods = lpAllMods().filter(m => m.status === 'published');
-  const done = mods.filter(m => lpDone(m.id)).length;
-  const next = mods.find(m => !lpDone(m.id));
+  const courses = lpCourses();
+  const done = courses.filter(m => lpDone(m.id)).length;
+  const next = courses.find(m => !lpDone(m.id));
   lpRoot().innerHTML = `
     <div class="wrap lp-page">
       <header class="lp-head">
         <h1>Learn.</h1>
-        <p class="lede">Go through the flashcards, then take a short quiz. Pass the quiz and the module is complete.</p>
-        <div class="lp-head-row">
-          <span class="lp-prog"><b>${done}</b> of ${mods.length} modules complete</span>
+        <p class="lede">Go through the flashcards, then take a short quiz. Pass the quiz and the course is complete.</p>
+        ${courses.length ? `<div class="lp-head-row">
+          <span class="lp-prog"><b>${done}</b> of ${courses.length} ${courses.length === 1 ? 'course' : 'courses'} complete</span>
           ${next ? `<button class="lp-pill lp-pill-lg" id="lpContinue" type="button">${done ? 'Continue' : 'Start'}: ${esc(next.title)}</button>` : ''}
-        </div>
+        </div>` : ''}
       </header>
-      ${LP.levels.map((l, i) => {
-        const pub = l.modules.filter(m => m.status === 'published');
-        const d = pub.filter(m => lpDone(m.id)).length;
-        return `<section class="lp-sec" style="--lc:${lpColor(i)}">
-          <div class="lp-sec-head"><h2><span class="lp-dot"></span>${esc(l.title)}</h2>
-            <p>${esc([l.audience, pub.length ? `${d} of ${pub.length} complete` : 'Coming soon'].filter(Boolean).join(' · '))}</p></div>
-          <div class="lp-rows">${l.modules.map(m => m.status === 'published' ? `
-            <article class="lp-row">
-              <div><h3>${esc(m.title)}</h3>
-                <p>${esc([plural(m.cards.length, 'card'), plural(m.questions.length, 'question'), lpDone(m.id) ? `Complete · best ${LP.progress[m.id].best}%` : ''].filter(Boolean).join(' · '))}</p></div>
-              <button class="lp-pill" type="button" data-mod="${esc(m.id)}">${lpDone(m.id) ? 'Review' : 'Study'}</button>
-            </article>` : `
-            <article class="lp-row is-soon">
-              <div><h3>${esc(m.title)}</h3><p>Coming soon</p></div>
-              <button class="lp-pill is-ghost" type="button" disabled>Soon</button>
-            </article>`).join('')}</div>
-        </section>`;
-      }).join('')}
+      ${courses.length ? `<div class="lp-rows lp-courses">${courses.map(m => `
+        <article class="lp-row" style="--lc:${lpColor(m.ci)}">
+          <div><h3><span class="lp-dot"></span>${esc(m.title)}</h3>
+            <p>${esc([plural(m.cards.length, 'card'), plural(m.questions.length, 'question'), lpDone(m.id) ? `Complete · best ${LP.progress[m.id].best}%` : ''].filter(Boolean).join(' · '))}</p></div>
+          <button class="lp-pill" type="button" data-mod="${esc(m.id)}">${lpDone(m.id) ? 'Review' : 'Study'}</button>
+        </article>`).join('')}</div>`
+      : `<p class="lede" style="margin-top:40px">No courses yet. They will appear here as soon as they are published.</p>`}
     </div>`;
   lpRoot().querySelectorAll('[data-mod]').forEach(b => b.addEventListener('click', () => lpOpenStudy(b.dataset.mod)));
   $('#lpContinue')?.addEventListener('click', () => next && lpOpenStudy(next.id));
@@ -167,13 +157,13 @@ function lpRenderHome() {
 let S = null; // current study session
 
 function lpOpenStudy(id) {
-  const m = lpAllMods().find(x => x.id === id);
-  if (!m || m.status !== 'published') return;
+  const m = lpCourses().find(x => x.id === id);
+  if (!m) return;
   S = { m, phase: m.cards.length ? 'cards' : 'quiz', deck: m.cards.map((_, i) => i), i: 0, flipped: false,
         got: new Set(), miss: new Set(), qi: 0, picked: [], fb: [], result: null, busy: false };
   let el = $('#lpStudy');
   if (!el) { el = document.createElement('div'); el.id = 'lpStudy'; el.className = 'lp-study'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); document.body.appendChild(el); }
-  el.style.setProperty('--lc', lpColor(m.li));
+  el.style.setProperty('--lc', lpColor(m.ci));
   window.SEC.lockScroll('study'); // the page's own scroll lock, which also works on iPhone Safari
   document.addEventListener('keydown', lpKeys);
   history.pushState({ lp: 'study' }, '', '#learning'); // so the phone's back button closes the module instead of leaving the portal
@@ -210,7 +200,7 @@ function lpKeys(e) {
 
 async function lpExit() {
   const inProgress = S && !S.result && (S.phase === 'quiz' ? S.picked.some(v => v !== undefined) : S.got.size + S.miss.size > 0);
-  if (inProgress && !await uiConfirm('Leave this module?', 'Your answers so far will not be saved.', 'Leave')) return;
+  if (inProgress && !await uiConfirm('Leave this course?', 'Your answers so far will not be saved.', 'Leave')) return;
   lpCloseStudy(); lpRenderHome();
 }
 
@@ -265,10 +255,10 @@ function lpRenderCardsDone() {
     <div class="lp-center">
       <p class="lp-big">${known}<span>/${total}</span></p>
       <h2>${missed.length ? `${plural(missed.length, 'card')} still to learn.` : 'You know every card.'}</h2>
-      <p class="lede">${hasQuiz ? `Next is a quiz of ${plural(S.m.questions.length, 'question')}. You need ${S.m.passMark}% to complete the module.` : 'This module has no quiz yet.'}</p>
+      <p class="lede">${hasQuiz ? `Next is a quiz of ${plural(S.m.questions.length, 'question')}. You need ${S.m.passMark}% to complete the course.` : 'This course has no quiz yet.'}</p>
       <div class="lp-actions">
         ${missed.length ? `<button class="lp-pill is-ghost lp-pill-lg" id="lpRedo" type="button">Review ${missed.length} missed</button>` : ''}
-        ${hasQuiz ? `<button class="lp-pill lp-pill-lg" id="lpToQuiz" type="button">Start the quiz</button>` : `<button class="lp-pill lp-pill-lg" id="lpBackHome" type="button">Back to modules</button>`}
+        ${hasQuiz ? `<button class="lp-pill lp-pill-lg" id="lpToQuiz" type="button">Start the quiz</button>` : `<button class="lp-pill lp-pill-lg" id="lpBackHome" type="button">Back to courses</button>`}
       </div>
       <button class="lp-text-link" id="lpAgain" type="button">Go through all the cards again</button>
     </div>`, 'Cards done', 100);
@@ -300,7 +290,7 @@ async function lpPick(j) {
   if (S.busy || S.fb[S.qi]) return;
   S.busy = true; S.picked[S.qi] = j;
   try {
-    S.fb[S.qi] = await api('/api/learning', { method: 'POST', body: JSON.stringify({ moduleId: S.m.id, check: { i: S.qi, choice: j } }) });
+    S.fb[S.qi] = await api('/api/learning', { method: 'POST', body: JSON.stringify({ courseId: S.m.id, check: { i: S.qi, choice: j } }) });
     lpRenderQuestion();
   } catch (e) { const el = $('#lpQErr'); if (el) { el.textContent = e.message; el.hidden = false; } S.picked[S.qi] = undefined; }
   S.busy = false;
@@ -308,7 +298,7 @@ async function lpPick(j) {
 async function lpNextQ() {
   if (S.qi < S.m.questions.length - 1) { S.qi++; lpRenderQuestion(); return; }
   try {
-    const res = await api('/api/learning', { method: 'POST', body: JSON.stringify({ moduleId: S.m.id, answers: S.picked }) });
+    const res = await api('/api/learning', { method: 'POST', body: JSON.stringify({ courseId: S.m.id, answers: S.picked }) });
     S.result = res; LP.progress[S.m.id] = res.progress;
     lpRenderResult();
   } catch (e) { const el = $('#lpQErr'); if (el) { el.textContent = e.message; el.hidden = false; } }
@@ -319,10 +309,10 @@ function lpRenderResult() {
   lpStudyShell(`
     <div class="lp-center">
       <p class="lp-big">${r.score}<span>%</span></p>
-      <h2>${r.passed ? 'Module complete.' : 'Not yet.'}</h2>
-      <p class="lede">${r.passed ? `You passed with ${r.score}%.${wrong.length ? ' Review what you missed below.' : ''}` : `You need ${S.m.passMark}% to complete this module. Go back through the cards and try again.`}</p>
+      <h2>${r.passed ? 'Course complete.' : 'Not yet.'}</h2>
+      <p class="lede">${r.passed ? `You passed with ${r.score}%.${wrong.length ? ' Review what you missed below.' : ''}` : `You need ${S.m.passMark}% to complete this course. Go back through the cards and try again.`}</p>
       <div class="lp-actions">
-        <button class="lp-pill lp-pill-lg" id="lpDone" type="button">Back to modules</button>
+        <button class="lp-pill lp-pill-lg" id="lpDone" type="button">Back to courses</button>
         ${r.passed ? '' : `<button class="lp-pill is-ghost lp-pill-lg" id="lpRetry" type="button">Retake the quiz</button>`}
         <button class="lp-pill is-ghost lp-pill-lg" id="lpRestudy" type="button">Study the cards</button>
       </div>
@@ -340,14 +330,16 @@ function lpRenderResult() {
 /* =====================================================================
    Layer 3: SEC Admin, Learning portal settings
    ===================================================================== */
-const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null, sort: 'progress', keySet: false, files: {} };
+const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null, sort: 'progress',
+  keySet: false, files: {}, adding: false, notice: null };
+const CARDS_PER_COURSE = 20, QUESTIONS_PER_COURSE = 10; // fixed on purpose: one file, one course, always the same shape
 
 async function loadAdminLearn() {
   const el = $('#panelLearn'); if (!el) return;
   if (!LC.data) el.innerHTML = '<div class="empty">Loading…</div>';
   try {
     const d = await api('/api/learning?admin=1');
-    LC.data = { public: d.content.public, levels: d.content.levels };
+    LC.data = { public: d.content.public, courses: d.content.courses || [] };
     LC.progressAll = d.progressAll || {};
     LC.members = d.members || [];
     LC.joinCode = d.joinCode || '';
@@ -360,11 +352,11 @@ function lcPayload() {
   return {
     public: LC.data.public,
     joinCode: LC.joinCode,
-    levels: LC.data.levels.map(l => ({ ...l, modules: l.modules.map(m => ({ ...m,
-      questions: m.questions.map(q => {
+    courses: LC.data.courses.map(c => ({ ...c,
+      questions: c.questions.map(q => {
         const keep = q.options.map((o, i) => [o, i]).filter(([o]) => String(o).trim());
         return { ...q, options: keep.map(k => k[0]), answer: Math.max(0, keep.findIndex(k => k[1] === q.answer)) };
-      }) })) })),
+      }) })),
   };
 }
 function lcSave() {
@@ -383,9 +375,15 @@ const lcSet = (path, val) => {
   keys.slice(0, -1).forEach(k => { o = o[k]; });
   o[keys[keys.length - 1]] = val;
 };
-const lcId = () => 'm' + Math.random().toString(36).slice(2, 8);
+const lcId = () => 'c' + Math.random().toString(36).slice(2, 8);
+/* flashcards are edited as plain lines: "front | back" */
+const cardsToText = cards => (cards || []).map(c => `${c.front} | ${c.back}`).join('\n');
+const textToCards = text => String(text).split('\n').map(line => {
+  const i = line.indexOf('|');
+  return i < 0 ? null : { front: line.slice(0, i).trim(), back: line.slice(i + 1).trim() };
+}).filter(c => c && c.front && c.back);
 
-/* ---------- make a module from a file (text is read in the browser, the AI runs on the server) ---------- */
+/* ---------- make a course from a file (text is read in the browser, the AI runs on the server) ---------- */
 const FILE_TYPES = '.pdf,.docx,.txt,.md,.markdown';
 const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
 const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -417,74 +415,62 @@ async function extractText(file) {
   }
   throw new Error(`${file.name}: use a PDF, Word (.docx), .txt or .md file.`);
 }
-function lcStatus(mid, text, isErr) {
-  const el = document.querySelector(`[data-genstatus="${mid}"]`);
+function lcStatus(cid, text, isErr) {
+  const el = document.querySelector(`[data-genstatus="${cid}"]`);
   if (el) { el.textContent = text; el.style.color = isErr ? 'var(--err)' : ''; }
   $('#saveState').textContent = text;
 }
-async function lcGenerate(li, mi, file, { cards = 12, questions = 6, mode = 'replace' } = {}) {
-  const m = LC.data.levels[li].modules[mi];
-  lcStatus(m.id, `Reading ${file.name}…`);
+/* Fills the course from the file. Always replaces what was there, and always leaves the course as a draft. */
+async function lcGenerate(course, file) {
+  lcStatus(course.id, `Reading ${file.name}…`);
   const text = await extractText(file);
   if (text.trim().length < 200) throw new Error(`${file.name} has no readable text. A scanned PDF (a picture of pages) will not work; use one with selectable text.`);
-  lcStatus(m.id, `Read ${Math.round(text.length / 1000)}k characters. The AI is writing the cards and questions…`);
+  lcStatus(course.id, `Read ${Math.round(text.length / 1000)}k characters. The AI is writing the flashcards and questions…`);
   let res;
-  try { res = await api('/api/studyai', { method: 'POST', body: JSON.stringify({ text, cards, questions }) }); }
-  catch (e) { throw new Error(e.message === 'NO_KEY' ? 'Add your API key first (the AI box near the top of this page).' : e.message); }
-  const asQuestion = q => ({ q: q.q, options: q.options, answer: q.answer, why: q.why || '', source: q.source || '' });
-  m.cards = mode === 'append' ? [...m.cards, ...res.cards] : res.cards;
-  m.questions = mode === 'append' ? [...m.questions, ...res.questions.map(asQuestion)] : res.questions.map(asQuestion);
-  m.sourceName = file.name; m.generatedAt = new Date().toISOString(); m.aiGenerated = true;
-  m.status = 'draft'; // AI-written content never goes live by itself
-  LC.open.add(m.id);
+  try { res = await api('/api/studyai', { method: 'POST', body: JSON.stringify({ text, cards: CARDS_PER_COURSE, questions: QUESTIONS_PER_COURSE }) }); }
+  catch (e) { throw new Error(e.message === 'NO_KEY' ? 'Add your API key first (the AI box on this page).' : e.message); }
+  course.cards = res.cards;
+  course.questions = res.questions.map(q => ({ q: q.q, options: q.options, answer: q.answer, why: q.why || '', source: q.source || '' }));
+  course.sourceName = file.name; course.generatedAt = new Date().toISOString(); course.aiGenerated = true;
+  course.status = 'draft'; // AI-written content never goes live by itself
   const dropped = res.dropped.cards + res.dropped.questions;
   return `${res.cards.length} flashcards and ${res.questions.length} questions made from ${file.name}.`
-    + (dropped ? ` ${dropped} suggested item${dropped === 1 ? ' was' : 's were'} discarded because the file did not back them up.` : '')
+    + (res.cards.length < CARDS_PER_COURSE || res.questions.length < QUESTIONS_PER_COURSE ? ` (The file did not give enough to reach ${CARDS_PER_COURSE} and ${QUESTIONS_PER_COURSE}; you can add more by hand.)` : '')
+    + (dropped ? ` ${dropped} suggested item${dropped === 1 ? ' was' : 's were'} left out because the file did not back them up.` : '')
     + (res.truncated ? ' The file was very long, so only the first part was used.' : '');
 }
-async function lcBulk(li, files) {
-  const level = LC.data.levels[li], notes = [];
-  for (const file of files) {
-    const title = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'New module';
-    const mod = { id: lcId(), title, objective: '', status: 'draft', owner: '', reviewer: '', passMark: 75, cards: [], questions: [] };
-    level.modules.push(mod);
-    try { notes.push(`${title}: ` + await lcGenerate(li, level.modules.length - 1, file)); }
-    catch (e) { notes.push(`${title}: ${e.message}`); }
-    renderAdminLearn(); lcSave();
-  }
-  lcStatus('', notes.join('  ·  '));
+async function lcAddCourse(title, file) {
+  const course = { id: lcId(), title: title || (file ? file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() : 'New course'),
+    status: 'draft', passMark: 75, cards: [], questions: [] };
+  LC.data.courses.push(course); LC.open.add(course.id);
+  let notice;
+  if (file) {
+    try { notice = { text: `${course.title}: ${await lcGenerate(course, file)} Read them, fix anything, then publish.` }; }
+    catch (e) { notice = { text: `${course.title} was created empty. ${e.message}`, err: true }; }
+  } else notice = { text: `${course.title} was created empty. Write the flashcards and questions below, or add a file.` };
+  LC.adding = false; LC.notice = notice;
+  renderAdminLearn(); lcSave();
 }
-
-/* flashcards are edited as plain lines: "front | back" */
-const cardsToText = cards => (cards || []).map(c => `${c.front} | ${c.back}`).join('\n');
-const textToCards = text => String(text).split('\n').map(line => {
-  const i = line.indexOf('|');
-  return i < 0 ? null : { front: line.slice(0, i).trim(), back: line.slice(i + 1).trim() };
-}).filter(c => c && c.front && c.back);
 
 /* ---------- committee progress ---------- */
 function lcProgress() {
-  const levels = LC.data.levels;
-  const mods = levels.flatMap((l, li) => l.modules.filter(m => m.status === 'published' && m.questions.length).map(m => ({ ...m, li })));
+  const courses = LC.data.courses.filter(c => c.status === 'published' && c.questions.length);
   const known = new Map(LC.members.map(m => [m.id, m]));
   // everyone who joined, plus any admin who has studied
   const ids = [...new Set([...LC.members.map(m => m.id), ...Object.keys(LC.progressAll)])];
   const people = ids.map(id => {
     const prog = LC.progressAll[id] || {};
-    const mine = mods.map(m => ({ m, p: prog[m.id] }));
+    const mine = courses.map(c => ({ c, p: prog[c.id] }));
     const done = mine.filter(x => x.p?.passed).length;
-    const tried = mine.filter(x => x.p);
     const best = mine.filter(x => x.p).map(x => x.p.best);
-    const last = tried.map(x => x.p.at).filter(Boolean).sort().pop() || '';
+    const last = mine.map(x => x.p?.at).filter(Boolean).sort().pop() || '';
     return {
       id, name: known.get(id)?.name || id, email: known.get(id)?.imail || (id.startsWith('m:') ? id.slice(2) : 'Admin'),
-      done, total: mods.length, pct: mods.length ? Math.round(done / mods.length * 100) : 0,
-      avg: best.length ? Math.round(best.reduce((a, b) => a + b, 0) / best.length) : null, last,
-      byLevel: levels.map((l, li) => ({ title: l.title, done: mine.filter(x => x.m.li === li && x.p?.passed).length, total: mine.filter(x => x.m.li === li).length })).filter(x => x.total),
-      mine,
+      done, total: courses.length, pct: courses.length ? Math.round(done / courses.length * 100) : 0,
+      avg: best.length ? Math.round(best.reduce((a, b) => a + b, 0) / best.length) : null, last, mine,
     };
   });
-  return { mods, people };
+  return { courses, people };
 }
 const lcAgo = iso => {
   if (!iso) return 'Not started';
@@ -492,7 +478,7 @@ const lcAgo = iso => {
   return days <= 0 ? 'Today' : days === 1 ? 'Yesterday' : days < 30 ? `${days} days ago` : new Date(iso).toISOString().slice(0, 10);
 };
 function lcProgressBlock() {
-  const { mods, people } = lcProgress();
+  const { courses, people } = lcProgress();
   if (!people.length) return `<div class="setblock"><h3>Committee progress</h3><p class="lead" style="margin:0">Nobody has joined yet. Share the join code (below) in the committee chat and everyone who signs up appears here.</p></div>`;
   const sorted = [...people].sort(LC.sort === 'name' ? (a, b) => a.name.localeCompare(b.name)
     : LC.sort === 'recent' ? (a, b) => (b.last || '').localeCompare(a.last || '')
@@ -501,86 +487,78 @@ function lcProgressBlock() {
   const notStarted = people.filter(x => !x.last).length;
   const avgPct = Math.round(people.reduce((a, x) => a + x.pct, 0) / people.length);
   const stat = (n, l) => `<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`;
-  const moduleRows = mods.map(m => {
-    const passed = people.filter(x => x.mine.find(y => y.m.id === m.id)?.p?.passed).length;
-    const scores = people.map(x => x.mine.find(y => y.m.id === m.id)?.p?.best).filter(v => v != null);
-    return `<tr><td>${esc(m.title)}</td><td><span class="lc-bar"><i style="width:${Math.round(passed / people.length * 100)}%"></i></span> ${passed} of ${people.length}</td>
+  const courseRows = courses.map(c => {
+    const passed = people.filter(x => x.mine.find(y => y.c.id === c.id)?.p?.passed).length;
+    const scores = people.map(x => x.mine.find(y => y.c.id === c.id)?.p?.best).filter(v => v != null);
+    return `<tr><td>${esc(c.title)}</td><td><span class="lc-bar"><i style="width:${Math.round(passed / people.length * 100)}%"></i></span> ${passed} of ${people.length}</td>
       <td>${scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) + '%' : '—'}</td></tr>`;
   }).join('');
   return `<div class="setblock">
     <h3>Committee progress</h3>
-    <p class="lead">How far each member has got. A module counts as complete when they pass its quiz. ${mods.length} modules are open for completion.</p>
+    <p class="lead">How far each member has got. A course counts as complete when they pass its quiz. ${courses.length ? `${courses.length} published course${courses.length === 1 ? ' is' : 's are'} open for completion.` : 'No course is published yet.'}</p>
     <div class="stats" style="margin-bottom:22px">${stat(people.length, 'Members')}${stat(avgPct + '%', 'Average complete')}${stat(finished, 'Finished everything')}${stat(notStarted, 'Not started')}</div>
     <div class="lc-row" style="margin:0 0 12px;align-items:center">
       <label for="lcSort" style="margin:0">Sort by</label>
       <select id="lcSort" style="width:auto"><option value="progress" ${LC.sort === 'progress' ? 'selected' : ''}>Most complete</option><option value="name" ${LC.sort === 'name' ? 'selected' : ''}>Name</option><option value="recent" ${LC.sort === 'recent' ? 'selected' : ''}>Last active</option></select>
       <span style="flex:1"></span><button class="mini" type="button" data-act="csv">Export CSV</button>
     </div>
-    <div class="lc-scroll"><table class="lc-table lc-prog"><thead><tr><th>Member</th><th style="min-width:210px">Progress</th><th>Avg score</th><th>Last active</th><th>By level</th></tr></thead><tbody>
+    <div class="lc-scroll"><table class="lc-table lc-prog"><thead><tr><th>Member</th><th style="min-width:210px">Progress</th><th>Avg score</th><th>Last active</th></tr></thead><tbody>
       ${sorted.map(x => `<tr>
         <td class="lc-who"><div><b>${esc(x.name)}</b><br><span class="small" style="color:var(--muted)">${esc(x.email)}</span></div>
           ${x.id.startsWith('m:') ? `<button class="lc-x" type="button" data-act="delmember" data-id="${esc(x.id)}" aria-label="Remove ${esc(x.name)}" title="Remove ${esc(x.name)}">&#10005;</button>` : ''}</td>
         <td data-label="Progress"><span class="lc-bar"><i style="width:${x.pct}%"></i></span> <b>${x.done}</b> of ${x.total} · ${x.pct}%</td>
         <td data-label="Avg score">${x.avg == null ? '—' : x.avg + '%'}</td>
         <td data-label="Last active">${esc(lcAgo(x.last))}</td>
-        <td data-label="By level" class="lc-levels">${x.byLevel.map(l => `<span class="lc-chip ${l.done === l.total ? 'is-full' : ''}" title="${esc(l.title)}">${esc(l.title.replace(/ training$/i, ''))} ${l.done}/${l.total}</span>`).join(' ')}</td>
       </tr>`).join('')}
     </tbody></table></div>
-    <details class="lc-mod" style="margin-top:18px"><summary><span class="lc-sum">Which modules are hardest, and who is stuck</span></summary><div class="lc-body">
-      <h3 style="margin-top:16px">By module</h3>
-      <div class="lc-scroll"><table class="lc-table"><thead><tr><th>Module</th><th>Completed</th><th>Average best score</th></tr></thead><tbody>${moduleRows}</tbody></table></div>
+    ${courses.length ? `<details class="lc-mod" style="margin-top:18px"><summary><span class="lc-sum">Which courses are hardest, and who is stuck</span></summary><div class="lc-body">
+      <h3 style="margin-top:16px">By course</h3>
+      <div class="lc-scroll"><table class="lc-table"><thead><tr><th>Course</th><th>Completed</th><th>Average best score</th></tr></thead><tbody>${courseRows}</tbody></table></div>
       <h3 style="margin-top:22px">Tried but not passed yet</h3>
-      ${(() => { const rows = people.flatMap(x => x.mine.filter(y => y.p && !y.p.passed).map(y => `<tr><td><b>${esc(x.name)}</b></td><td>${esc(y.m.title)}</td><td>${y.p.best}% best · ${y.p.attempts} ${y.p.attempts === 1 ? 'try' : 'tries'}</td></tr>`)); return rows.length ? `<div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th><th>Module</th><th>Result</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Nobody is stuck right now.</p>'; })()}
-    </div></details>
+      ${(() => { const rows = people.flatMap(x => x.mine.filter(y => y.p && !y.p.passed).map(y => `<tr><td><b>${esc(x.name)}</b></td><td>${esc(y.c.title)}</td><td>${y.p.best}% best · ${y.p.attempts} ${y.p.attempts === 1 ? 'try' : 'tries'}</td></tr>`)); return rows.length ? `<div class="lc-scroll"><table class="lc-table"><thead><tr><th>Member</th><th>Course</th><th>Result</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>` : '<p class="hint" style="margin:0">Nobody is stuck right now.</p>'; })()}
+    </div></details>` : ''}
   </div>`;
 }
 function lcCsv() {
-  const { mods, people } = lcProgress();
+  const { courses, people } = lcProgress();
   const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-  const rows = [['Name', 'Email', 'Modules passed', 'Modules open', 'Percent complete', 'Average best score', 'Last active', ...mods.map(m => m.title)]];
+  const rows = [['Name', 'Email', 'Courses passed', 'Courses open', 'Percent complete', 'Average best score', 'Last active', ...courses.map(c => c.title)]];
   people.forEach(x => rows.push([x.name, x.email, x.done, x.total, x.pct, x.avg ?? '', x.last ? x.last.slice(0, 10) : '', ...x.mine.map(y => y.p ? (y.p.passed ? `Passed ${y.p.best}%` : `${y.p.best}% (not passed)`) : '')]));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([rows.map(r => r.map(q).join(',')).join('\n')], { type: 'text/csv' }));
   a.download = 'sec-learning-progress.csv'; a.click(); URL.revokeObjectURL(a.href);
 }
 
+/* ---------- the admin tab ---------- */
 function renderAdminLearn() {
   const el = $('#panelLearn'); if (!el || !LC.data) return;
-  const { public: pub, levels } = LC.data;
+  const { public: pub, courses } = LC.data;
 
   const inp = (path, val, ph = '', extra = '') => `<input type="text" data-p="${path}" value="${esc(val ?? '')}" placeholder="${esc(ph)}" ${extra}>`;
   const area = (path, val, cls = '', ph = '') => `<textarea class="${cls}" data-p="${path}" placeholder="${esc(ph)}">${esc(val ?? '')}</textarea>`;
 
-  const modBlock = (m, li, mi, nMods) => {
-    const base = `levels.${li}.modules.${mi}`;
+  const courseBlock = (m, ci) => {
+    const base = `courses.${ci}`;
     return `<details class="lc-mod" data-mid="${esc(m.id)}" ${LC.open.has(m.id) ? 'open' : ''}>
-      <summary><span class="lc-sum">${esc(m.title || 'Untitled module')}</span>
+      <summary><span class="lc-sum">${esc(m.title || 'Untitled course')}</span>
         <span class="small" style="font-weight:400;color:var(--muted)">${m.cards.length} cards · ${m.questions.length} questions</span>
         ${m.aiGenerated ? '<span class="small" style="font-weight:600;color:var(--muted)">AI draft</span>' : ''}
         <span class="pill ${m.status === 'published' ? 'ok' : 'no'}">${m.status === 'published' ? 'Published' : 'Draft'}</span></summary>
       <div class="lc-body">
         <div class="setgrid" style="margin-top:16px">
-          <div style="grid-column:1/-1"><label>Title</label>${inp(base + '.title', m.title)}</div>
-          <div style="grid-column:1/-1"><label>What the member will be able to do</label>${inp(base + '.objective', m.objective)}</div>
-          <div><label>Status</label><select data-p="${base}.status"><option value="draft" ${m.status !== 'published' ? 'selected' : ''}>Draft (members see "Coming soon")</option><option value="published" ${m.status === 'published' ? 'selected' : ''}>Published</option></select></div>
-          <div><label>Content owner</label>${inp(base + '.owner', m.owner, 'e.g. President / ExCo')}</div>
-          <div><label>Reviewer</label>${inp(base + '.reviewer', m.reviewer)}</div>
+          <div style="grid-column:1/-1"><label>Course title</label>${inp(base + '.title', m.title, 'Course title')}</div>
+          <div><label>Status</label><select data-p="${base}.status"><option value="draft" ${m.status !== 'published' ? 'selected' : ''}>Draft (hidden from members)</option><option value="published" ${m.status === 'published' ? 'selected' : ''}>Published</option></select></div>
           <div><label>Pass mark (%)</label>${inp(base + '.passMark', m.passMark, '75', 'inputmode="numeric"')}</div>
         </div>
         <div class="lc-ai">
-          <b>Make this module from a file</b>
-          <p class="hint" style="margin:4px 0 10px">Choose a PDF, Word (.docx), .txt or .md file. ${m.sourceName ? `<br><b>Last made from:</b> ${esc(m.sourceName)}${m.generatedAt ? ' on ' + esc(m.generatedAt.slice(0, 10)) : ''}. Read every card and question before you publish.` : ''}</p>
+          <b>${m.sourceName ? 'Make it again from a different file' : 'Make it from a file'}</b>
+          <p class="hint" style="margin:4px 0 10px">${m.sourceName ? `Made from <b>${esc(m.sourceName)}</b>${m.generatedAt ? ' on ' + esc(m.generatedAt.slice(0, 10)) : ''}. Read every flashcard and question before you publish. ` : ''}A new file replaces the flashcards and questions below with ${CARDS_PER_COURSE} flashcards and ${QUESTIONS_PER_COURSE} questions.</p>
           <input type="file" data-genfile="${esc(m.id)}" accept="${FILE_TYPES}">
-          <div class="lc-row" style="align-items:center">
-            <label class="lc-inline">Flashcards <input type="number" min="3" max="30" value="12" data-gen="cards"></label>
-            <label class="lc-inline">Questions <input type="number" min="3" max="15" value="6" data-gen="questions"></label>
-            <select data-gen="mode"><option value="replace">Replace what is here</option><option value="append">Add to what is here</option></select>
-            <button class="mini" type="button" data-act="generate" data-li="${li}" data-mi="${mi}">Generate with AI</button>
-          </div>
+          <div class="lc-row" style="align-items:center"><button class="mini" type="button" data-act="generate" data-ci="${ci}">Generate with AI</button></div>
           <p class="hint" data-genstatus="${esc(m.id)}" style="margin:8px 0 0"></p>
         </div>
         <label>Flashcards</label>
-        <p class="hint" style="margin-top:0">One card per line, written as <b>question | answer</b>. Keep each side short: one idea per card.</p>
+        <p class="hint" style="margin-top:0">One card per line, written as <b>question | answer</b>. You can edit, add or delete any line.</p>
         <textarea class="lc-tall" data-cards="${base}" placeholder="Ownership | If it is yours, you carry it to the end.">${esc(cardsToText(m.cards))}</textarea>
         <label style="margin-top:14px">Quiz questions (multiple choice)</label>
         ${m.questions.map((q, qi) => `<div class="lc-q">
@@ -589,24 +567,43 @@ function renderAdminLearn() {
             <input type="radio" name="ans-${esc(m.id)}-${qi}" data-ans="${base}.questions.${qi}.answer" value="${oi}" ${q.answer === oi ? 'checked' : ''} title="Correct answer">
             <input type="text" data-p="${base}.questions.${qi}.options.${oi}" value="${esc(q.options[oi] || '')}" placeholder="Option ${oi + 1}${oi < 2 ? '' : ' (optional)'}"></div>`).join('')}</div>
           <input type="text" data-p="${base}.questions.${qi}.why" value="${esc(q.why || '')}" placeholder="Why that answer is right (shown right after they answer)">
-          <input type="text" data-p="${base}.questions.${qi}.source" value="${esc(q.source || '')}" placeholder="Source, e.g. Charter 4.4.15 (admin only, members never see this)" style="margin-top:8px">
-          <div class="lc-row"><button class="mini danger" type="button" data-act="delq" data-li="${li}" data-mi="${mi}" data-qi="${qi}">Remove question</button></div>
-        </div>`).join('') || `<p class="hint">No questions yet. A module with no questions cannot be completed.</p>`}
+          <input type="text" data-p="${base}.questions.${qi}.source" value="${esc(q.source || '')}" placeholder="Source quote (admin only, members never see this)" style="margin-top:8px">
+          <div class="lc-row"><button class="mini danger" type="button" data-act="delq" data-ci="${ci}" data-qi="${qi}">Remove question</button></div>
+        </div>`).join('') || `<p class="hint">No questions yet. A course with no questions cannot be completed.</p>`}
         <div class="lc-row">
-          <button class="mini" type="button" data-act="addq" data-li="${li}" data-mi="${mi}">Add question</button>
+          <button class="mini" type="button" data-act="addq" data-ci="${ci}">Add question</button>
           <span style="flex:1"></span>
-          <button class="mini" type="button" data-act="mup" data-li="${li}" data-mi="${mi}" ${mi === 0 ? 'disabled' : ''}>Move up</button>
-          <button class="mini" type="button" data-act="mdown" data-li="${li}" data-mi="${mi}" ${mi === nMods - 1 ? 'disabled' : ''}>Move down</button>
-          <button class="mini danger" type="button" data-act="delm" data-li="${li}" data-mi="${mi}">Delete module</button>
+          <button class="mini" type="button" data-act="cup" data-ci="${ci}" ${ci === 0 ? 'disabled' : ''}>Move up</button>
+          <button class="mini" type="button" data-act="cdown" data-ci="${ci}" ${ci === courses.length - 1 ? 'disabled' : ''}>Move down</button>
+          <button class="mini danger" type="button" data-act="delc" data-ci="${ci}">Delete course</button>
         </div>
       </div></details>`;
   };
 
   el.innerHTML = `
   ${lcProgressBlock()}
+
+  <div class="setblock">
+    <h3>Courses</h3>
+    <p class="lead">One course is one title and one file. The AI turns the file into ${CARDS_PER_COURSE} flashcards and ${QUESTIONS_PER_COURSE} quiz questions, and you can edit every one afterwards. Members only see courses you publish.</p>
+    ${LC.notice ? `<div class="lc-notice ${LC.notice.err ? 'is-err' : ''}">${esc(LC.notice.text)}</div>` : ''}
+    ${LC.adding ? `<div class="lc-add">
+      <label for="lcNewTitle">Course title</label>
+      <input type="text" id="lcNewTitle" placeholder="Course title, e.g. How SEC works" autocomplete="off">
+      <label for="lcNewFile" style="margin-top:14px">File (PDF, Word, .txt or .md)</label>
+      <input type="file" id="lcNewFile" accept="${FILE_TYPES}">
+      ${LC.keySet ? '' : '<p class="hint" style="color:var(--err);margin:10px 0 0">No API key yet. Add one in the AI box below, or create the course empty and write it by hand.</p>'}
+      <div class="lc-row"><button class="btn" type="button" data-act="createcourse" ${LC.keySet ? '' : 'disabled'}>Generate course</button>
+        <button class="mini" type="button" data-act="createempty">Start empty</button>
+        <button class="mini" type="button" data-act="canceladd">Cancel</button></div>
+      <p class="hint" data-genstatus="new" style="margin:8px 0 0"></p>
+    </div>` : `<button class="btn" type="button" data-act="addcourse">${courses.length ? 'Add another course' : 'Add first course'}</button>`}
+    <div style="margin-top:22px">${courses.map((m, ci) => courseBlock(m, ci)).join('') || '<p class="hint" style="margin:0">No courses yet.</p>'}</div>
+  </div>
+
   <div class="setblock">
     <h3>AI for flashcards and questions</h3>
-    <p class="lead">Give a module a file and the AI writes its flashcards and quiz from that file only. Every card and question must be backed by a quote that really appears in the file, otherwise it is thrown away. Everything arrives as a draft for you to read before it goes live.</p>
+    <p class="lead">This uses a Google Gemini API key. Every flashcard and question must be backed by a quote that really appears in the file, otherwise it is thrown away. Everything arrives as a draft for you to read before it goes live.</p>
     <span class="pill ${LC.keySet ? 'ok' : 'no'}">${LC.keySet ? 'API key set' : 'No API key yet'}</span>
     <div class="setgrid" style="margin-top:14px"><div style="grid-column:1/-1">
       <label for="lcKey">Gemini API key</label>
@@ -616,41 +613,22 @@ function renderAdminLearn() {
       ${LC.keySet ? '<button class="mini danger" type="button" data-act="clearkey">Remove key</button>' : ''}</div>
     <p class="hint">The key is kept on the server and is never sent back to any browser. You can instead set it as <b>GEMINI_API_KEY</b> in Vercel. Files are read in your browser and only their text is sent to Google, so do not upload anything confidential. Scanned PDFs (pictures of pages) cannot be read.</p>
   </div>
+
   <div class="setblock">
-    <h3>Public recruitment page</h3>
-    <p class="lead">Shown to applicants on the public page. It tells them what happens after they are selected. Switch it off to hide the whole section.</p>
-    <label style="display:flex;gap:10px;align-items:center;margin-bottom:18px"><input type="checkbox" data-bool="public.enabled" ${pub.enabled !== false ? 'checked' : ''} style="width:auto"> Show this section on the public page</label>
+    <h3>Public Learning page</h3>
+    <p class="lead">Shown to applicants on the public Learning page (top bar and Menu). It tells them what happens after they are selected. Switch it off to hide the page and its links.</p>
+    <label style="display:flex;gap:10px;align-items:center;margin-bottom:18px"><input type="checkbox" data-bool="public.enabled" ${pub.enabled !== false ? 'checked' : ''} style="width:auto"> Show the Learning page</label>
     <div class="setgrid">
       <div style="grid-column:1/-1"><label>Headline</label>${inp('public.headline', pub.headline)}</div>
       <div style="grid-column:1/-1"><label>Intro</label>${area('public.intro', pub.intro)}</div>
     </div>
-    <label>Learning path (also shown on the Learning Portal)</label>
+    <label>Steps</label>
     ${(pub.steps || []).map((s, i) => `<div class="qrow">
       <input type="text" data-p="public.steps.${i}.title" value="${esc(s.title)}" placeholder="Step" style="flex:1">
       <input type="text" data-p="public.steps.${i}.text" value="${esc(s.text)}" placeholder="One line" style="flex:2.4">
       <button class="mini danger" type="button" data-act="delstep" data-i="${i}" aria-label="Remove step">&#10005;</button></div>`).join('')}
     <button class="mini" type="button" data-act="addstep" ${(pub.steps || []).length >= 6 ? 'disabled' : ''}>Add step</button>
   </div>
-
-  ${levels.map((l, li) => `<div class="setblock">
-    <h3>Level ${li + 1}: ${esc(l.title)}</h3>
-    <div class="setgrid">
-      <div><label>Level name</label>${inp(`levels.${li}.title`, l.title)}</div>
-      <div><label>Who it is for</label>${inp(`levels.${li}.audience`, l.audience)}</div>
-      <div style="grid-column:1/-1"><label>One-line summary</label>${inp(`levels.${li}.summary`, l.summary)}</div>
-    </div>
-    ${l.modules.map((m, mi) => modBlock(m, li, mi, l.modules.length)).join('') || '<p class="hint">No modules yet.</p>'}
-    <div class="lc-row">
-      <button class="mini" type="button" data-act="addm" data-li="${li}">Add module</button>
-      <button class="mini" type="button" data-act="pickfiles" data-li="${li}">Add modules from files</button>
-      <input type="file" multiple hidden data-addfiles="${li}" accept="${FILE_TYPES}">
-      <span style="flex:1"></span>
-      <button class="mini" type="button" data-act="lup" data-li="${li}" ${li === 0 ? 'disabled' : ''}>Move level up</button>
-      <button class="mini" type="button" data-act="ldown" data-li="${li}" ${li === levels.length - 1 ? 'disabled' : ''}>Move level down</button>
-      <button class="mini danger" type="button" data-act="dell" data-li="${li}">Delete level</button>
-    </div>
-  </div>`).join('')}
-  <button class="mini" type="button" data-act="addl" style="margin-bottom:22px">Add level</button>
 
   <div class="setblock">
     <h3>Committee sign-up</h3>
@@ -669,20 +647,21 @@ function renderAdminLearn() {
 /* one delegated set of listeners for the whole editor */
 (function wireAdminLearn() {
   const el = $('#panelLearn'); if (!el) return;
+  const courseOf = path => LC.data.courses[Number(path.split('.')[1])];
   el.addEventListener('input', e => {
     if (e.target.id === 'lcJoin') { LC.joinCode = e.target.value.trim(); lcSave(); return; }
     if (e.target.dataset.cards && LC.data) { // flashcards: parse the lines back into cards
       lcSet(e.target.dataset.cards + '.cards', textToCards(e.target.value));
       const sum = e.target.closest('details.lc-mod')?.querySelector('summary .small');
-      if (sum) { const m = e.target.dataset.cards.split('.'); const mod = LC.data.levels[m[1]].modules[m[3]]; sum.textContent = `${mod.cards.length} cards · ${mod.questions.length} questions`; }
+      if (sum) { const c = courseOf(e.target.dataset.cards); sum.textContent = `${c.cards.length} cards · ${c.questions.length} questions`; }
       lcSave(); return;
     }
     const p = e.target.dataset.p; if (!p || !LC.data) return;
     let v = e.target.value;
     if (p.endsWith('.passMark')) v = parseInt(v, 10) || 0;
     lcSet(p, v);
-    if (/\.title$/.test(p) && e.target.closest('summary, .lc-body')) {
-      const d = e.target.closest('details.lc-mod'); if (d) d.querySelector('.lc-sum').textContent = v || 'Untitled module';
+    if (/^courses\.\d+\.title$/.test(p)) {
+      const d = e.target.closest('details.lc-mod'); if (d) d.querySelector('.lc-sum').textContent = v || 'Untitled course';
     }
     lcSave();
   });
@@ -690,22 +669,17 @@ function renderAdminLearn() {
     if (!LC.data) return;
     if (e.target.id === 'lcSort') { LC.sort = e.target.value; renderAdminLearn(); return; }
     if (e.target.dataset.genfile) { LC.files[e.target.dataset.genfile] = e.target.files[0] || null; return; }
-    if (e.target.dataset.addfiles !== undefined) {
-      const files = [...e.target.files]; e.target.value = '';
-      if (files.length) lcBulk(Number(e.target.dataset.addfiles), files);
-      return;
-    }
     if (e.target.dataset.bool) { lcSet(e.target.dataset.bool, e.target.checked); lcSave(); }
     else if (e.target.dataset.ans) { lcSet(e.target.dataset.ans, Number(e.target.value)); lcSave(); }
     else if (e.target.tagName === 'SELECT' && e.target.dataset.p) {
       const path = e.target.dataset.p;
-      const mod = path.endsWith('.status') ? path.split('.').slice(0, 4).reduce((o, k) => o[k], LC.data) : null;
-      if (e.target.value === 'published' && mod?.aiGenerated) {
-        uiConfirm('Publish AI-written content?', 'This module was made by AI from a file. Have you read every flashcard and question and checked them against the original? Members will see it straight away.', 'Publish')
+      const course = path.endsWith('.status') ? courseOf(path) : null;
+      if (e.target.value === 'published' && course?.aiGenerated) {
+        uiConfirm('Publish AI-written content?', 'This course was made by AI from a file. Have you read every flashcard and question and checked them against the original? Members will see it straight away.', 'Publish')
           .then(ok => { if (ok) { lcSet(path, 'published'); lcSave(); renderAdminLearn(); } else e.target.value = 'draft'; });
         return;
       }
-      lcSet(e.target.dataset.p, e.target.value); lcSave();
+      lcSet(path, e.target.value); lcSave();
       const d = e.target.closest('details.lc-mod');
       if (d) { const pill = d.querySelector('summary .pill'); pill.textContent = e.target.value === 'published' ? 'Published' : 'Draft'; pill.className = 'pill ' + (e.target.value === 'published' ? 'ok' : 'no'); }
     }
@@ -716,7 +690,7 @@ function renderAdminLearn() {
   }, true);
   el.addEventListener('click', async e => {
     const b = e.target.closest('[data-act]'); if (!b || !LC.data) return;
-    const { act } = b.dataset, li = Number(b.dataset.li), mi = Number(b.dataset.mi), qi = Number(b.dataset.qi), L = LC.data.levels;
+    const { act } = b.dataset, ci = Number(b.dataset.ci), qi = Number(b.dataset.qi), C = LC.data.courses;
     if (act === 'csv') { lcCsv(); return; }
     if (act === 'savekey') {
       const v = $('#lcKey').value.trim();
@@ -730,16 +704,23 @@ function renderAdminLearn() {
       try { const r = await api('/api/key', { method: 'DELETE' }); LC.keySet = !!r.keySet; window.SEC.setKeySet(LC.keySet); renderAdminLearn(); } catch (ex) { $('#saveState').textContent = 'Not removed: ' + ex.message; }
       return;
     }
-    if (act === 'pickfiles') { el.querySelector(`[data-addfiles="${li}"]`)?.click(); return; }
+    if (act === 'addcourse') { LC.adding = true; LC.notice = null; renderAdminLearn(); if (window.matchMedia('(hover: hover)').matches) $('#lcNewTitle')?.focus(); return; }
+    if (act === 'canceladd') { LC.adding = false; renderAdminLearn(); return; }
+    if (act === 'createempty') { await lcAddCourse($('#lcNewTitle').value.trim(), null); return; }
+    if (act === 'createcourse') {
+      const title = $('#lcNewTitle').value.trim(), file = $('#lcNewFile').files[0];
+      if (!title) { lcStatus('new', 'Type a course title first.', true); $('#lcNewTitle').focus(); return; }
+      if (!file) { lcStatus('new', 'Choose a file first.', true); return; }
+      document.querySelectorAll('.lc-add button').forEach(x => { x.disabled = true; });
+      await lcAddCourse(title, file); return;
+    }
     if (act === 'generate') {
-      const mod = LC.data.levels[li].modules[mi], file = LC.files[mod.id];
-      if (!file) { lcStatus(mod.id, 'Choose a file first.', true); return; }
-      const box = b.closest('.lc-ai');
-      const opts = { cards: Number(box.querySelector('[data-gen=cards]').value), questions: Number(box.querySelector('[data-gen=questions]').value), mode: box.querySelector('[data-gen=mode]').value };
-      if (mod.cards.length + mod.questions.length && opts.mode === 'replace' && !await uiConfirm('Replace this module\u2019s content?', 'The current flashcards and questions will be replaced by new ones made from the file.', 'Replace')) return;
+      const course = C[ci], file = LC.files[course.id];
+      if (!file) { lcStatus(course.id, 'Choose a file first.', true); return; }
+      if (course.cards.length + course.questions.length && !await uiConfirm('Replace this course’s content?', `The current flashcards and questions will be replaced by ${CARDS_PER_COURSE} flashcards and ${QUESTIONS_PER_COURSE} questions made from the new file. Your edits to them will be lost.`, 'Replace')) return;
       b.disabled = true;
-      try { const note = await lcGenerate(li, mi, file, opts); renderAdminLearn(); lcSave(); lcStatus(mod.id, note); }
-      catch (ex) { lcStatus(mod.id, ex.message, true); b.disabled = false; }
+      try { const note = await lcGenerate(course, file); LC.open.add(course.id); LC.notice = null; renderAdminLearn(); lcSave(); lcStatus(course.id, note); }
+      catch (ex) { lcStatus(course.id, ex.message, true); b.disabled = false; }
       return;
     }
     if (act === 'gencode') {
@@ -756,18 +737,13 @@ function renderAdminLearn() {
     const swap = (arr, i, j) => { if (j >= 0 && j < arr.length) [arr[i], arr[j]] = [arr[j], arr[i]]; };
     if (act === 'addstep') LC.data.public.steps.push({ title: '', text: '' });
     else if (act === 'delstep') LC.data.public.steps.splice(Number(b.dataset.i), 1);
-    else if (act === 'addl') L.push({ id: 'l' + lcId(), title: 'New level', audience: '', summary: '', modules: [] });
-    else if (act === 'dell') { if (!await uiConfirm('Delete this level?', 'Every module in it goes too. Members’ completion records for those modules stop showing.', 'Delete')) return; L.splice(li, 1); }
-    else if (act === 'lup') swap(L, li, li - 1);
-    else if (act === 'ldown') swap(L, li, li + 1);
-    else if (act === 'addm') { const id = lcId(); L[li].modules.push({ id, title: 'New module', objective: '', status: 'draft', owner: '', reviewer: '', passMark: 75, cards: [], questions: [] }); LC.open.add(id); }
-    else if (act === 'delm') { if (!await uiConfirm('Delete this module?', L[li].modules[mi].title || 'Untitled module', 'Delete')) return; L[li].modules.splice(mi, 1); }
-    else if (act === 'mup') swap(L[li].modules, mi, mi - 1);
-    else if (act === 'mdown') swap(L[li].modules, mi, mi + 1);
-    else if (act === 'addq') { L[li].modules[mi].questions.push({ q: '', options: ['', '', '', ''], answer: 0, why: '' }); LC.open.add(L[li].modules[mi].id); }
-    else if (act === 'delq') L[li].modules[mi].questions.splice(qi, 1);
+    else if (act === 'delc') { if (!await uiConfirm('Delete this course?', (C[ci].title || 'Untitled course') + ' and its flashcards and questions. Members’ results for it stop showing.', 'Delete')) return; C.splice(ci, 1); }
+    else if (act === 'cup') swap(C, ci, ci - 1);
+    else if (act === 'cdown') swap(C, ci, ci + 1);
+    else if (act === 'addq') { C[ci].questions.push({ q: '', options: ['', '', '', ''], answer: 0, why: '', source: '' }); LC.open.add(C[ci].id); }
+    else if (act === 'delq') C[ci].questions.splice(qi, 1);
     else return;
-    renderAdminLearn(); lcSave();
+    LC.notice = null; renderAdminLearn(); lcSave();
   });
 })();
 window.SEC.loadAdminLearn = loadAdminLearn;

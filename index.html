@@ -1655,6 +1655,7 @@ textarea{min-height:110px;resize:vertical}
     <a href="/" class="topbar-word" id="topbarHome">Sunway Entrepreneurs Club</a>
     <div class="pubnav" role="tablist" aria-label="Recruitment sections">
       <button class="pubtab pubtab-apply" role="tab" id="pt-apply" aria-controls="pp-apply" data-pub="apply" aria-selected="false" type="button">Roles</button>
+      <button class="pubtab" role="tab" id="pt-learning" aria-controls="pp-learning" data-pub="learning" aria-selected="false" type="button" hidden>Learning</button>
       <button class="pubtab navstatus-btn" id="navStatus" type="button">Application Status</button>
     </div>
     <button class="menu-toggle" id="menuOpen" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="main-menu">Menu</button>
@@ -1670,6 +1671,7 @@ textarea{min-height:110px;resize:vertical}
     <nav class="menu-primary" aria-label="Pages">
       <a href="#" data-menu-go="overview">Home</a>
       <a href="#" data-menu-go="apply">Roles</a>
+      <a href="#" data-menu-go="learning" hidden>Learning</a>
       <a href="#" data-menu-go="status">Application Status</a>
     </nav>
     <div class="menu-bottom">
@@ -1708,8 +1710,6 @@ textarea{min-height:110px;resize:vertical}
         <div class="home-role-list" id="homeRoles"><div class="empty">Loading positions…</div></div>
         <button class="home-roles-all" id="homeRolesAll" type="button">View all roles</button>
       </section>
-
-      <section class="abandsection" id="learnTeaser" data-reveal hidden><div id="learnTeaserBody"></div></section>
     </div>
 
     <div class="pubpanel chapter-light roles-chapter" id="pp-apply" role="tabpanel" aria-labelledby="pt-apply" hidden>
@@ -1721,6 +1721,10 @@ textarea{min-height:110px;resize:vertical}
         </div>
       </section>
       <main class="board" id="board"><div class="empty">Loading positions…</div></main>
+    </div>
+
+    <div class="pubpanel chapter-light learning-page" id="pp-learning" role="tabpanel" aria-labelledby="pt-learning" hidden>
+      <section class="abandsection" id="learnTeaser" data-reveal><div id="learnTeaserBody"></div></section>
     </div>
   </div>
 
@@ -3876,6 +3880,7 @@ window.addEventListener('pageshow', () => {
 window.SEC = { $, esc, api, showView, applyLock, loadState, uiConfirm,
   dismissGate() { const g = $('#introSplash'); if (g) { g.hidden = true; INTRO_DISMISSED = true; unlockPageScroll('intro'); } },
   lockScroll: lockPageScroll, unlockScroll: unlockPageScroll,
+  setKeySet(v) { KEY_SET = !!v; },
   signedOutReset() { ADMIN = false; USER = null; APPLICATIONS = []; } };
 import('./learning.js');
 </script>

@@ -1,4 +1,4 @@
-import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, kvUpdate, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN } from './_lib.js';
+import { send, readBody, requireAdmin, identify, guardEnv, kvGet, kvSet, kvUpdate, K_LEARN, K_PROGRESS, K_MEMBERS, K_JOIN, K_KEY } from './_lib.js';
 import { seedLearning, wipeGeneratedContent, cleanLearning, publicLearning, memberLevels, findModule, grade } from './_learning.js';
 
 const VERSION = 6;
@@ -38,6 +38,7 @@ export default async function handler(req, res) {
       return send(res, 200, {
         public: pub, user: who.name, role, content: c, progressAll: progress,
         joinCode: ((await kvGet(K_JOIN)) || {}).code || '',
+        keySet: !!(process.env.GEMINI_API_KEY || await kvGet(K_KEY)),
         members: Object.entries(members).map(([key, m]) => ({ id: 'm:' + key, name: m.name, imail: m.imail, createdAt: m.createdAt })),
       });
     }

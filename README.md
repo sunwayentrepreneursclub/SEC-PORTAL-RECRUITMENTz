@@ -100,6 +100,10 @@ No extra environment variable is needed. Committee members create their own acco
 
 **Where the Learning Portal data lives.** Accounts (passwords hashed), quiz progress, the module content you edit and the join code are all saved in the same Upstash Redis database as the applications, never in the browser or in the sign-in cookie. Signing out only deletes the cookie, so everything is still there when a member signs back in, from any device. Writes are safe when many people submit at once, and each saved version of members, progress and content is kept in a history list (the last 50, for 30 days) in case anything needs recovering. Only `npm run dev` uses temporary in-memory data that resets when it restarts.
 
+**Making modules from files.** In Admin → Learning portal, paste your Gemini API key into the "AI for flashcards and questions" box (or set `GEMINI_API_KEY` in Vercel). Then open any module, choose a PDF, Word (.docx), .txt or .md file and press **Generate with AI**, or use **Add modules from files** on a level to make one module per file. The file is read in the browser and only its text goes to Gemini. Every generated card and question must carry a word-for-word quote that really appears in the file, and anything that does not is discarded on the server. Results always arrive as drafts, and publishing an AI-made module asks you to confirm you have read it. Scanned PDFs (pictures of pages) have no text and cannot be used. Locally, `npm run dev` uses a mock AI so you can try the flow without a key.
+
+**Learning page.** The "Selected? Training starts straight away" section now lives on its own public page, reached from **Learning** in the top bar and in the Menu. Switch it off in Admin and both links disappear.
+
 Modules stay as drafts ("Coming soon" to members) until you publish them. Run `npm run dev` to try everything locally; it uses in-memory data, the test login `admin/admin` and the join code `dev-join-code`.
 
 ## How it works

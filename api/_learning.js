@@ -106,6 +106,7 @@ export function cleanLearning(body) {
         status: m?.status === 'published' ? 'published' : 'draft',
         owner: str(m?.owner, 80), reviewer: str(m?.reviewer, 80),
         passMark: Math.min(100, Math.max(1, parseInt(m?.passMark, 10) || 75)),
+        sourceName: str(m?.sourceName, 160), generatedAt: str(m?.generatedAt, 40), aiGenerated: m?.aiGenerated === true,
         cards, questions,
       });
     });

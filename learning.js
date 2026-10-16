@@ -12,21 +12,25 @@ const lpColor = i => LEVEL_COLORS[i % LEVEL_COLORS.length];
    Layer 1: public teaser on the recruitment page
    ===================================================================== */
 async function lpLoadTeaser() {
-  const sec = $('#learnTeaser'); if (!sec) return;
+  const body = $('#learnTeaserBody'); if (!body) return;
+  const links = document.querySelectorAll('#pt-learning, [data-menu-go="learning"]');
   try {
     const d = (await api('/api/learning')).public;
-    if (!d || d.enabled === false || !(d.steps || []).length) { sec.hidden = true; return; }
-    $('#learnTeaserBody').innerHTML = `
+    if (!d || d.enabled === false || !(d.steps || []).length) { links.forEach(l => { l.hidden = true; }); return; }
+    body.innerHTML = `
       <div class="aband-head">
         <h2 class="aband-title">${esc(d.headline || 'Selected? Training starts straight away.')}</h2>
         ${d.intro ? `<p class="aband-lede">${esc(d.intro)}</p>` : ''}
       </div>
       <div class="lp-path">${d.steps.map((s, i) => `
         <div class="lp-step"><div class="n">${i + 1}</div><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>`).join('')}</div>
-      <button class="lp-teaser-link" id="teaserOpen" type="button">Committee member? Open the Learning Portal</button>`;
+      <div class="lp-teaser-cta">
+        <button class="lp-pill lp-pill-lg" id="teaserOpen" type="button">Open the Learning Portal</button>
+        <p>For SEC committee members. Sign in, or create an account with the join code from the committee chat.</p>
+      </div>`;
     $('#teaserOpen').addEventListener('click', openLearn);
-    sec.hidden = false;
-  } catch { sec.hidden = true; }
+    links.forEach(l => { l.hidden = false; });
+  } catch { links.forEach(l => { l.hidden = true; }); }
 }
 
 /* =====================================================================
@@ -336,7 +340,7 @@ function lpRenderResult() {
 /* =====================================================================
    Layer 3: SEC Admin, Learning portal settings
    ===================================================================== */
-const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null, sort: 'progress' };
+const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null, sort: 'progress', keySet: false, files: {} };
 
 async function loadAdminLearn() {
   const el = $('#panelLearn'); if (!el) return;
@@ -347,6 +351,7 @@ async function loadAdminLearn() {
     LC.progressAll = d.progressAll || {};
     LC.members = d.members || [];
     LC.joinCode = d.joinCode || '';
+    LC.keySet = !!d.keySet;
     renderAdminLearn();
   } catch (e) { el.innerHTML = `<div class="empty">Could not load the Learning Portal settings: ${esc(e.message)}</div>`; }
 }
@@ -379,6 +384,77 @@ const lcSet = (path, val) => {
   o[keys[keys.length - 1]] = val;
 };
 const lcId = () => 'm' + Math.random().toString(36).slice(2, 8);
+
+/* ---------- make a module from a file (text is read in the browser, the AI runs on the server) ---------- */
+const FILE_TYPES = '.pdf,.docx,.txt,.md,.markdown';
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const PDFJS_WORKER = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const MAMMOTH = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+const loadScript = src => new Promise((resolve, reject) => {
+  if (document.querySelector(`script[src="${src}"]`)) return resolve();
+  const el = document.createElement('script'); el.src = src; el.onload = resolve;
+  el.onerror = () => reject(new Error('Could not load the file reader. Check your internet connection and try again.'));
+  document.head.appendChild(el);
+});
+async function extractText(file) {
+  const name = file.name.toLowerCase();
+  if (file.size > 25 * 1024 * 1024) throw new Error(`${file.name} is over 25 MB.`);
+  if (/\.(txt|md|markdown)$/.test(name)) return file.text();
+  if (name.endsWith('.pdf')) {
+    await loadScript(PDFJS);
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+    const pdf = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+    let out = '';
+    for (let p = 1; p <= pdf.numPages && out.length < 300000; p++) {
+      const content = await (await pdf.getPage(p)).getTextContent();
+      out += content.items.map(i => i.str + (i.hasEOL ? '\n' : ' ')).join('') + '\n';
+    }
+    return out;
+  }
+  if (name.endsWith('.docx')) {
+    await loadScript(MAMMOTH);
+    return (await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() })).value;
+  }
+  throw new Error(`${file.name}: use a PDF, Word (.docx), .txt or .md file.`);
+}
+function lcStatus(mid, text, isErr) {
+  const el = document.querySelector(`[data-genstatus="${mid}"]`);
+  if (el) { el.textContent = text; el.style.color = isErr ? 'var(--err)' : ''; }
+  $('#saveState').textContent = text;
+}
+async function lcGenerate(li, mi, file, { cards = 12, questions = 6, mode = 'replace' } = {}) {
+  const m = LC.data.levels[li].modules[mi];
+  lcStatus(m.id, `Reading ${file.name}…`);
+  const text = await extractText(file);
+  if (text.trim().length < 200) throw new Error(`${file.name} has no readable text. A scanned PDF (a picture of pages) will not work; use one with selectable text.`);
+  lcStatus(m.id, `Read ${Math.round(text.length / 1000)}k characters. The AI is writing the cards and questions…`);
+  let res;
+  try { res = await api('/api/studyai', { method: 'POST', body: JSON.stringify({ text, cards, questions }) }); }
+  catch (e) { throw new Error(e.message === 'NO_KEY' ? 'Add your API key first (the AI box near the top of this page).' : e.message); }
+  const asQuestion = q => ({ q: q.q, options: q.options, answer: q.answer, why: q.why || '', source: q.source || '' });
+  m.cards = mode === 'append' ? [...m.cards, ...res.cards] : res.cards;
+  m.questions = mode === 'append' ? [...m.questions, ...res.questions.map(asQuestion)] : res.questions.map(asQuestion);
+  m.sourceName = file.name; m.generatedAt = new Date().toISOString(); m.aiGenerated = true;
+  m.status = 'draft'; // AI-written content never goes live by itself
+  LC.open.add(m.id);
+  const dropped = res.dropped.cards + res.dropped.questions;
+  return `${res.cards.length} flashcards and ${res.questions.length} questions made from ${file.name}.`
+    + (dropped ? ` ${dropped} suggested item${dropped === 1 ? ' was' : 's were'} discarded because the file did not back them up.` : '')
+    + (res.truncated ? ' The file was very long, so only the first part was used.' : '');
+}
+async function lcBulk(li, files) {
+  const level = LC.data.levels[li], notes = [];
+  for (const file of files) {
+    const title = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || 'New module';
+    const mod = { id: lcId(), title, objective: '', status: 'draft', owner: '', reviewer: '', passMark: 75, cards: [], questions: [] };
+    level.modules.push(mod);
+    try { notes.push(`${title}: ` + await lcGenerate(li, level.modules.length - 1, file)); }
+    catch (e) { notes.push(`${title}: ${e.message}`); }
+    renderAdminLearn(); lcSave();
+  }
+  lcStatus('', notes.join('  ·  '));
+}
+
 /* flashcards are edited as plain lines: "front | back" */
 const cardsToText = cards => (cards || []).map(c => `${c.front} | ${c.back}`).join('\n');
 const textToCards = text => String(text).split('\n').map(line => {
@@ -480,6 +556,7 @@ function renderAdminLearn() {
     return `<details class="lc-mod" data-mid="${esc(m.id)}" ${LC.open.has(m.id) ? 'open' : ''}>
       <summary><span class="lc-sum">${esc(m.title || 'Untitled module')}</span>
         <span class="small" style="font-weight:400;color:var(--muted)">${m.cards.length} cards · ${m.questions.length} questions</span>
+        ${m.aiGenerated ? '<span class="small" style="font-weight:600;color:var(--muted)">AI draft</span>' : ''}
         <span class="pill ${m.status === 'published' ? 'ok' : 'no'}">${m.status === 'published' ? 'Published' : 'Draft'}</span></summary>
       <div class="lc-body">
         <div class="setgrid" style="margin-top:16px">
@@ -489,6 +566,18 @@ function renderAdminLearn() {
           <div><label>Content owner</label>${inp(base + '.owner', m.owner, 'e.g. President / ExCo')}</div>
           <div><label>Reviewer</label>${inp(base + '.reviewer', m.reviewer)}</div>
           <div><label>Pass mark (%)</label>${inp(base + '.passMark', m.passMark, '75', 'inputmode="numeric"')}</div>
+        </div>
+        <div class="lc-ai">
+          <b>Make this module from a file</b>
+          <p class="hint" style="margin:4px 0 10px">Choose a PDF, Word (.docx), .txt or .md file. ${m.sourceName ? `<br><b>Last made from:</b> ${esc(m.sourceName)}${m.generatedAt ? ' on ' + esc(m.generatedAt.slice(0, 10)) : ''}. Read every card and question before you publish.` : ''}</p>
+          <input type="file" data-genfile="${esc(m.id)}" accept="${FILE_TYPES}">
+          <div class="lc-row" style="align-items:center">
+            <label class="lc-inline">Flashcards <input type="number" min="3" max="30" value="12" data-gen="cards"></label>
+            <label class="lc-inline">Questions <input type="number" min="3" max="15" value="6" data-gen="questions"></label>
+            <select data-gen="mode"><option value="replace">Replace what is here</option><option value="append">Add to what is here</option></select>
+            <button class="mini" type="button" data-act="generate" data-li="${li}" data-mi="${mi}">Generate with AI</button>
+          </div>
+          <p class="hint" data-genstatus="${esc(m.id)}" style="margin:8px 0 0"></p>
         </div>
         <label>Flashcards</label>
         <p class="hint" style="margin-top:0">One card per line, written as <b>question | answer</b>. Keep each side short: one idea per card.</p>
@@ -516,6 +605,18 @@ function renderAdminLearn() {
   el.innerHTML = `
   ${lcProgressBlock()}
   <div class="setblock">
+    <h3>AI for flashcards and questions</h3>
+    <p class="lead">Give a module a file and the AI writes its flashcards and quiz from that file only. Every card and question must be backed by a quote that really appears in the file, otherwise it is thrown away. Everything arrives as a draft for you to read before it goes live.</p>
+    <span class="pill ${LC.keySet ? 'ok' : 'no'}">${LC.keySet ? 'API key set' : 'No API key yet'}</span>
+    <div class="setgrid" style="margin-top:14px"><div style="grid-column:1/-1">
+      <label for="lcKey">Gemini API key</label>
+      <input type="password" id="lcKey" placeholder="Paste your API key here" autocomplete="off">
+    </div></div>
+    <div class="lc-row" style="margin-top:0"><button class="mini" type="button" data-act="savekey">${LC.keySet ? 'Replace key' : 'Save key'}</button>
+      ${LC.keySet ? '<button class="mini danger" type="button" data-act="clearkey">Remove key</button>' : ''}</div>
+    <p class="hint">The key is kept on the server and is never sent back to any browser. You can instead set it as <b>GEMINI_API_KEY</b> in Vercel. Files are read in your browser and only their text is sent to Google, so do not upload anything confidential. Scanned PDFs (pictures of pages) cannot be read.</p>
+  </div>
+  <div class="setblock">
     <h3>Public recruitment page</h3>
     <p class="lead">Shown to applicants on the public page. It tells them what happens after they are selected. Switch it off to hide the whole section.</p>
     <label style="display:flex;gap:10px;align-items:center;margin-bottom:18px"><input type="checkbox" data-bool="public.enabled" ${pub.enabled !== false ? 'checked' : ''} style="width:auto"> Show this section on the public page</label>
@@ -541,6 +642,8 @@ function renderAdminLearn() {
     ${l.modules.map((m, mi) => modBlock(m, li, mi, l.modules.length)).join('') || '<p class="hint">No modules yet.</p>'}
     <div class="lc-row">
       <button class="mini" type="button" data-act="addm" data-li="${li}">Add module</button>
+      <button class="mini" type="button" data-act="pickfiles" data-li="${li}">Add modules from files</button>
+      <input type="file" multiple hidden data-addfiles="${li}" accept="${FILE_TYPES}">
       <span style="flex:1"></span>
       <button class="mini" type="button" data-act="lup" data-li="${li}" ${li === 0 ? 'disabled' : ''}>Move level up</button>
       <button class="mini" type="button" data-act="ldown" data-li="${li}" ${li === levels.length - 1 ? 'disabled' : ''}>Move level down</button>
@@ -586,9 +689,22 @@ function renderAdminLearn() {
   el.addEventListener('change', e => {
     if (!LC.data) return;
     if (e.target.id === 'lcSort') { LC.sort = e.target.value; renderAdminLearn(); return; }
+    if (e.target.dataset.genfile) { LC.files[e.target.dataset.genfile] = e.target.files[0] || null; return; }
+    if (e.target.dataset.addfiles !== undefined) {
+      const files = [...e.target.files]; e.target.value = '';
+      if (files.length) lcBulk(Number(e.target.dataset.addfiles), files);
+      return;
+    }
     if (e.target.dataset.bool) { lcSet(e.target.dataset.bool, e.target.checked); lcSave(); }
     else if (e.target.dataset.ans) { lcSet(e.target.dataset.ans, Number(e.target.value)); lcSave(); }
     else if (e.target.tagName === 'SELECT' && e.target.dataset.p) {
+      const path = e.target.dataset.p;
+      const mod = path.endsWith('.status') ? path.split('.').slice(0, 4).reduce((o, k) => o[k], LC.data) : null;
+      if (e.target.value === 'published' && mod?.aiGenerated) {
+        uiConfirm('Publish AI-written content?', 'This module was made by AI from a file. Have you read every flashcard and question and checked them against the original? Members will see it straight away.', 'Publish')
+          .then(ok => { if (ok) { lcSet(path, 'published'); lcSave(); renderAdminLearn(); } else e.target.value = 'draft'; });
+        return;
+      }
       lcSet(e.target.dataset.p, e.target.value); lcSave();
       const d = e.target.closest('details.lc-mod');
       if (d) { const pill = d.querySelector('summary .pill'); pill.textContent = e.target.value === 'published' ? 'Published' : 'Draft'; pill.className = 'pill ' + (e.target.value === 'published' ? 'ok' : 'no'); }
@@ -602,6 +718,30 @@ function renderAdminLearn() {
     const b = e.target.closest('[data-act]'); if (!b || !LC.data) return;
     const { act } = b.dataset, li = Number(b.dataset.li), mi = Number(b.dataset.mi), qi = Number(b.dataset.qi), L = LC.data.levels;
     if (act === 'csv') { lcCsv(); return; }
+    if (act === 'savekey') {
+      const v = $('#lcKey').value.trim();
+      if (v.length < 20) { $('#saveState').textContent = "That doesn't look like an API key."; return; }
+      try { await api('/api/key', { method: 'POST', body: JSON.stringify({ key: v }) }); LC.keySet = true; window.SEC.setKeySet(true); renderAdminLearn(); $('#saveState').textContent = 'API key saved'; }
+      catch (ex) { $('#saveState').textContent = 'Not saved: ' + ex.message; }
+      return;
+    }
+    if (act === 'clearkey') {
+      if (!await uiConfirm('Remove the API key?', 'The AI buttons stop working until you add a key again.', 'Remove')) return;
+      try { const r = await api('/api/key', { method: 'DELETE' }); LC.keySet = !!r.keySet; window.SEC.setKeySet(LC.keySet); renderAdminLearn(); } catch (ex) { $('#saveState').textContent = 'Not removed: ' + ex.message; }
+      return;
+    }
+    if (act === 'pickfiles') { el.querySelector(`[data-addfiles="${li}"]`)?.click(); return; }
+    if (act === 'generate') {
+      const mod = LC.data.levels[li].modules[mi], file = LC.files[mod.id];
+      if (!file) { lcStatus(mod.id, 'Choose a file first.', true); return; }
+      const box = b.closest('.lc-ai');
+      const opts = { cards: Number(box.querySelector('[data-gen=cards]').value), questions: Number(box.querySelector('[data-gen=questions]').value), mode: box.querySelector('[data-gen=mode]').value };
+      if (mod.cards.length + mod.questions.length && opts.mode === 'replace' && !await uiConfirm('Replace this module\u2019s content?', 'The current flashcards and questions will be replaced by new ones made from the file.', 'Replace')) return;
+      b.disabled = true;
+      try { const note = await lcGenerate(li, mi, file, opts); renderAdminLearn(); lcSave(); lcStatus(mod.id, note); }
+      catch (ex) { lcStatus(mod.id, ex.message, true); b.disabled = false; }
+      return;
+    }
     if (act === 'gencode') {
       const a = new Uint8Array(6); crypto.getRandomValues(a);
       LC.joinCode = 'SEC-' + [...a].map(n => 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[n % 32]).join('');

@@ -9,7 +9,13 @@ process.env.ADMIN_USERS = 'reviewer:test-password';
 const data = new Map();
 let gemini = null;     // what the fake Gemini will answer next: { status, body }
 let geminiCalls = [];  // every request the server sent to Gemini
+let listCalls = 0;
+let availableModels = ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'embedding-001'];
 globalThis.fetch = async (url, opts) => {
+  if (String(url).includes('generativelanguage.googleapis.com/v1beta/models?')) { // which models can this key use?
+    listCalls++;
+    return { ok: true, status: 200, json: async () => ({ models: availableModels.map(name => ({ name: 'models/' + name, supportedGenerationMethods: ['generateContent'] })) }) };
+  }
   if (String(url).includes('generativelanguage.googleapis.com')) {
     geminiCalls.push({ url: String(url), body: JSON.parse(opts.body) });
     const g = gemini;
@@ -112,4 +118,48 @@ test('very long files are cut off and the admin is told', async () => {
   assert.equal(r.status, 200);
   assert.equal(r.data.truncated, true);
   assert.ok(geminiCalls.at(-1).body.contents[0].parts[0].text.length < 125000);
+});
+
+test('the model is discovered from Google, newest plain flash first, and retired models are skipped', async () => {
+  geminiCalls = [];
+  gemini = reply({ cards: [{ front: 'Who owns the standards?', back: 'Leadership.', evidence: 'Leadership owns the standards. Departments own the knowledge.' }], questions: [] });
+  const ok = await call({ text: DOC });
+  assert.equal(ok.status, 200);
+  assert.match(geminiCalls[0].url, /models\/gemini-3\.8-flash:generateContent/, 'newest plain flash, not lite or an old version');
+  assert.equal(ok.data.model, 'gemini-3.8-flash');
+});
+
+test('if a model has been retired the next one is tried, and the reasons are reported if none works', async () => {
+  geminiCalls = [];
+  let n = 0;
+  const realFake = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => {
+    if (String(url).includes(':generateContent') && n++ === 0) {
+      geminiCalls.push({ url: String(url) });
+      return { ok: false, status: 404, json: async () => ({ error: { message: 'This model models/gemini-3.8-flash is no longer available.' } }) };
+    }
+    return realFake(url, opts);
+  };
+  gemini = reply({ cards: [{ front: 'Who owns the standards?', back: 'Leadership.', evidence: 'Leadership owns the standards. Departments own the knowledge.' }], questions: [] });
+  const r = await call({ text: DOC });
+  assert.equal(r.status, 200, 'the second model answered');
+  assert.notEqual(r.data.model, 'gemini-3.8-flash');
+  globalThis.fetch = async (url, opts) => String(url).includes(':generateContent')
+    ? { ok: false, status: 404, json: async () => ({ error: { message: 'no longer available' } }) } : realFake(url, opts);
+  const dead = await call({ text: DOC });
+  assert.equal(dead.status, 502);
+  assert.match(dead.data.error, /No Gemini model worked/);
+  assert.match(dead.data.error, /no longer available/);
+  globalThis.fetch = realFake;
+});
+
+test('when the model list cannot be read, the built-in fallbacks are used', async () => {
+  availableModels = [];
+  const list = await import('../api/studyai.js'); // same module; the cache is keyed by key so a new key forces a fresh lookup
+  data.set('sec:gemini_key', JSON.stringify('another-key-with-no-model-list-0000'));
+  geminiCalls = [];
+  gemini = reply({ cards: [{ front: 'Who owns the standards?', back: 'Leadership.', evidence: 'Leadership owns the standards. Departments own the knowledge.' }], questions: [] });
+  const r = await call({ text: DOC });
+  assert.equal(r.status, 200);
+  assert.match(geminiCalls[0].url, /gemini-flash-latest/, 'falls back to the always-newest alias');
 });

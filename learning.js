@@ -359,17 +359,24 @@ function lcPayload() {
       }) })),
   };
 }
-function lcSave() {
+function lcSave(now = false) {
   $('#saveState').textContent = 'Saving…';
+  LC.dirty = true;
   clearTimeout(LC.timer);
-  LC.timer = setTimeout(async () => {
+  const run = async () => {
     try {
       await api('/api/learning', { method: 'PUT', body: JSON.stringify(lcPayload()) });
+      LC.dirty = false;
       $('#saveState').textContent = 'Saved';
       setTimeout(() => { if ($('#saveState').textContent === 'Saved') $('#saveState').textContent = ''; }, 1800);
-    } catch (e) { $('#saveState').textContent = 'Not saved: ' + e.message; }
-  }, 700);
+      return true;
+    } catch (e) { $('#saveState').textContent = 'Not saved: ' + e.message; return false; }
+  };
+  if (now) return run();
+  LC.timer = setTimeout(run, 700);
+  return Promise.resolve(true);
 }
+window.addEventListener('beforeunload', e => { if (LC.dirty) { e.preventDefault(); e.returnValue = ''; } });
 const lcSet = (path, val) => {
   const keys = path.split('.'); let o = LC.data;
   keys.slice(0, -1).forEach(k => { o = o[k]; });
@@ -439,6 +446,19 @@ async function lcGenerate(course, file) {
     + (dropped ? ` ${dropped} suggested item${dropped === 1 ? ' was' : 's were'} left out because the file did not back them up.` : '')
     + (res.truncated ? ' The file was very long, so only the first part was used.' : '');
 }
+/* Publishing is one clear button. AI-made courses ask for a last "have you read it" confirmation. */
+async function lcSetPublished(ci, publish) {
+  const c = LC.data.courses[ci];
+  if (publish) {
+    if (!c.questions.length && !await uiConfirm('Publish without a quiz?', 'This course has no quiz questions, so members can read the flashcards but cannot complete it.', 'Publish anyway')) return;
+    if (c.aiGenerated && !await uiConfirm('Publish AI-written content?', 'This course was made by AI from a file. Have you read the flashcards and questions and checked them against the original? Members will see it straight away.', 'Publish')) return;
+  }
+  c.status = publish ? 'published' : 'draft';
+  LC.open.add(c.id);
+  LC.notice = { text: publish ? `${c.title} is published. Members can see it now.` : `${c.title} is back to a draft. Members cannot see it.` };
+  renderAdminLearn();
+  await lcSave(true);
+}
 async function lcAddCourse(title, file) {
   const course = { id: lcId(), title: title || (file ? file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() : 'New course'),
     status: 'draft', passMark: 75, cards: [], questions: [] };
@@ -448,8 +468,9 @@ async function lcAddCourse(title, file) {
     try { notice = { text: `${course.title}: ${await lcGenerate(course, file)} Read them, fix anything, then publish.` }; }
     catch (e) { notice = { text: `${course.title} was created empty. ${e.message}`, err: true }; }
   } else notice = { text: `${course.title} was created empty. Write the flashcards and questions below, or add a file.` };
-  LC.adding = false; LC.notice = notice;
-  renderAdminLearn(); lcSave();
+  LC.adding = false; LC.notice = { ...notice, publishId: notice.err ? null : (course.cards.length || course.questions.length ? course.id : null) };
+  renderAdminLearn();
+  if (await lcSave(true)) { LC.notice.text += ' It is saved.'; renderAdminLearn(); }
 }
 
 /* ---------- committee progress ---------- */
@@ -545,6 +566,12 @@ function renderAdminLearn() {
         ${m.aiGenerated ? '<span class="small" style="font-weight:600;color:var(--muted)">AI draft</span>' : ''}
         <span class="pill ${m.status === 'published' ? 'ok' : 'no'}">${m.status === 'published' ? 'Published' : 'Draft'}</span></summary>
       <div class="lc-body">
+        <div class="lc-pubbar ${m.status === 'published' ? 'is-live' : ''}">
+          <div><b>${m.status === 'published' ? 'Published' : 'Draft'}</b> · ${m.status === 'published' ? 'members can see and study this course.' : 'members cannot see this course yet.'}</div>
+          ${m.status === 'published'
+            ? `<button class="mini" type="button" data-act="unpublish" data-ci="${ci}">Unpublish</button>`
+            : `<button class="btn" type="button" data-act="publish" data-ci="${ci}">Publish course</button>`}
+        </div>
         <div class="setgrid" style="margin-top:16px">
           <div style="grid-column:1/-1"><label>Course title</label>${inp(base + '.title', m.title, 'Course title')}</div>
           <div><label>Status</label><select data-p="${base}.status"><option value="draft" ${m.status !== 'published' ? 'selected' : ''}>Draft (hidden from members)</option><option value="published" ${m.status === 'published' ? 'selected' : ''}>Published</option></select></div>
@@ -586,7 +613,7 @@ function renderAdminLearn() {
   <div class="setblock">
     <h3>Courses</h3>
     <p class="lead">One course is one title and one file. The AI turns the file into ${CARDS_PER_COURSE} flashcards and ${QUESTIONS_PER_COURSE} quiz questions, and you can edit every one afterwards. Members only see courses you publish.</p>
-    ${LC.notice ? `<div class="lc-notice ${LC.notice.err ? 'is-err' : ''}">${esc(LC.notice.text)}</div>` : ''}
+    ${LC.notice ? `<div class="lc-notice ${LC.notice.err ? 'is-err' : ''}"><span>${esc(LC.notice.text)}</span>${(() => { const i = LC.notice.publishId ? courses.findIndex(c => c.id === LC.notice.publishId && c.status !== 'published') : -1; return i >= 0 ? `<button class="btn" type="button" data-act="publish" data-ci="${i}">Publish now</button>` : ''; })()}</div>` : ''}
     ${LC.adding ? `<div class="lc-add">
       <label for="lcNewTitle">Course title</label>
       <input type="text" id="lcNewTitle" placeholder="Course title, e.g. How SEC works" autocomplete="off">
@@ -611,7 +638,7 @@ function renderAdminLearn() {
     </div></div>
     <div class="lc-row" style="margin-top:0"><button class="mini" type="button" data-act="savekey">${LC.keySet ? 'Replace key' : 'Save key'}</button>
       ${LC.keySet ? '<button class="mini danger" type="button" data-act="clearkey">Remove key</button>' : ''}</div>
-    <p class="hint">The key is kept on the server and is never sent back to any browser. You can instead set <b>DEEPSEEK_API_KEY</b> or <b>GEMINI_API_KEY</b> in Vercel. Files are read in your browser and only their text is sent to the AI company you chose (DeepSeek's servers are in China), so do not upload anything confidential. Scanned PDFs (pictures of pages) cannot be read.</p>
+    <p class="hint"><b>You only need to do this once.</b> The key is saved on the server and stays there until you replace or remove it. It does not expire, and signing out or closing the browser does not remove it. It is never sent back to any browser. You can instead set <b>DEEPSEEK_API_KEY</b> or <b>GEMINI_API_KEY</b> in Vercel. Files are read in your browser and only their text is sent to the AI company you chose (DeepSeek's servers are in China), so do not upload anything confidential. Scanned PDFs (pictures of pages) cannot be read.</p>
   </div>
 
   <div class="setblock">
@@ -692,10 +719,12 @@ function renderAdminLearn() {
     const b = e.target.closest('[data-act]'); if (!b || !LC.data) return;
     const { act } = b.dataset, ci = Number(b.dataset.ci), qi = Number(b.dataset.qi), C = LC.data.courses;
     if (act === 'csv') { lcCsv(); return; }
+    if (act === 'publish') { await lcSetPublished(ci, true); return; }
+    if (act === 'unpublish') { await lcSetPublished(ci, false); return; }
     if (act === 'savekey') {
       const v = $('#lcKey').value.trim();
       if (v.length < 20) { $('#saveState').textContent = "That doesn't look like an API key."; return; }
-      try { const r = await api('/api/studykey', { method: 'POST', body: JSON.stringify({ key: v }) }); LC.keySet = r.keySet; LC.keyProvider = r.provider; renderAdminLearn(); $('#saveState').textContent = 'API key saved'; }
+      try { const r = await api('/api/studykey', { method: 'POST', body: JSON.stringify({ key: v }) }); LC.keySet = r.keySet; LC.keyProvider = r.provider; renderAdminLearn(); $('#saveState').textContent = 'API key saved for good'; }
       catch (ex) { $('#saveState').textContent = 'Not saved: ' + ex.message; }
       return;
     }
@@ -719,7 +748,11 @@ function renderAdminLearn() {
       if (!file) { lcStatus(course.id, 'Choose a file first.', true); return; }
       if (course.cards.length + course.questions.length && !await uiConfirm('Replace this course’s content?', `The current flashcards and questions will be replaced by ${CARDS_PER_COURSE} flashcards and ${QUESTIONS_PER_COURSE} questions made from the new file. Your edits to them will be lost.`, 'Replace')) return;
       b.disabled = true;
-      try { const note = await lcGenerate(course, file); LC.open.add(course.id); LC.notice = null; renderAdminLearn(); lcSave(); lcStatus(course.id, note); }
+      try {
+        const note = await lcGenerate(course, file); LC.open.add(course.id);
+        LC.notice = { text: `${course.title}: ${note} Read them, fix anything, then publish.`, publishId: course.id };
+        renderAdminLearn(); if (await lcSave(true)) { LC.notice.text += ' It is saved.'; renderAdminLearn(); }
+      }
       catch (ex) { lcStatus(course.id, ex.message, true); b.disabled = false; }
       return;
     }

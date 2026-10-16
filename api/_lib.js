@@ -34,6 +34,7 @@ export async function kvSet(key, value) {
 export const K_STATE = 'sec:state';
 export const K_APPS  = 'sec:applications';
 export const K_KEY   = 'sec:gemini_key';
+export const K_STUDY_KEY = 'sec:study_ai_key';
 export const K_LEARN = 'sec:learning';
 export const K_PROGRESS = 'sec:learning_progress';
 export const K_MEMBERS = 'sec:learning_members';
@@ -442,4 +443,16 @@ export async function loadStateRecord() {
 export async function loadAppsRecord() {
   const raw = await kvGetRaw(K_APPS);
   return { raw, apps: raw === null ? [] : JSON.parse(raw) };
+}
+
+
+/* Which AI key do courses use, and for which provider? DeepSeek keys start with "sk-", Gemini keys with "AIza".
+   Order: DEEPSEEK_API_KEY or GEMINI_API_KEY set in Vercel, then the key pasted in Admin > Learning portal,
+   then the older key saved under Settings (kept so existing setups still work). */
+export const providerOf = key => (/^sk-/.test(String(key)) ? 'deepseek' : 'gemini');
+export async function resolveAiKey() {
+  if (process.env.DEEPSEEK_API_KEY) return { key: process.env.DEEPSEEK_API_KEY, provider: 'deepseek', fromEnv: true };
+  if (process.env.GEMINI_API_KEY) return { key: process.env.GEMINI_API_KEY, provider: 'gemini', fromEnv: true };
+  const saved = (await kvGet(K_STUDY_KEY)) || (await kvGet(K_KEY));
+  return saved ? { key: String(saved), provider: providerOf(saved), fromEnv: false } : null;
 }

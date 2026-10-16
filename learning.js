@@ -331,7 +331,7 @@ function lpRenderResult() {
    Layer 3: SEC Admin, Learning portal settings
    ===================================================================== */
 const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null, sort: 'progress',
-  keySet: false, files: {}, adding: false, notice: null };
+  keySet: false, keyProvider: null, files: {}, adding: false, notice: null };
 const CARDS_PER_COURSE = 20, QUESTIONS_PER_COURSE = 10; // fixed on purpose: one file, one course, always the same shape
 
 async function loadAdminLearn() {
@@ -343,7 +343,7 @@ async function loadAdminLearn() {
     LC.progressAll = d.progressAll || {};
     LC.members = d.members || [];
     LC.joinCode = d.joinCode || '';
-    LC.keySet = !!d.keySet;
+    LC.keySet = !!d.keySet; LC.keyProvider = d.keyProvider || null;
     renderAdminLearn();
   } catch (e) { el.innerHTML = `<div class="empty">Could not load the Learning Portal settings: ${esc(e.message)}</div>`; }
 }
@@ -428,7 +428,7 @@ async function lcGenerate(course, file) {
   lcStatus(course.id, `Read ${Math.round(text.length / 1000)}k characters. The AI is writing the flashcards and questions…`);
   let res;
   try { res = await api('/api/studyai', { method: 'POST', body: JSON.stringify({ text, cards: CARDS_PER_COURSE, questions: QUESTIONS_PER_COURSE }) }); }
-  catch (e) { throw new Error(e.message === 'NO_KEY' ? 'Add your API key first (the AI box on this page).' : e.message); }
+  catch (e) { throw new Error(e.message === 'NO_KEY' ? 'Add your API key first (the AI box lower on this page).' : e.message); }
   course.cards = res.cards;
   course.questions = res.questions.map(q => ({ q: q.q, options: q.options, answer: q.answer, why: q.why || '', source: q.source || '' }));
   course.sourceName = file.name; course.generatedAt = new Date().toISOString(); course.aiGenerated = true;
@@ -603,15 +603,15 @@ function renderAdminLearn() {
 
   <div class="setblock">
     <h3>AI for flashcards and questions</h3>
-    <p class="lead">This uses a Google Gemini API key. Every flashcard and question must be backed by a quote that really appears in the file, otherwise it is thrown away. Everything arrives as a draft for you to read before it goes live.</p>
-    <span class="pill ${LC.keySet ? 'ok' : 'no'}">${LC.keySet ? 'API key set' : 'No API key yet'}</span>
+    <p class="lead">Paste an API key from <b>DeepSeek</b> (starts with <b>sk-</b>) or <b>Google Gemini</b>. The portal works out which one it is. Every flashcard and question must be backed by a quote that really appears in the file, otherwise it is thrown away, and everything arrives as a draft for you to read before it goes live.</p>
+    <span class="pill ${LC.keySet ? 'ok' : 'no'}">${LC.keySet ? `API key set${LC.keyProvider ? ' (' + (LC.keyProvider === 'deepseek' ? 'DeepSeek' : 'Gemini') + ')' : ''}` : 'No API key yet'}</span>
     <div class="setgrid" style="margin-top:14px"><div style="grid-column:1/-1">
-      <label for="lcKey">Gemini API key</label>
+      <label for="lcKey">API key</label>
       <input type="password" id="lcKey" placeholder="Paste your API key here" autocomplete="off">
     </div></div>
     <div class="lc-row" style="margin-top:0"><button class="mini" type="button" data-act="savekey">${LC.keySet ? 'Replace key' : 'Save key'}</button>
       ${LC.keySet ? '<button class="mini danger" type="button" data-act="clearkey">Remove key</button>' : ''}</div>
-    <p class="hint">The key is kept on the server and is never sent back to any browser. You can instead set it as <b>GEMINI_API_KEY</b> in Vercel. Files are read in your browser and only their text is sent to Google, so do not upload anything confidential. Scanned PDFs (pictures of pages) cannot be read.</p>
+    <p class="hint">The key is kept on the server and is never sent back to any browser. You can instead set <b>DEEPSEEK_API_KEY</b> or <b>GEMINI_API_KEY</b> in Vercel. Files are read in your browser and only their text is sent to the AI company you chose (DeepSeek's servers are in China), so do not upload anything confidential. Scanned PDFs (pictures of pages) cannot be read.</p>
   </div>
 
   <div class="setblock">
@@ -695,13 +695,13 @@ function renderAdminLearn() {
     if (act === 'savekey') {
       const v = $('#lcKey').value.trim();
       if (v.length < 20) { $('#saveState').textContent = "That doesn't look like an API key."; return; }
-      try { await api('/api/key', { method: 'POST', body: JSON.stringify({ key: v }) }); LC.keySet = true; window.SEC.setKeySet(true); renderAdminLearn(); $('#saveState').textContent = 'API key saved'; }
+      try { const r = await api('/api/studykey', { method: 'POST', body: JSON.stringify({ key: v }) }); LC.keySet = r.keySet; LC.keyProvider = r.provider; renderAdminLearn(); $('#saveState').textContent = 'API key saved'; }
       catch (ex) { $('#saveState').textContent = 'Not saved: ' + ex.message; }
       return;
     }
     if (act === 'clearkey') {
       if (!await uiConfirm('Remove the API key?', 'The AI buttons stop working until you add a key again.', 'Remove')) return;
-      try { const r = await api('/api/key', { method: 'DELETE' }); LC.keySet = !!r.keySet; window.SEC.setKeySet(LC.keySet); renderAdminLearn(); } catch (ex) { $('#saveState').textContent = 'Not removed: ' + ex.message; }
+      try { const r = await api('/api/studykey', { method: 'DELETE' }); LC.keySet = !!r.keySet; LC.keyProvider = r.provider; renderAdminLearn(); } catch (ex) { $('#saveState').textContent = 'Not removed: ' + ex.message; }
       return;
     }
     if (act === 'addcourse') { LC.adding = true; LC.notice = null; renderAdminLearn(); if (window.matchMedia('(hover: hover)').matches) $('#lcNewTitle')?.focus(); return; }

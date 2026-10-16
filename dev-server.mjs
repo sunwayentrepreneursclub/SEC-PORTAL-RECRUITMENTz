@@ -14,7 +14,7 @@ process.env.ADMIN_USERS = 'admin:admin';
 
 const store = new Map([
   ['sec:learning_join', JSON.stringify({ code: 'dev-join-code' })],
-  ['sec:gemini_key', JSON.stringify('dev-only-fake-gemini-key-0000000000')], // lets the AI button run locally
+  ['sec:study_ai_key', JSON.stringify('sk-dev-only-fake-deepseek-key-00000000')], // lets the AI button run locally
 ]);
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (url, opts) => {
@@ -36,10 +36,13 @@ globalThis.fetch = async (url, opts) => {
     else if (op === 'LRANGE') { result = JSON.parse(store.get(key) || '[]').slice(Number(args[2]), Number(args[3]) + 1); }
     return new Response(JSON.stringify({ result }), { status: 200 });
   }
-  // LOCAL MOCK of Gemini so the upload-a-file flow can be tried with no real key. It just rebuilds cards and
-  // questions from sentences in the file, quoting them word for word. Production calls the real Gemini.
-  if (String(url).includes('generativelanguage.googleapis.com')) {
-    const prompt = JSON.parse(opts.body).contents[0].parts[0].text;
+  // LOCAL MOCK of Gemini / DeepSeek so the upload-a-file flow can be tried with no real key. It rebuilds cards and
+  // questions from sentences in the file, quoting them word for word. Production calls the real services.
+  const isGemini = String(url).includes('generativelanguage.googleapis.com'), isDeepSeek = String(url).includes('api.deepseek.com');
+  if (isDeepSeek && String(url).endsWith('/models')) return new Response(JSON.stringify({ data: [{ id: 'deepseek-chat' }] }), { status: 200 });
+  if (isGemini || isDeepSeek) {
+    const body = JSON.parse(opts.body);
+    const prompt = isGemini ? body.contents[0].parts[0].text : body.messages[1].content;
     const doc = prompt.slice(prompt.lastIndexOf('<document>') + 10, prompt.lastIndexOf('</document>'));
     const sentences = doc.replace(/\s+/g, ' ').split(/(?<=[.!?])\s+/).filter(x => x.split(' ').length >= 9);
     const quote = x => x.split(' ').slice(0, 12).join(' ');
@@ -50,7 +53,8 @@ globalThis.fetch = async (url, opts) => {
       const right = x.split(' ').slice(0, 9).join(' ') + '…', at = i % 4, options = [...others]; options.splice(at, 0, right);
       return { q: 'Which statement appears in the file?', options: options.slice(0, 4), answer: at, why: 'The file says: ' + right, evidence: quote(x) };
     }).filter(q => q.options.length === 4);
-    return new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: JSON.stringify({ cards, questions }) }] } }] }), { status: 200 });
+    const json = JSON.stringify({ cards, questions });
+    return new Response(JSON.stringify(isGemini ? { candidates: [{ content: { parts: [{ text: json }] } }] } : { choices: [{ message: { content: json } }] }), { status: 200 });
   }
   return realFetch(url, opts);
 };

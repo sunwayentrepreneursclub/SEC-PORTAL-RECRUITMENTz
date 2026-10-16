@@ -10,8 +10,15 @@ const data = new Map();
 let gemini = null;     // what the fake Gemini will answer next: { status, body }
 let geminiCalls = [];  // every request the server sent to Gemini
 let listCalls = 0;
+let deepseek = null;   // what the fake DeepSeek answers next
+let deepseekCalls = [];
 let availableModels = ['gemini-3.8-flash', 'gemini-3.8-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash', 'embedding-001'];
 globalThis.fetch = async (url, opts) => {
+  if (String(url).includes('api.deepseek.com')) {
+    if (String(url).endsWith('/models')) return { ok: true, status: 200, json: async () => ({ data: [{ id: 'deepseek-chat' }, { id: 'deepseek-reasoner' }] }) };
+    deepseekCalls.push({ url: String(url), headers: opts.headers, body: JSON.parse(opts.body) });
+    return { ok: deepseek.status < 400, status: deepseek.status, json: async () => deepseek.body };
+  }
   if (String(url).includes('generativelanguage.googleapis.com/v1beta/models?')) { // which models can this key use?
     listCalls++;
     return { ok: true, status: 200, json: async () => ({ models: availableModels.map(name => ({ name: 'models/' + name, supportedGenerationMethods: ['generateContent'] })) }) };
@@ -31,6 +38,7 @@ const reply = obj => ({ status: 200, body: { candidates: [{ content: { parts: [{
 
 const { issueSession } = await import('../api/_lib.js');
 const { default: studyai } = await import('../api/studyai.js');
+const { default: studykey } = await import('../api/studykey.js');
 const s = { headers: {}, setHeader(k, v) { this.headers[k] = v; } };
 issueSession(s, 'reviewer');
 const cookie = s.headers['Set-Cookie'].split(';')[0];
@@ -162,4 +170,64 @@ test('when the model list cannot be read, the built-in fallbacks are used', asyn
   const r = await call({ text: DOC });
   assert.equal(r.status, 200);
   assert.match(geminiCalls[0].url, /gemini-flash-latest/, 'falls back to the always-newest alias');
+});
+
+const dsReply = obj => ({ status: 200, body: { choices: [{ message: { content: JSON.stringify(obj) } }] } });
+const CARD_OK = { front: 'Who owns the standards?', back: 'Leadership.', evidence: 'Leadership owns the standards. Departments own the knowledge.' };
+async function keyCall(method, body, ck = cookie) {
+  const req = { method, url: '/api/studykey', body: body ?? {}, headers: { cookie: ck } };
+  const res = { statusCode: 200, headers: {}, setHeader(k, v) { this.headers[k] = v; }, end(raw) { this.raw = raw; } };
+  await studykey(req, res);
+  return { status: res.statusCode, data: JSON.parse(res.raw) };
+}
+
+test('the AI key box is admin only, never returns the key, and knows the provider', async () => {
+  assert.equal((await keyCall('GET', null, '')).status, 401);
+  assert.equal((await keyCall('POST', { key: 'too short' })).status, 400);
+  const saved = await keyCall('POST', { key: 'sk-deepseek-test-key-000000000000000' });
+  assert.deepEqual(saved.data, { keySet: true, provider: 'deepseek', fromVercel: false });
+  assert.equal(JSON.stringify(saved.data).includes('sk-deepseek'), false, 'the key itself is never sent back');
+  assert.equal((await keyCall('GET')).data.provider, 'deepseek');
+});
+
+test('a DeepSeek key (sk-...) is sent to DeepSeek, in JSON mode, and the quote check still applies', async () => {
+  deepseekCalls = []; geminiCalls = [];
+  deepseek = dsReply({ cards: [CARD_OK, { front: 'Invented', back: 'x', evidence: 'The club was founded in nineteen ninety nine by a group of students' }], questions: [] });
+  const r = await call({ text: DOC });
+  assert.equal(r.status, 200);
+  assert.equal(r.data.provider, 'deepseek');
+  assert.deepEqual(r.data.cards, [{ front: 'Who owns the standards?', back: 'Leadership.' }]);
+  assert.equal(r.data.dropped.cards, 1, 'invented content is still discarded');
+  assert.equal(geminiCalls.length, 0, 'nothing went to Gemini');
+  const c = deepseekCalls[0];
+  assert.match(c.url, /api\.deepseek\.com\/chat\/completions/);
+  assert.equal(c.headers.Authorization, 'Bearer sk-deepseek-test-key-000000000000000');
+  assert.equal(c.body.model, 'deepseek-chat', 'a plain chat model, not the reasoning one');
+  assert.deepEqual(c.body.response_format, { type: 'json_object' });
+  assert.match(c.body.messages[1].content, /Use ONLY facts that are stated in the document/);
+  assert.match(c.body.messages[1].content, /shaped exactly like this example/);
+});
+
+test('DeepSeek problems give clear messages', async () => {
+  deepseek = { status: 401, body: { error: { message: 'Authentication Fails' } } };
+  let r = await call({ text: DOC }); assert.equal(r.status, 400); assert.match(r.data.error, /rejected the API key/);
+  deepseek = { status: 402, body: { error: { message: 'Insufficient Balance' } } };
+  r = await call({ text: DOC }); assert.equal(r.status, 402); assert.match(r.data.error, /no balance/);
+  deepseek = { status: 429, body: { error: { message: 'rate' } } };
+  r = await call({ text: DOC }); assert.equal(r.status, 429);
+  deepseek = { status: 200, body: { choices: [{ message: { content: 'not json' } }] } };
+  r = await call({ text: DOC }); assert.equal(r.status, 502);
+});
+
+test('a key set in Vercel wins, and removing the pasted key falls back to the older Settings key', async () => {
+  process.env.DEEPSEEK_API_KEY = 'sk-from-vercel-env-0000000000000000';
+  deepseekCalls = []; deepseek = dsReply({ cards: [CARD_OK], questions: [] });
+  await call({ text: DOC });
+  assert.equal(deepseekCalls[0].headers.Authorization, 'Bearer sk-from-vercel-env-0000000000000000');
+  assert.equal((await keyCall('GET')).data.fromVercel, true);
+  delete process.env.DEEPSEEK_API_KEY;
+  const cleared = await keyCall('DELETE');
+  assert.deepEqual([cleared.data.keySet, cleared.data.provider], [true, 'gemini'], 'the older Gemini key under Settings still works');
+  data.set('sec:gemini_key', JSON.stringify(''));
+  assert.deepEqual((await call({ text: DOC })).data, { error: 'NO_KEY' });
 });

@@ -139,12 +139,18 @@ function lpRenderHome() {
           ${next ? `<button class="lp-pill lp-pill-lg" id="lpContinue" type="button">${done ? 'Continue' : 'Start'}: ${esc(next.title)}</button>` : ''}
         </div>` : ''}
       </header>
-      ${courses.length ? `<div class="lp-rows lp-courses">${courses.map(m => `
+      ${courses.length ? `<div class="lp-rows lp-courses">${courses.map(m => {
+        const p = LP.progress[m.id];
+        const score = p ? (p.last ?? p.best) : null; // older records only kept the best score
+        return `
         <article class="lp-row" style="--lc:${lpColor(m.ci)}">
-          <div><h3><span class="lp-dot"></span>${esc(m.title)}</h3>
-            <p>${esc([plural(m.cards.length, 'card'), plural(m.questions.length, 'question'), lpDone(m.id) ? `Complete · best ${LP.progress[m.id].best}%` : ''].filter(Boolean).join(' · '))}</p></div>
-          <button class="lp-pill" type="button" data-mod="${esc(m.id)}">${lpDone(m.id) ? 'Review' : 'Study'}</button>
-        </article>`).join('')}</div>`
+          <div class="lp-row-main"><h3><span class="lp-dot"></span>${esc(m.title)}</h3>
+            <p>${esc([plural(m.cards.length, 'card'), plural(m.questions.length, 'question'), p ? `${plural(p.attempts, 'attempt')} · best ${p.best}%` : ''].filter(Boolean).join(' · '))}</p></div>
+          <div class="lp-row-side">
+            ${p ? `<div class="lp-last ${p.passed ? 'is-pass' : ''}" title="${p.at ? 'Last attempt ' + esc(p.at.slice(0, 10)) : ''}"><b>${score}%</b><span>${p.last != null ? 'Last attempt' : 'Best score'} · ${p.passed ? 'Passed' : `need ${m.passMark}%`}</span></div>` : ''}
+            <button class="lp-pill" type="button" data-mod="${esc(m.id)}">${p?.passed ? 'Review' : 'Study'}</button>
+          </div>
+        </article>`; }).join('')}</div>`
       : `<p class="lede" style="margin-top:40px">No courses yet. They will appear here as soon as they are published.</p>`}
     </div>`;
   lpRoot().querySelectorAll('[data-mod]').forEach(b => b.addEventListener('click', () => lpOpenStudy(b.dataset.mod)));
@@ -332,7 +338,7 @@ function lpRenderResult() {
    ===================================================================== */
 const LC = { data: null, progressAll: {}, members: [], joinCode: '', open: new Set(), timer: null, sort: 'progress',
   keySet: false, keyProvider: null, files: {}, adding: false, notice: null };
-const CARDS_PER_COURSE = 20, QUESTIONS_PER_COURSE = 10; // fixed on purpose: one file, one course, always the same shape
+const CARDS_PER_COURSE = 15, QUESTIONS_PER_COURSE = 10; // fixed on purpose: one file, one course, always the same shape
 
 async function loadAdminLearn() {
   const el = $('#panelLearn'); if (!el) return;

@@ -83,6 +83,7 @@ export default async function handler(req, res) {
       saved = {
         attempts: prev.attempts + 1,
         best: Math.max(prev.best, result.score),
+        last: result.score,
         passed: prev.passed || result.passed,
         at: new Date().toISOString(),
       };

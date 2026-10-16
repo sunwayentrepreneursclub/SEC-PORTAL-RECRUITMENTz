@@ -108,6 +108,7 @@ test('instant feedback and final grading happen on the server', async () => {
   const pass = await call(learning, 'POST', '/api/learning', { courseId: 'standards', answers: [1, 0] }, cookie);
   assert.equal(pass.data.passed, true);
   assert.equal(pass.data.progress.attempts, 2);
+  assert.deepEqual([fail.data.progress.last, pass.data.progress.last, pass.data.progress.best], [0, 100, 100], 'the latest score is remembered, not only the best');
 });
 
 test('records survive signing out and back in', async () => {

@@ -42,6 +42,10 @@
 <style>
 /* The main website's next/font Inter Latin file, scoped to its shared chrome. */
 @font-face{font-family:'SEC Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('/fonts/inter-main-latin.woff2') format('woff2')}
+/* Instrument Serif: the same next/font/google files and fallback metrics the main site serves. */
+@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/instrument-serif-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url('/fonts/instrument-serif-italic-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Serif Fallback';src:local('Times New Roman');ascent-override:117.94%;descent-override:36.93%;line-gap-override:0%;size-adjust:83.94%}
 /* =========================================================================
    Editorial-serif theme — matched to sec-website-3-0.vercel.app: a near-
    black charcoal ground, cream/off-white type, Georgia for display
@@ -87,10 +91,13 @@
   --a-cyan:var(--ink-weak);   --t-cyan:var(--ink-weak);
   --s-blue:rgba(246,245,242,.05); --s-pink:rgba(246,245,242,.05);
   --s-gold:rgba(246,245,242,.05); --s-green:rgba(246,245,242,.05);
-  --serif:Georgia,'Times New Roman',serif;
-  --display:Georgia,'Times New Roman',serif;
+  /* Same names as the main site: Instrument Serif for h1, h2 and accent words, Inter for the rest.
+     --display is this file's older token for UI headings (h3 and below), now the body face. */
+  --font-display:'Instrument Serif','Instrument Serif Fallback',Georgia,serif;
+  --font-body:'SEC Inter','Inter',Arial,Helvetica,sans-serif;
+  --display:var(--font-body);
   --display-mega:'Anton',Impact,'Arial Black',sans-serif;
-  --body:'Inter',Arial,Helvetica,sans-serif;
+  --body:var(--font-body);
   --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
   --r-sm:4px;
   --r-md:10px;
@@ -142,10 +149,13 @@ body{
 #viewAdmin{background:var(--paper)}
 /* big, quiet serif display type — the reference runs its headline across two
    lines at a generous size with tight leading, the emphasis word in italic */
-#viewPublic h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.08;letter-spacing:-.05em}
+#viewPublic h1{font-family:var(--font-display);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.08;letter-spacing:-.05em}
 #viewPublic .masthead h1{max-width:1100px;text-wrap:balance}
-#viewPublic .aband-title{font-family:var(--serif);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.08;letter-spacing:-.045em}
+#viewPublic .aband-title{font-family:var(--font-display);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.08;letter-spacing:-.045em}
 #viewPublic .aband-title em,#viewPublic h1 em{font-style:italic}
+/* Every h1 and h2 on the public site and the Learning Portal is display type; it has one weight, so no faux bold.
+   The committee dashboard (#viewAdmin) keeps its Inter-only working theme. */
+:is(#viewPublic,#viewLearn) :is(h1,h2){font-family:var(--font-display);font-synthesis:none}
 #viewPublic .lede,#viewPublic .aband-lede{font-weight:400;letter-spacing:0}
 /* flat surfaces instead of a visible border — a 1px inset line (nearly
    invisible on black, exactly like the reference's card treatment) rather
@@ -234,7 +244,7 @@ body{
 #viewPublic .roles-chapter .department-group{margin:0 0 42px;min-width:0;scroll-margin-top:calc(var(--recruitment-nav-height) + 16px)}
 #viewPublic .roles-chapter .department-heading{border:0;padding:0;margin:0 0 15px}
 #viewPublic .roles-chapter .department-heading h3{
-  font-family:var(--serif);font-size:clamp(30px,3vw,40px);font-weight:400;
+  font-family:var(--font-body);font-size:clamp(30px,3vw,40px);font-weight:400;
   line-height:1.1;letter-spacing:-.045em;color:var(--deptc);margin:0;
 }
 #viewPublic .roles-chapter .roles-group,
@@ -254,7 +264,7 @@ body{
 }
 #viewPublic .roles-chapter .dept-role .cf-card-main{min-width:0}
 #viewPublic .roles-chapter .dept-role .cf-card-title{
-  font-family:var(--serif);font-size:clamp(21px,1.85vw,26px);font-weight:400;
+  font-family:var(--font-body);font-size:clamp(21px,1.85vw,26px);font-weight:400;
   line-height:1.14;letter-spacing:-.04em;margin:0 0 7px;color:#111214;
 }
 #viewPublic .roles-chapter .dept-role .cf-card-meta{
@@ -324,7 +334,7 @@ body{
 
 /* oversized serif counters — the reference sets its stat numbers ("2.66",
    "99", "12") at headline scale, not a body-adjacent size */
-#viewPublic .stat .n{font-family:var(--serif);font-size:clamp(40px,6vw,64px);font-weight:400;letter-spacing:-.01em}
+#viewPublic .stat .n{font-family:var(--font-body);font-size:clamp(40px,6vw,64px);font-weight:400;letter-spacing:-.01em}
 #viewPublic .stat{padding:28px 24px}
 /* hashtag-style tags on level/seniority labels — a quiet category-chip
    register, applied without touching the label text itself */
@@ -508,7 +518,7 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 }
 .hero-cta:hover{background:var(--open-dark);border-color:var(--open-dark)}
 .hero-cta:active{transform:scale(.97)}
-.hero-filter-line{font-family:var(--serif);font-weight:400;font-size:clamp(20px,2.6vw,28px);
+.hero-filter-line{font-family:var(--font-body);font-weight:400;font-size:clamp(20px,2.6vw,28px);
   color:var(--ink-weak);margin:4px 0 0}
 .eyebrow{
   font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
@@ -547,7 +557,7 @@ h1{
 .envelope-body{background:linear-gradient(155deg,#bdb9ae,#e6e3da 40%,#d6d2c7);box-shadow:0 18px 36px #0004}
 .envelope-letter{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:20px;inset:8% 7% 5%;padding:24px 8px;z-index:1;color:#262521;background:#faf9f5;box-shadow:0 1px 6px #0002;font-family:var(--body);text-align:center}
 .envelope-letter>span:first-child{font-size:11px}
-.envelope-letter>span:last-child{font:400 clamp(24px,3vw,36px)/1.1 var(--serif)}
+.envelope-letter>span:last-child{font:400 clamp(24px,3vw,36px)/1.1 var(--font-display)}
 .envelope-pocket{z-index:2;clip-path:polygon(0 0,50% 48%,100% 0,100% 100%,0 100%);background:linear-gradient(150deg,#e0ddd3,#f1efe8 48%,#d0cdc4)}
 .envelope-pocket::after{content:"";position:absolute;inset:0;clip-path:polygon(0 100%,50% 44%,100% 100%);background:linear-gradient(175deg,#f0eee688,#e0ded499)}
 .envelope-flap{z-index:3;height:57%;transform-origin:center top;background:linear-gradient(175deg,#f7f5ed 15%,#e9e6db 85%,#c7c2b5);clip-path:polygon(0 0,100% 0,50% 100%)}
@@ -659,7 +669,7 @@ h1{
 @media (max-width:720px){.org-grid{grid-template-columns:1fr}}
 .org-card{background:#F6F5F2;padding:32px 36px;border-radius:0}
 .org-card-exco{background:#EDEAE0}
-.org-card h3{font-family:var(--serif);font-weight:400;font-size:22px;margin:0 0 10px;letter-spacing:-.01em;color:#111214}
+.org-card h3{font-family:var(--font-body);font-weight:400;font-size:22px;margin:0 0 10px;letter-spacing:-.01em;color:#111214}
 .org-card p{margin:0 0 14px;font-size:15px;color:#53575F;font-family:var(--body);line-height:1.5}
 .org-tags{display:flex;flex-wrap:wrap;gap:8px 28px}
 .org-tags span{font-size:15px;color:#111214;position:relative}
@@ -678,7 +688,7 @@ h1{
 .roadmap{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 40px}
 .rm-stage{min-width:0}
 .rm-date{display:block;font:600 12px/1.4 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.rm-label{font:400 clamp(19px,1.8vw,26px)/1.22 var(--serif);letter-spacing:-.025em;color:var(--ink);overflow-wrap:break-word}
+.rm-label{font:400 clamp(19px,1.8vw,26px)/1.22 var(--font-body);letter-spacing:-.025em;color:var(--ink);overflow-wrap:break-word}
 @media (max-width:900px){.roadmap{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.roadmap{grid-template-columns:1fr;gap:24px}}
 
@@ -702,7 +712,7 @@ h1{
 .status-search input{min-width:0}
 .status-search .btn{border-radius:var(--r-sm);white-space:nowrap;padding-inline:17px}
 .status-result{border-top:1px solid var(--board-line);margin-top:28px;padding-top:24px}
-.status-result h4{font:400 23px/1.2 var(--serif);letter-spacing:-.025em;margin:0 0 5px}
+.status-result h4{font:400 23px/1.2 var(--font-body);letter-spacing:-.025em;margin:0 0 5px}
 .status-result-dept{font:400 13px/1.5 var(--body);color:var(--muted);margin:0}
 .status-note{font:400 13px/1.5 var(--body);color:var(--muted);margin:16px 0 0}
 @media (max-width:520px){
@@ -788,12 +798,12 @@ h1{
 @media (max-width:480px){.standard-grid{grid-template-columns:1fr}}
 .standard-card{padding:40px 32px;border-right:1px solid var(--board-line);border-bottom:1px solid var(--board-line)}
 .standard-num{display:block;font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em;margin:0 0 20px}
-.standard-card h3{font-family:var(--serif);font-weight:400;font-size:28px;margin:0 0 12px;letter-spacing:-.01em}
+.standard-card h3{font-family:var(--font-body);font-weight:400;font-size:28px;margin:0 0 12px;letter-spacing:-.01em}
 .standard-card p{margin:0;font-size:15px;color:var(--ink-weak);line-height:1.5;max-width:28ch}
 .proof-list{list-style:none;margin:0 0 32px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0 48px;max-width:960px}
 @media (max-width:860px){.proof-list{grid-template-columns:1fr 1fr;max-width:none}}
 @media (max-width:480px){.proof-list{grid-template-columns:1fr}}
-.proof-list li{font-family:var(--serif);font-size:26px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line);
+.proof-list li{font-family:var(--font-body);font-size:26px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line);
   opacity:0;transform:translateX(-18px);transition:opacity .5s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1)}
 .proof-list li.is-visible{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.proof-list li{transition:none;opacity:1;transform:none}}
@@ -818,7 +828,7 @@ h1{
 #viewPublic .home-overview[hidden]{display:none}
 #viewPublic .roles-overview{margin:0 0 clamp(48px,5vw,72px)}
 #viewPublic .roles-overview h3{
-  font:400 clamp(32px,3.3vw,46px)/1.1 var(--serif);
+  font:400 clamp(32px,3.3vw,46px)/1.1 var(--font-body);
   letter-spacing:-.045em;margin:0 0 28px;color:var(--ink);
 }
 #viewPublic #overviewStats{
@@ -850,7 +860,7 @@ h1{
   min-width:0;margin:0;padding:0;scroll-margin-top:var(--recruitment-nav-height);
 }
 #viewPublic .home-timeline h2{
-  font:400 clamp(38px,4.5vw,64px)/1.08 var(--serif);letter-spacing:-.045em;
+  font:400 clamp(38px,4.5vw,64px)/1.08 var(--font-display);letter-spacing:-.045em;
   margin:0 0 clamp(32px,4vw,58px);color:var(--ink);
 }
 #viewPublic .home-timeline .roadmap{gap:clamp(30px,3.6vw,52px) clamp(24px,3.4vw,48px)}
@@ -865,10 +875,10 @@ h1{
   background:#eeefec;border:0;border-radius:4px;color:#16181c;
 }
 .home-role .home-role-dept{
-  grid-column:1/-1;font:400 20px/1.1 var(--serif);letter-spacing:-.035em;
+  grid-column:1/-1;font:400 20px/1.1 var(--font-body);letter-spacing:-.035em;
   color:var(--deptc,#424b56);margin-bottom:9px;
 }
-.home-role h3{grid-column:1;font:400 clamp(21px,1.85vw,26px)/1.14 var(--serif);letter-spacing:-.04em;margin:0 0 6px}
+.home-role h3{grid-column:1;font:400 clamp(21px,1.85vw,26px)/1.14 var(--font-body);letter-spacing:-.04em;margin:0 0 6px}
 .home-role .home-role-meta{grid-column:1;font:400 13px/1.35 var(--body);color:#535B60}
 .home-role button{
   grid-column:2;grid-row:2/span 2;align-self:center;min-height:44px;padding:9px 18px;

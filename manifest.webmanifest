@@ -1,0 +1,17 @@
+{
+  "id": "/",
+  "name": "SEC Recruitment",
+  "short_name": "SEC",
+  "description": "Explore committee roles at Sunway Entrepreneurs Club, see what each role owns, and apply to join the team.",
+  "lang": "en-MY",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#111214",
+  "theme_color": "#111214",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

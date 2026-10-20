@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-MY">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,6 +10,19 @@
 <meta property="og:description" content="Explore committee roles at Sunway Entrepreneurs Club, see what each role owns, and apply to join the team.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Sunway Entrepreneurs Club">
+<meta property="og:url" content="https://applysec.sunwayentrepreneurs.com/">
+<meta property="og:locale" content="en_MY">
+<meta property="og:image" content="https://applysec.sunwayentrepreneurs.com/images/social-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Sunway Entrepreneurs Club: turn ambition into action.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SEC Recruitment">
+<meta name="twitter:description" content="Explore committee roles at Sunway Entrepreneurs Club, see what each role owns, and apply to join the team.">
+<meta name="twitter:image" content="https://applysec.sunwayentrepreneurs.com/images/social-preview.png">
+<link rel="canonical" href="https://applysec.sunwayentrepreneurs.com/">
+<meta name="theme-color" content="#111214">
+<link rel="manifest" href="/manifest.webmanifest">
 <!-- Same icon set as the main site: the E mark, not the full SEC wordmark. -->
 <link rel="icon" href="/favicon.ico" sizes="any">
 <link rel="icon" href="/icons/icon-16.png" sizes="16x16" type="image/png">
@@ -29,6 +42,10 @@
 <style>
 /* The main website's next/font Inter Latin file, scoped to its shared chrome. */
 @font-face{font-family:'SEC Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url('/fonts/inter-main-latin.woff2') format('woff2')}
+/* Instrument Serif: the same next/font/google files and fallback metrics the main site serves. */
+@font-face{font-family:'Instrument Serif';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/instrument-serif-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Serif';font-style:italic;font-weight:400;font-display:swap;src:url('/fonts/instrument-serif-italic-latin.woff2') format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD}
+@font-face{font-family:'Instrument Serif Fallback';src:local('Times New Roman');ascent-override:117.94%;descent-override:36.93%;line-gap-override:0%;size-adjust:83.94%}
 /* =========================================================================
    Editorial-serif theme — matched to sec-website-3-0.vercel.app: a near-
    black charcoal ground, cream/off-white type, Georgia for display
@@ -74,10 +91,13 @@
   --a-cyan:var(--ink-weak);   --t-cyan:var(--ink-weak);
   --s-blue:rgba(246,245,242,.05); --s-pink:rgba(246,245,242,.05);
   --s-gold:rgba(246,245,242,.05); --s-green:rgba(246,245,242,.05);
-  --serif:Georgia,'Times New Roman',serif;
-  --display:Georgia,'Times New Roman',serif;
+  /* Same names as the main site: Instrument Serif for h1, h2 and accent words, Inter for the rest.
+     --display is this file's older token for UI headings (h3 and below), now the body face. */
+  --font-display:'Instrument Serif','Instrument Serif Fallback',Georgia,serif;
+  --font-body:'SEC Inter','Inter',Arial,Helvetica,sans-serif;
+  --display:var(--font-body);
   --display-mega:'Anton',Impact,'Arial Black',sans-serif;
-  --body:'Inter',Arial,Helvetica,sans-serif;
+  --body:var(--font-body);
   --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
   --r-sm:4px;
   --r-md:10px;
@@ -129,10 +149,13 @@ body{
 #viewAdmin{background:var(--paper)}
 /* big, quiet serif display type — the reference runs its headline across two
    lines at a generous size with tight leading, the emphasis word in italic */
-#viewPublic h1{font-family:var(--serif);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.08;letter-spacing:-.05em}
+#viewPublic h1{font-family:var(--font-display);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.08;letter-spacing:-.05em}
 #viewPublic .masthead h1{max-width:1100px;text-wrap:balance}
-#viewPublic .aband-title{font-family:var(--serif);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.08;letter-spacing:-.045em}
+#viewPublic .aband-title{font-family:var(--font-display);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.08;letter-spacing:-.045em}
 #viewPublic .aband-title em,#viewPublic h1 em{font-style:italic}
+/* Every h1 and h2 on the public site and the Learning Portal is display type; it has one weight, so no faux bold.
+   The committee dashboard (#viewAdmin) keeps its Inter-only working theme. */
+:is(#viewPublic,#viewLearn) :is(h1,h2){font-family:var(--font-display);font-synthesis:none}
 #viewPublic .lede,#viewPublic .aband-lede{font-weight:400;letter-spacing:0}
 /* flat surfaces instead of a visible border — a 1px inset line (nearly
    invisible on black, exactly like the reference's card treatment) rather
@@ -221,7 +244,7 @@ body{
 #viewPublic .roles-chapter .department-group{margin:0 0 42px;min-width:0;scroll-margin-top:calc(var(--recruitment-nav-height) + 16px)}
 #viewPublic .roles-chapter .department-heading{border:0;padding:0;margin:0 0 15px}
 #viewPublic .roles-chapter .department-heading h3{
-  font-family:var(--serif);font-size:clamp(30px,3vw,40px);font-weight:400;
+  font-family:var(--font-body);font-size:clamp(30px,3vw,40px);font-weight:400;
   line-height:1.1;letter-spacing:-.045em;color:var(--deptc);margin:0;
 }
 #viewPublic .roles-chapter .roles-group,
@@ -241,7 +264,7 @@ body{
 }
 #viewPublic .roles-chapter .dept-role .cf-card-main{min-width:0}
 #viewPublic .roles-chapter .dept-role .cf-card-title{
-  font-family:var(--serif);font-size:clamp(21px,1.85vw,26px);font-weight:400;
+  font-family:var(--font-body);font-size:clamp(21px,1.85vw,26px);font-weight:400;
   line-height:1.14;letter-spacing:-.04em;margin:0 0 7px;color:#111214;
 }
 #viewPublic .roles-chapter .dept-role .cf-card-meta{
@@ -311,7 +334,7 @@ body{
 
 /* oversized serif counters — the reference sets its stat numbers ("2.66",
    "99", "12") at headline scale, not a body-adjacent size */
-#viewPublic .stat .n{font-family:var(--serif);font-size:clamp(40px,6vw,64px);font-weight:400;letter-spacing:-.01em}
+#viewPublic .stat .n{font-family:var(--font-body);font-size:clamp(40px,6vw,64px);font-weight:400;letter-spacing:-.01em}
 #viewPublic .stat{padding:28px 24px}
 /* hashtag-style tags on level/seniority labels — a quiet category-chip
    register, applied without touching the label text itself */
@@ -442,11 +465,10 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 }
 .menu-primary a + a{margin-top:12px}
 .menu-bottom{
-  display:flex;align-items:center;justify-content:space-between;gap:28px;flex-wrap:wrap;margin-top:auto;
-  padding-top:24px;border-top:1px solid var(--board-line);
-  font-family:'SEC Inter',var(--body);font-size:12px;
+  display:flex;align-items:center;justify-content:flex-end;gap:8px 24px;flex-wrap:wrap;margin-top:auto;
+  padding-top:28px;font-family:'SEC Inter',var(--body);font-size:12px;
 }
-.menu-bottom a{color:var(--muted);text-decoration:none}
+.menu-bottom a{display:inline-flex;align-items:center;min-height:44px;color:var(--muted);text-decoration:none}
 .menu-bottom a:hover{color:var(--ink)}
 @media (prefers-reduced-motion:no-preference){
   .menu-toggle{transition:opacity 200ms ease,transform 300ms cubic-bezier(.22,1,.36,1)}
@@ -496,7 +518,7 @@ summary:focus-visible{outline:2px solid var(--open);outline-offset:3px;border-ra
 }
 .hero-cta:hover{background:var(--open-dark);border-color:var(--open-dark)}
 .hero-cta:active{transform:scale(.97)}
-.hero-filter-line{font-family:var(--serif);font-weight:400;font-size:clamp(20px,2.6vw,28px);
+.hero-filter-line{font-family:var(--font-body);font-weight:400;font-size:clamp(20px,2.6vw,28px);
   color:var(--ink-weak);margin:4px 0 0}
 .eyebrow{
   font-family:var(--body);font-size:12px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;
@@ -535,7 +557,7 @@ h1{
 .envelope-body{background:linear-gradient(155deg,#bdb9ae,#e6e3da 40%,#d6d2c7);box-shadow:0 18px 36px #0004}
 .envelope-letter{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:20px;inset:8% 7% 5%;padding:24px 8px;z-index:1;color:#262521;background:#faf9f5;box-shadow:0 1px 6px #0002;font-family:var(--body);text-align:center}
 .envelope-letter>span:first-child{font-size:11px}
-.envelope-letter>span:last-child{font:400 clamp(24px,3vw,36px)/1.1 var(--serif)}
+.envelope-letter>span:last-child{font:400 clamp(24px,3vw,36px)/1.1 var(--font-display)}
 .envelope-pocket{z-index:2;clip-path:polygon(0 0,50% 48%,100% 0,100% 100%,0 100%);background:linear-gradient(150deg,#e0ddd3,#f1efe8 48%,#d0cdc4)}
 .envelope-pocket::after{content:"";position:absolute;inset:0;clip-path:polygon(0 100%,50% 44%,100% 100%);background:linear-gradient(175deg,#f0eee688,#e0ded499)}
 .envelope-flap{z-index:3;height:57%;transform-origin:center top;background:linear-gradient(175deg,#f7f5ed 15%,#e9e6db 85%,#c7c2b5);clip-path:polygon(0 0,100% 0,50% 100%)}
@@ -647,7 +669,7 @@ h1{
 @media (max-width:720px){.org-grid{grid-template-columns:1fr}}
 .org-card{background:#F6F5F2;padding:32px 36px;border-radius:0}
 .org-card-exco{background:#EDEAE0}
-.org-card h3{font-family:var(--serif);font-weight:400;font-size:22px;margin:0 0 10px;letter-spacing:-.01em;color:#111214}
+.org-card h3{font-family:var(--font-body);font-weight:400;font-size:22px;margin:0 0 10px;letter-spacing:-.01em;color:#111214}
 .org-card p{margin:0 0 14px;font-size:15px;color:#53575F;font-family:var(--body);line-height:1.5}
 .org-tags{display:flex;flex-wrap:wrap;gap:8px 28px}
 .org-tags span{font-size:15px;color:#111214;position:relative}
@@ -666,7 +688,7 @@ h1{
 .roadmap{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:36px 40px}
 .rm-stage{min-width:0}
 .rm-date{display:block;font:600 12px/1.4 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.rm-label{font:400 clamp(19px,1.8vw,26px)/1.22 var(--serif);letter-spacing:-.025em;color:var(--ink);overflow-wrap:break-word}
+.rm-label{font:400 clamp(19px,1.8vw,26px)/1.22 var(--font-body);letter-spacing:-.025em;color:var(--ink);overflow-wrap:break-word}
 @media (max-width:900px){.roadmap{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:600px){.roadmap{grid-template-columns:1fr;gap:24px}}
 
@@ -690,7 +712,7 @@ h1{
 .status-search input{min-width:0}
 .status-search .btn{border-radius:var(--r-sm);white-space:nowrap;padding-inline:17px}
 .status-result{border-top:1px solid var(--board-line);margin-top:28px;padding-top:24px}
-.status-result h4{font:400 23px/1.2 var(--serif);letter-spacing:-.025em;margin:0 0 5px}
+.status-result h4{font:400 23px/1.2 var(--font-body);letter-spacing:-.025em;margin:0 0 5px}
 .status-result-dept{font:400 13px/1.5 var(--body);color:var(--muted);margin:0}
 .status-note{font:400 13px/1.5 var(--body);color:var(--muted);margin:16px 0 0}
 @media (max-width:520px){
@@ -776,12 +798,12 @@ h1{
 @media (max-width:480px){.standard-grid{grid-template-columns:1fr}}
 .standard-card{padding:40px 32px;border-right:1px solid var(--board-line);border-bottom:1px solid var(--board-line)}
 .standard-num{display:block;font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:.1em;margin:0 0 20px}
-.standard-card h3{font-family:var(--serif);font-weight:400;font-size:28px;margin:0 0 12px;letter-spacing:-.01em}
+.standard-card h3{font-family:var(--font-body);font-weight:400;font-size:28px;margin:0 0 12px;letter-spacing:-.01em}
 .standard-card p{margin:0;font-size:15px;color:var(--ink-weak);line-height:1.5;max-width:28ch}
 .proof-list{list-style:none;margin:0 0 32px;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:0 48px;max-width:960px}
 @media (max-width:860px){.proof-list{grid-template-columns:1fr 1fr;max-width:none}}
 @media (max-width:480px){.proof-list{grid-template-columns:1fr}}
-.proof-list li{font-family:var(--serif);font-size:26px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line);
+.proof-list li{font-family:var(--font-body);font-size:26px;color:var(--ink);padding:10px 0;border-bottom:1px solid var(--board-line);
   opacity:0;transform:translateX(-18px);transition:opacity .5s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1)}
 .proof-list li.is-visible{opacity:1;transform:none}
 @media (prefers-reduced-motion:reduce){.proof-list li{transition:none;opacity:1;transform:none}}
@@ -806,7 +828,7 @@ h1{
 #viewPublic .home-overview[hidden]{display:none}
 #viewPublic .roles-overview{margin:0 0 clamp(48px,5vw,72px)}
 #viewPublic .roles-overview h3{
-  font:400 clamp(32px,3.3vw,46px)/1.1 var(--serif);
+  font:400 clamp(32px,3.3vw,46px)/1.1 var(--font-body);
   letter-spacing:-.045em;margin:0 0 28px;color:var(--ink);
 }
 #viewPublic #overviewStats{
@@ -838,7 +860,7 @@ h1{
   min-width:0;margin:0;padding:0;scroll-margin-top:var(--recruitment-nav-height);
 }
 #viewPublic .home-timeline h2{
-  font:400 clamp(38px,4.5vw,64px)/1.08 var(--serif);letter-spacing:-.045em;
+  font:400 clamp(38px,4.5vw,64px)/1.08 var(--font-display);letter-spacing:-.045em;
   margin:0 0 clamp(32px,4vw,58px);color:var(--ink);
 }
 #viewPublic .home-timeline .roadmap{gap:clamp(30px,3.6vw,52px) clamp(24px,3.4vw,48px)}
@@ -853,10 +875,10 @@ h1{
   background:#eeefec;border:0;border-radius:4px;color:#16181c;
 }
 .home-role .home-role-dept{
-  grid-column:1/-1;font:400 20px/1.1 var(--serif);letter-spacing:-.035em;
+  grid-column:1/-1;font:400 20px/1.1 var(--font-body);letter-spacing:-.035em;
   color:var(--deptc,#424b56);margin-bottom:9px;
 }
-.home-role h3{grid-column:1;font:400 clamp(21px,1.85vw,26px)/1.14 var(--serif);letter-spacing:-.04em;margin:0 0 6px}
+.home-role h3{grid-column:1;font:400 clamp(21px,1.85vw,26px)/1.14 var(--font-body);letter-spacing:-.04em;margin:0 0 6px}
 .home-role .home-role-meta{grid-column:1;font:400 13px/1.35 var(--body);color:#535B60}
 .home-role button{
   grid-column:2;grid-row:2/span 2;align-self:center;min-height:44px;padding:9px 18px;
@@ -1035,35 +1057,31 @@ h1{
   #adminEntry{flex:0 0 auto;font-size:10px;min-height:34px}
 }
 @media (max-width:520px){#viewPublic .site-footer > .wrap{width:calc(100% - 40px)}}
-/* Terms & Privacy — duplicated verbatim from the main site's lib/policies.ts,
-   rendered in the same light "paper" dialog it uses (policy content is
-   always light-on-cream, regardless of the dark public theme around it). */
-.policy-dialog{margin:auto;padding:0;border:1px solid var(--board-line);width:min(840px,calc(100% - 32px));max-width:none;height:min(900px,calc(100dvh - 48px));max-height:none;background:#f2f3f0;color:#17191c;overflow:hidden;color-scheme:light}
-.policy-dialog::backdrop{background:#08090bce;backdrop-filter:blur(6px)}
-.policy-dialog :focus-visible{outline-color:#17191c}
-.policy-panel{display:flex;flex-direction:column;height:100%}
-.policy-toolbar{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:80px;padding-inline:36px;border-bottom:1px solid #17191c25;font-size:12px;font-family:var(--body)}
-.policy-dismiss{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:44px;min-height:44px;flex-shrink:0;font-size:14px;font-family:var(--body);color:#17191c;background:none;border:0;cursor:pointer}
-.policy-content{padding:36px 48px 48px;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;font-family:var(--body)}
-.policy-content h1{font-family:var(--body);font-size:clamp(30px,4vw,48px);line-height:1.15;letter-spacing:-.04em;font-weight:500;margin:0 0 24px}
-.policy-content p,.policy-content li{font-size:15px;line-height:1.8;color:#484c53;margin:0}
-.policy-content p + p{margin-top:14px}
-.policy-content .policy-draft{font-size:13px;border-left:2px solid #535b65;padding-left:14px;margin-bottom:24px;color:#343941}
-.policy-content section{margin-top:32px}
-.policy-content h2{font-size:21px;line-height:1.35;font-weight:600;margin:0 0 14px}
-.policy-content h3{font-size:16px;font-weight:600;margin-block:20px 10px}
-.policy-content ul{list-style:disc;padding-left:24px;margin-block:12px}
-.policy-content li + li{margin-top:6px}
-.policy-email{display:inline-block;overflow-wrap:anywhere;margin-block:16px 28px;text-decoration:underline;text-underline-offset:4px;font-size:15px;color:#17191c}
-@media (prefers-reduced-motion:no-preference){
-  .policy-dialog[open]{animation:policy-arrive 320ms var(--ease-out,cubic-bezier(.22,1,.36,1))}
-  @keyframes policy-arrive{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
-}
+/* Shared with the main site's chrome: the Join SEC / #WorkWithUs switch (here
+   #WorkWithUs rests filled, since this is its side), the menu's column layout,
+   the footer's legal links and its copy-email button. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.join-switch{display:inline-flex;align-items:center;flex:none;gap:2px;padding:3px;border:1px solid #ffffff28;border-radius:999px}
+.join-switch a{display:inline-flex;align-items:center;min-height:36px;padding:8px 18px;border-radius:999px;font-family:'SEC Inter',var(--body);font-size:13px;font-weight:500;line-height:1.5;white-space:nowrap;color:var(--ink);text-decoration:none;transition:background 220ms ease,color 220ms ease}
+.join-switch a[data-active],.join-switch a:is(:hover,:focus-visible){background:var(--ink);color:var(--navy)}
+.join-switch:has(a:is(:hover,:focus-visible)) a[data-active]:not(:hover,:focus-visible){background:transparent;color:var(--ink)}
+.join-switch-large a{min-height:48px;padding:12px 24px;font-size:15px}
+.menu-columns{display:grid;justify-items:start;gap:clamp(28px,4vw,44px);margin-block:auto;padding-block:40px}
+.menu-columns .menu-primary{margin:0;padding:0;justify-self:stretch}
+.footer-bottom-links{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:8px 24px}
+.footer-bottom-links a{display:inline-flex;align-items:center;min-height:44px;font-size:12px}
+.footer-email{display:inline-flex;align-items:center;min-height:40px;padding:6px 0;background:none;border:0;cursor:pointer;font:inherit;color:var(--muted);text-align:left;transition:color .2s}
+.footer-email:hover{color:var(--ink)}
+.copy-email-fallback{display:grid;gap:8px;padding-block:12px;font-size:13px}
+.copy-email-fallback[hidden]{display:none}
+.copy-email-fallback input{width:min(100%,440px);border:1px solid #ffffff28;border-radius:4px;background:var(--navy);color:var(--ink);padding:12px;font:inherit}
+@media (max-width:1050px){.topbar-inner .join-switch{display:none}}
 @media (max-width:760px){
-  .policy-dialog{width:calc(100% - 16px);height:calc(100dvh - 16px)}
-  .policy-toolbar{min-height:68px;padding-inline:20px}
-  .policy-toolbar>span{max-width:170px;font-size:11px}
-  .policy-content{padding:24px 20px 32px}
+  .menu-bottom{justify-content:flex-start}
+  .footer-bottom{flex-wrap:wrap;align-items:flex-start}
+  .footer-bottom > .footer-bottom-links{flex:1 1 100%;justify-content:flex-start;gap:4px 14px}
+  .footer-bottom-links a{font-size:10px;min-height:34px}
+  .copy-email-fallback input{font-size:16px}
 }
 .footer-status-cta{
   display:inline-flex;align-items:center;gap:8px;margin:0 0 20px;
@@ -1658,6 +1676,10 @@ textarea{min-height:110px;resize:vertical}
       <button class="pubtab" role="tab" id="pt-learning" aria-controls="pp-learning" data-pub="learning" aria-selected="false" type="button" hidden>Learning</button>
       <button class="pubtab navstatus-btn" id="navStatus" type="button">Application Status</button>
     </div>
+    <div class="join-switch" role="group" aria-label="Get involved">
+      <a href="https://sunwayentrepreneurs.com/#join" target="_blank" rel="noopener">Join SEC<span class="sr-only"> (opens in a new tab)</span></a>
+      <a href="/" data-active data-portal-home>#WorkWithUs</a>
+    </div>
     <button class="menu-toggle" id="menuOpen" type="button" aria-expanded="false" aria-haspopup="dialog" aria-controls="main-menu">Menu</button>
   </div>
 </nav>
@@ -1668,14 +1690,22 @@ textarea{min-height:110px;resize:vertical}
       <a href="/" class="topbar-word" data-menu-go="overview">Sunway Entrepreneurs Club</a>
       <button class="menu-toggle menu-close" id="menuClose" type="button">Close &#10005;</button>
     </div>
-    <nav class="menu-primary" aria-label="Pages">
-      <a href="#" data-menu-go="overview">Home</a>
-      <a href="#" data-menu-go="apply">Roles</a>
-      <a href="#" data-menu-go="learning" hidden>Learning</a>
-      <a href="#" data-menu-go="status">Application Status</a>
-    </nav>
+    <div class="menu-columns">
+      <nav class="menu-primary" aria-label="Pages">
+        <a href="#" data-menu-go="overview">Home</a>
+        <a href="#" data-menu-go="apply">Roles</a>
+        <a href="#" data-menu-go="learning" hidden>Learning</a>
+        <a href="#" data-menu-go="status">Application Status</a>
+      </nav>
+      <div class="join-switch join-switch-large" role="group" aria-label="Get involved">
+        <a href="https://sunwayentrepreneurs.com/#join" target="_blank" rel="noopener">Join SEC<span class="sr-only"> (opens in a new tab)</span></a>
+        <a href="/" data-active data-menu-go="overview">#WorkWithUs</a>
+      </div>
+    </div>
     <div class="menu-bottom">
-      <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website</a>
+      <a href="https://sunwayentrepreneurs.com/terms" target="_blank" rel="noopener">Terms &amp; Conditions<span class="sr-only"> (opens in a new tab)</span></a>
+      <a href="https://sunwayentrepreneurs.com/privacy" target="_blank" rel="noopener">Privacy Policy<span class="sr-only"> (opens in a new tab)</span></a>
+      <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website<span class="sr-only"> (opens in a new tab)</span></a>
       <a href="#" data-menu-go="admin">Committee Sign In</a>
     </div>
   </div>
@@ -1733,18 +1763,8 @@ textarea{min-height:110px;resize:vertical}
       <div class="footer-main">
         <a class="footer-identity" href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">
           <img src="/sec_e.png" alt="" width="64" height="64">
-          <span>Sunway Entrepreneurs Club</span>
+          <span>Sunway Entrepreneurs Club</span><span class="sr-only"> (opens in a new tab)</span>
         </a>
-        <nav class="footer-nav" aria-label="Footer navigation">
-          <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website</a>
-          <a href="#" id="footerTerms" aria-haspopup="dialog" aria-controls="policy-dialog-terms">Terms &amp; Conditions</a>
-          <a href="#" id="footerPrivacy" aria-haspopup="dialog" aria-controls="policy-dialog-privacy">Privacy Policy</a>
-        </nav>
-        <nav class="footer-social" aria-label="Social channels">
-          <a href="https://www.instagram.com/sunwayentrepreneurs" target="_blank" rel="noopener">Instagram</a>
-          <a href="https://www.linkedin.com/company/sunway-entrepreneurs-club/" target="_blank" rel="noopener">LinkedIn</a>
-          <a href="https://whatsapp.com/channel/0029VbDoiWoEFeXcwUjDcg2g" target="_blank" rel="noopener">WhatsApp Channel</a>
-        </nav>
         <div class="footer-community">
           <p>Part of the Sunway community</p>
           <ul aria-label="Sunway community">
@@ -1753,151 +1773,37 @@ textarea{min-height:110px;resize:vertical}
             <li><img src="/images/community/jeffrey-cheah-foundation.webp" alt="Jeffrey Cheah Foundation" width="766" height="326"></li>
           </ul>
         </div>
+        <nav class="footer-nav" aria-label="Footer navigation">
+          <a href="https://sunwayentrepreneurs.com/about" target="_blank" rel="noopener">About<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="https://sunwayentrepreneurs.com/initiatives" target="_blank" rel="noopener">Initiatives<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="https://sunwayentrepreneurs.com/team" target="_blank" rel="noopener">Advisors &amp; Committee<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="https://sunwayentrepreneurs.com/#join" target="_blank" rel="noopener">#JoinSEC<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="/" data-portal-home>#WorkWithUs</a>
+        </nav>
+        <nav class="footer-social" aria-label="Social channels">
+          <a href="https://www.instagram.com/sunwayentrepreneurs" target="_blank" rel="noopener">Instagram<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="https://www.linkedin.com/company/sunway-entrepreneurs-club/" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="https://whatsapp.com/channel/0029VbDoiWoEFeXcwUjDcg2g" target="_blank" rel="noopener">WhatsApp Channel<span class="sr-only"> (opens in a new tab)</span></a>
+          <button class="footer-email" id="footerEmail" type="button" aria-label="Copy email address: sunwayentrepreneursclub@gmail.com">Email</button>
+          <span class="sr-only" role="status" id="footerEmailStatus"></span>
+          <div class="copy-email-fallback" id="footerEmailFallback" hidden>
+            <label for="footerEmailAddress">Select and copy our email address</label>
+            <input id="footerEmailAddress" type="text" value="sunwayentrepreneursclub@gmail.com" readonly>
+          </div>
+        </nav>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 Sunway Entrepreneurs Club</span>
-        <span class="footer-bottom-links"><a href="#" id="footerLearn">Learning Portal</a> <a href="#" id="adminEntry">Committee Sign In</a></span>
+        <span>© <span id="footerYear">2026</span> Sunway Entrepreneurs Club</span>
+        <span class="footer-bottom-links">
+          <a href="https://sunwayentrepreneurs.com/terms" target="_blank" rel="noopener">Terms &amp; Conditions<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="https://sunwayentrepreneurs.com/privacy" target="_blank" rel="noopener">Privacy Policy<span class="sr-only"> (opens in a new tab)</span></a>
+          <a href="#" id="footerLearn">Learning Portal</a>
+          <a href="#" id="adminEntry">Committee Sign In</a>
+        </span>
       </div>
     </div>
   </footer>
 
-  <!-- Terms & Privacy — duplicated verbatim from the main site's lib/policies.ts (same
-       review-draft copy, same structure), so both sites say exactly the same thing. -->
-  <dialog id="policy-dialog-terms" class="policy-dialog" aria-labelledby="policy-title-terms">
-    <div class="policy-panel">
-      <header class="policy-toolbar">
-        <span>Sunway Entrepreneurs Club</span>
-        <button type="button" class="policy-dismiss" data-close-policy>Close ✕</button>
-      </header>
-      <div class="policy-content">
-        <h1 id="policy-title-terms" tabindex="-1">Terms &amp; Conditions</h1>
-        <p class="policy-draft">Draft for review</p>
-        <p>These draft Terms &amp; Conditions describe participation in events organised by Sunway Entrepreneurs Club (SEC).</p>
-        <section>
-          <h2>1. Event Registration</h2>
-          <p>Registration is required to attend SEC events, whether in person or online. Attendees must provide accurate and complete information during registration.</p>
-          <p>Your registration is confirmed once any required payment has been successfully processed and a confirmation has been issued by the SEC team.</p>
-          <p>We reserve the right to refuse, cancel, or revoke registration where necessary, including in cases involving inaccurate information, fraudulent activity, or violation of these Terms &amp; Conditions.</p>
-        </section>
-        <section>
-          <h2>2. Tickets &amp; Passes</h2>
-          <p>Each ticket provides access according to the specific pass purchased. Access to certain sessions, workshops, networking events, or experiences may be limited based on ticket type, capacity, or additional registration requirements.</p>
-          <p>Tickets may not be duplicated, resold, or used for commercial purposes without prior written permission from SEC.</p>
-          <p>Attendees are responsible for reviewing the details and access included with their selected pass before completing their purchase.</p>
-        </section>
-        <section>
-          <h2>3. Ticket Transfers</h2>
-          <p>If you are unable to attend, ticket transfers may be permitted before the stated transfer deadline.</p>
-          <p>To request a transfer, attendees must contact the SEC team and provide the required registration details. Additional conditions or fees may apply.</p>
-          <p>Tickets may not be transferred after the designated deadline or once event credentials have been issued.</p>
-        </section>
-        <section>
-          <h2>4. Cancellations &amp; Refunds</h2>
-          <p>All ticket purchases are subject to the applicable cancellation and refund policy.</p>
-          <p>Refund requests must be submitted before the stated deadline. Processing fees or other non-refundable charges may apply.</p>
-          <p>If an SEC event is postponed, rescheduled, or moved to an alternative format, purchased tickets may remain valid for the updated event.</p>
-        </section>
-        <section>
-          <h2>5. Event Changes</h2>
-          <p>An SEC event's programme, speakers, sessions, schedule, venue, and other details may change without prior notice.</p>
-          <p>While we aim to deliver the published programme, SEC reserves the right to make reasonable changes where necessary.</p>
-          <p>Such changes do not automatically entitle attendees to a refund.</p>
-        </section>
-        <section>
-          <h2>6. Attendee Conduct</h2>
-          <p>All attendees are expected to behave respectfully and professionally throughout the event.</p>
-          <p>Harassment, discrimination, disruptive behaviour, or any conduct that compromises the safety or experience of others will not be tolerated.</p>
-          <p>SEC reserves the right to remove individuals from the event without a refund if their behaviour violates these standards.</p>
-        </section>
-        <section>
-          <h2>7. Photography &amp; Media</h2>
-          <p>Photography, video, and audio recording may take place during SEC events.</p>
-          <p>By attending the event, you acknowledge that your image, voice, or likeness may appear in event-related photography, recordings, livestreams, or promotional materials.</p>
-          <p>If you have concerns regarding media participation, please contact the SEC team before the event.</p>
-        </section>
-        <section>
-          <h2>8. Contact</h2>
-          <p>If you have any questions regarding these Terms &amp; Conditions, please contact us using the email below.</p>
-        </section>
-        <a class="policy-email" href="mailto:sunwayentrepreneursclub@gmail.com">sunwayentrepreneursclub@gmail.com</a>
-        <p>We may update these Terms &amp; Conditions from time to time. Once approved, changes will be published here with an updated revision date.</p>
-      </div>
-    </div>
-  </dialog>
-
-  <dialog id="policy-dialog-privacy" class="policy-dialog" aria-labelledby="policy-title-privacy">
-    <div class="policy-panel">
-      <header class="policy-toolbar">
-        <span>Sunway Entrepreneurs Club</span>
-        <button type="button" class="policy-dismiss" data-close-policy>Close ✕</button>
-      </header>
-      <div class="policy-content">
-        <h1 id="policy-title-privacy" tabindex="-1">Privacy Policy</h1>
-        <p class="policy-draft">Draft for review</p>
-        <p>This draft Privacy Policy explains how Sunway Entrepreneurs Club (SEC, “we,” “our,” or “us”) collects, uses, and protects your personal information when you interact with our website, events, and community services.</p>
-        <p>We are committed to respecting your privacy and handling your data responsibly.</p>
-        <section>
-          <h2>1. Information We Collect</h2>
-          <p>We may collect the following types of information:</p>
-          <div class="policy-group">
-            <h3>1.1. Personal Information</h3>
-            <p>When you voluntarily provide information, such as when you register for events or membership, subscribe to our newsletter, or contact us through forms or email, this may include:</p>
-            <ul><li>Name</li><li>Email address</li><li>Organisation or role</li><li>Location (city/country)</li></ul>
-          </div>
-          <div class="policy-group">
-            <h3>1.2. Usage Information</h3>
-            <p>We may collect limited, non-identifiable information about how you use our website. This data helps us improve our content and community experience. It may include:</p>
-            <ul><li>Pages visited</li><li>Event registrations</li><li>Referring links</li><li>Device and browser type</li></ul>
-          </div>
-        </section>
-        <section>
-          <h2>2. How We Use Your Information</h2>
-          <p>We do not sell your personal data.</p>
-          <div class="policy-group">
-            <h3>We use your information to:</h3>
-            <ul>
-              <li>Manage event registrations and memberships</li>
-              <li>Send community updates, newsletters, and event communications</li>
-              <li>Respond to inquiries and requests</li>
-              <li>Improve our website, content, and services</li>
-              <li>Maintain the safety and integrity of the community</li>
-            </ul>
-          </div>
-        </section>
-        <section>
-          <h2>3. Communications</h2>
-          <p>You may receive emails related to events you registered for, membership updates, and community news and resources.</p>
-          <p>You can unsubscribe from non-essential communications at any time by using the link included in our emails.</p>
-        </section>
-        <section>
-          <h2>4. Sharing of Information</h2>
-          <p>We only share personal information when necessary and responsibly: with trusted service providers (such as event platforms and email services) who help us operate the community, or when required by law or legal process.</p>
-          <p>All partners and service providers are expected to handle data in compliance with applicable privacy standards.</p>
-        </section>
-        <section>
-          <h2>5. Data Security</h2>
-          <p>We take reasonable technical and organisational measures to protect your information against unauthorised access, loss, or misuse. While no system is completely secure, we strive to use best practices to safeguard your data.</p>
-        </section>
-        <section>
-          <h2>6. Your Rights</h2>
-          <p>To exercise these rights, please contact us using the details below.</p>
-          <div class="policy-group">
-            <h3>Depending on your location, you may have the right to:</h3>
-            <ul>
-              <li>Access the personal data we hold about you</li>
-              <li>Request correction or deletion of your data</li>
-              <li>Withdraw consent for certain uses</li>
-            </ul>
-          </div>
-        </section>
-        <section>
-          <h2>7. Contact Us</h2>
-          <p>If you have questions, concerns, or requests regarding this Privacy Policy or how we handle your personal information, please contact us using the email below.</p>
-        </section>
-        <a class="policy-email" href="mailto:sunwayentrepreneursclub@gmail.com">sunwayentrepreneursclub@gmail.com</a>
-      </div>
-    </div>
-  </dialog>
 </section>
 
 <section class="view" id="viewLearn" hidden>
@@ -2525,21 +2431,32 @@ $('#homeRolesAll')?.addEventListener('click', () => showPub('apply'));
   });
 })();
 
-/* Terms & Privacy dialogs — same open/close/backdrop behaviour as the main site's. */
-function openPolicyDialog(dialog) {
-  if (!dialog) return;
-  lockPageScroll(dialog.id);
-  dialog.showModal();
-  dialog.querySelector('.policy-content')?.scrollTo({ top: 0, behavior: 'instant' });
-  dialog.querySelector('h1')?.focus({ preventScroll: true });
-}
-document.querySelectorAll('.policy-dialog').forEach(dialog => {
-  dialog.addEventListener('close', () => unlockPageScroll(dialog.id));
-  dialog.querySelector('[data-close-policy]')?.addEventListener('click', () => dialog.close());
-  dialog.addEventListener('click', e => { if (e.target === dialog) dialog.close(); });
+/* #WorkWithUs links stay on this site and return to its home, like the brand link. */
+document.querySelectorAll('[data-portal-home]').forEach(link => {
+  link.addEventListener('click', e => { e.preventDefault(); showPub('overview'); });
 });
-$('#footerTerms')?.addEventListener('click', e => { e.preventDefault(); openPolicyDialog($('#policy-dialog-terms')); });
-$('#footerPrivacy')?.addEventListener('click', e => { e.preventDefault(); openPolicyDialog($('#policy-dialog-privacy')); });
+
+/* Footer: the current year, and the main site's copy-to-clipboard email button. */
+$('#footerYear').textContent = new Date().getFullYear();
+(function () {
+  const button = $('#footerEmail'), status = $('#footerEmailStatus'), fallback = $('#footerEmailFallback');
+  if (!button) return;
+  let timer;
+  button.addEventListener('click', async () => {
+    clearTimeout(timer);
+    try {
+      await navigator.clipboard.writeText($('#footerEmailAddress').value);
+      button.textContent = 'Copied';
+      status.textContent = 'Email address copied.';
+      timer = setTimeout(() => { button.textContent = 'Email'; status.textContent = ''; }, 2500);
+    } catch {
+      status.textContent = 'Automatic copying is unavailable. Select and copy the address below.';
+      fallback.hidden = false;
+      fallback.querySelector('input').select();
+      fallback.querySelector('input').focus();
+    }
+  });
+})();
 
 /* ================= FAQ smooth expand/collapse ================= */
 document.querySelectorAll('.faq-item').forEach(item => {

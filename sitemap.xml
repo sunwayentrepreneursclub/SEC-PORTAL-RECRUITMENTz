@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Only the public home page. Roles, Application Status, Learning and Committee Sign In
+     are views of the same page, not separate URLs. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://applysec.sunwayentrepreneurs.com/</loc>
+  </url>
+</urlset>

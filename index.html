@@ -149,9 +149,9 @@ body{
 #viewAdmin{background:var(--paper)}
 /* big, quiet serif display type — the reference runs its headline across two
    lines at a generous size with tight leading, the emphasis word in italic */
-#viewPublic h1{font-family:var(--font-display);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.08;letter-spacing:-.05em}
+#viewPublic h1{font-family:var(--font-display);font-weight:400;font-size:clamp(44px,7.2vw,92px);line-height:1.08;letter-spacing:-.01em}
 #viewPublic .masthead h1{max-width:1100px;text-wrap:balance}
-#viewPublic .aband-title{font-family:var(--font-display);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.08;letter-spacing:-.045em}
+#viewPublic .aband-title{font-family:var(--font-display);font-weight:400;font-size:clamp(28px,4.2vw,52px);line-height:1.08;letter-spacing:-.01em}
 #viewPublic .aband-title em,#viewPublic h1 em{font-style:italic}
 /* Every h1 and h2 on the public site and the Learning Portal is display type; it has one weight, so no faux bold.
    The committee dashboard (#viewAdmin) keeps its Inter-only working theme. */
@@ -860,7 +860,7 @@ h1{
   min-width:0;margin:0;padding:0;scroll-margin-top:var(--recruitment-nav-height);
 }
 #viewPublic .home-timeline h2{
-  font:400 clamp(38px,4.5vw,64px)/1.08 var(--font-display);letter-spacing:-.045em;
+  font:400 clamp(38px,4.5vw,64px)/1.08 var(--font-display);letter-spacing:-.01em;
   margin:0 0 clamp(32px,4vw,58px);color:var(--ink);
 }
 #viewPublic .home-timeline .roadmap{gap:clamp(30px,3.6vw,52px) clamp(24px,3.4vw,48px)}
@@ -1074,13 +1074,27 @@ h1{
 .footer-email:hover{color:var(--ink)}
 .copy-email-fallback{display:grid;gap:8px;padding-block:12px;font-size:13px}
 .copy-email-fallback[hidden]{display:none}
+/* Cookie choice: same corner card as the main site, shared sec_consent cookie. */
+.cookie-banner{position:fixed;right:24px;bottom:24px;z-index:60;width:min(480px,calc(100% - 48px));padding:20px 22px;border:1px solid #ffffff28;border-radius:20px;background:#1d2025;color:#f6f5f2;box-shadow:0 18px 48px #0007;font-family:'SEC Inter',var(--body)}
+.cookie-banner[hidden]{display:none}
+.cookie-banner p{margin:0;font-size:14px;line-height:1.6;color:#b7b9bf}
+.cookie-banner a{color:#f6f5f2;text-decoration:underline;text-underline-offset:4px}
+.cookie-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.cookie-actions button{min-width:104px;min-height:44px;padding:11px 22px;border:1px solid #f6f5f2;border-radius:999px;background:#f6f5f2;color:#111214;font:500 14px/1 'SEC Inter',var(--body);cursor:pointer}
+.cookie-actions .cookie-reject{background:transparent;color:#f6f5f2;border-color:#ffffff28}
+.cookie-actions .cookie-reject:hover{background:#ffffff14}
+[data-cookie-settings]{display:inline-flex;align-items:center;min-height:44px;padding:0;border:0;background:none;font:inherit;color:var(--muted);cursor:pointer}
+[data-cookie-settings]:hover{color:var(--ink)}
+.footer-bottom-links button{font-size:12px}
 .copy-email-fallback input{width:min(100%,440px);border:1px solid #ffffff28;border-radius:4px;background:var(--navy);color:var(--ink);padding:12px;font:inherit}
 @media (max-width:1050px){.topbar-inner .join-switch{display:none}}
 @media (max-width:760px){
   .menu-bottom{justify-content:flex-start}
   .footer-bottom{flex-wrap:wrap;align-items:flex-start}
   .footer-bottom > .footer-bottom-links{flex:1 1 100%;justify-content:flex-start;gap:4px 14px}
-  .footer-bottom-links a{font-size:10px;min-height:34px}
+  .footer-bottom-links :is(a,button){font-size:10px;min-height:34px}
+  .cookie-banner{right:12px;bottom:12px;width:calc(100% - 24px);padding:16px}
+  .cookie-actions button{flex:1}
   .copy-email-fallback input{font-size:16px}
 }
 .footer-status-cta{
@@ -1705,6 +1719,7 @@ textarea{min-height:110px;resize:vertical}
     <div class="menu-bottom">
       <a href="https://sunwayentrepreneurs.com/terms" target="_blank" rel="noopener">Terms &amp; Conditions<span class="sr-only"> (opens in a new tab)</span></a>
       <a href="https://sunwayentrepreneurs.com/privacy" target="_blank" rel="noopener">Privacy Policy<span class="sr-only"> (opens in a new tab)</span></a>
+      <button type="button" data-cookie-settings>Cookie settings</button>
       <a href="https://sunwayentrepreneurs.com" target="_blank" rel="noopener">Main website<span class="sr-only"> (opens in a new tab)</span></a>
       <a href="#" data-menu-go="admin">Committee Sign In</a>
     </div>
@@ -1797,6 +1812,7 @@ textarea{min-height:110px;resize:vertical}
         <span class="footer-bottom-links">
           <a href="https://sunwayentrepreneurs.com/terms" target="_blank" rel="noopener">Terms &amp; Conditions<span class="sr-only"> (opens in a new tab)</span></a>
           <a href="https://sunwayentrepreneurs.com/privacy" target="_blank" rel="noopener">Privacy Policy<span class="sr-only"> (opens in a new tab)</span></a>
+          <button type="button" data-cookie-settings>Cookie settings</button>
           <a href="#" id="footerLearn">Learning Portal</a>
           <a href="#" id="adminEntry">Committee Sign In</a>
         </span>
@@ -2435,6 +2451,50 @@ $('#homeRolesAll')?.addEventListener('click', () => showPub('apply'));
 document.querySelectorAll('[data-portal-home]').forEach(link => {
   link.addEventListener('click', e => { e.preventDefault(); showPub('overview'); });
 });
+
+/* Analytics consent — mirrors the main site's lib/analytics.ts. GA4 loads only after "Accept";
+   the choice lives in sec_consent on .sunwayentrepreneurs.com, so one answer covers both sites. */
+(function () {
+  const GA_ID = 'G-20GNWGK1G4', COOKIE = 'sec_consent', banner = $('#cookieBanner');
+  if (!banner) return;
+  const shared = /(^|\.)sunwayentrepreneurs\.com$/.test(location.hostname) ? '; domain=.sunwayentrepreneurs.com' : '';
+  const read = () => (document.cookie.match(new RegExp(`(?:^|; )${COOKIE}=(granted|denied)`)) || [])[1] || null;
+  let loaded = false;
+  function startAnalytics() {
+    window[`ga-disable-${GA_ID}`] = false;
+    if (loaded) return;
+    loaded = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', GA_ID);
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+    document.head.appendChild(script);
+  }
+  function stopAnalytics() {
+    window[`ga-disable-${GA_ID}`] = true;
+    for (const name of ['_ga', `_ga_${GA_ID.slice(2)}`]) {
+      for (const domain of ['', '; domain=.sunwayentrepreneurs.com', `; domain=${location.hostname}`]) document.cookie = `${name}=; max-age=0; path=/${domain}`;
+    }
+  }
+  function choose(value) {
+    const secure = location.protocol === 'https:' ? '; secure' : '';
+    document.cookie = `${COOKIE}=${value}; max-age=${180 * 86400}; path=/; samesite=lax${shared}${secure}`;
+    banner.hidden = true;
+    if (value === 'granted') startAnalytics(); else stopAnalytics();
+  }
+  banner.querySelectorAll('[data-consent]').forEach(button => button.addEventListener('click', () => choose(button.dataset.consent)));
+  document.querySelectorAll('[data-cookie-settings]').forEach(button => button.addEventListener('click', () => {
+    const menu = $('#main-menu');
+    if (menu?.open) menu.close();
+    banner.hidden = false;
+  }));
+  const consent = read();
+  if (consent === 'granted') startAnalytics();
+  else if (!consent) banner.hidden = false;
+})();
 
 /* Footer: the current year, and the main site's copy-to-clipboard email button. */
 $('#footerYear').textContent = new Date().getFullYear();
@@ -3828,5 +3888,13 @@ import('./learning.js');
   new MutationObserver(scan).observe(document.body,{childList:true,subtree:true});
 })();
 </script>
+<section class="cookie-banner" id="cookieBanner" aria-labelledby="cookieBannerTitle" hidden>
+  <h2 id="cookieBannerTitle" class="sr-only">Cookie choice</h2>
+  <p>We’d like to use Google Analytics cookies to understand how people use this site. They’re only set if you accept. <a href="https://sunwayentrepreneurs.com/privacy" target="_blank" rel="noopener">Privacy Policy<span class="sr-only"> (opens in a new tab)</span></a></p>
+  <div class="cookie-actions">
+    <button type="button" class="cookie-reject" data-consent="denied">Reject</button>
+    <button type="button" data-consent="granted">Accept</button>
+  </div>
+</section>
 </body>
 </html>
